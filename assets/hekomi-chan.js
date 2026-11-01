@@ -88,7 +88,7 @@
       [52+h,35,4,2,'skin3'],[50+w,44,2,3,'skin3']
     ],dy);
   }
-  function drawEyes(ctx,expression,blink){
+  function drawEyes(ctx,expression,blink,gazeX=0,gazeY=0){
     if(blink){
       blocks(ctx,[[22,31,8,2,'eye0'],[23,32,6,1,'eye2'],[36,31,8,2,'eye0'],[37,32,6,1,'eye2']]);
       return;
@@ -108,13 +108,13 @@
       [22,30,8,surprised?7:5,'white'],[36,30,8,surprised?7:5,'white'],
       [24,30,5,surprised?7:5,'eye1'],[38,30,5,surprised?7:5,'eye1'],
       [25,31,4,surprised?6:4,'eye2'],[39,31,4,surprised?6:4,'eye2'],
-      [26,31,2,3,'eye3'],[40,31,2,3,'eye3'],[25,31,1,1,'white'],[39,31,1,1,'white'],
+      [26+gazeX,31+gazeY,2,3,'eye3'],[40+gazeX,31+gazeY,2,3,'eye3'],[25+gazeX,31+gazeY,1,1,'white'],[39+gazeX,31+gazeY,1,1,'white'],
       [22,29,3,1,'hair0'],[42,29,3,1,'hair0']
     ]);
   }
   function drawFaceDetails(ctx,expression){
     blocks(ctx,[[18,30,2,4,'skin1'],[45,30,2,4,'skin1'],[21,37,4,2,'blush'],[41,37,4,2,'blush'],[31,36,2,3,'skin0'],[32,37,2,2,'skin2']]);
-    if(expression==='surprised')blocks(ctx,[[31,40,4,4,'skin0'],[32,40,2,2,'ink']]);
+    if(expression==='surprised')blocks(ctx,[[31,40,4,4,'skin0'],[32,40,2,2,'ink']]);\n    else if(expression==='annoyed')blocks(ctx,[[29,39,6,2,'eye0'],[30,41,4,1,'eye0']]);
     else if(expression==='sleepy')blocks(ctx,[[30,40,5,1,'eye0'],[34,41,2,1,'skin0']]);
     else if(expression==='happy')blocks(ctx,[[29,39,2,2,'eye0'],[31,41,4,2,'eye0'],[35,39,2,2,'eye0']]);
     else blocks(ctx,[[30,40,5,1,'eye0'],[34,41,2,1,'eye0']]);
@@ -135,7 +135,7 @@
       [13,45,5,12,'hair0'],[14,54,4,7,'hair1'],[45,46,5,12,'hair0'],
       [46,54,4,8,'hair1'],[17,58,3,5,'hair0'],[44,60,3,5,'hair0']
     ],dy);
-    drawEyes(ctx,frame.expression,frame.blink);
+    drawEyes(ctx,frame.expression,frame.blink,frame.gazeX||0,frame.gazeY||0);
     drawFaceDetails(ctx,frame.expression);
     blocks(ctx,[
       [43,22,3,1,'mint1'],[44,21,1,3,'mint1'],[46,22,2,1,'accent'],
@@ -177,6 +177,7 @@
       this.root=root;this.bubble=bubble;this.state='idle';this.target=null;this.face=1;
       this.x=12;this.y=12;this.last=0;this.lastSpeech=0;this.speechUntil=0;this.lastObstacleCheck=0;
       this.stateUntil=0;this.walkFrame=0;this.stops=0;this.sleepCount=0;this.hiddenPause=false;
+      this.nextBlink=performance.now()+1800+Math.random()*2600;this.blinkUntil=0;this.gazeX=0;this.gazeY=0;this.nextGlance=performance.now()+2200+Math.random()*3800;this.activity='idle';
       this.reduced=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
       this.canvas.width=W;this.canvas.height=H;this.ctx.imageSmoothingEnabled=false;
       this.canvas.style.imageRendering='pixelated';this.canvas.setAttribute('role','button');
@@ -298,7 +299,7 @@
       const now=performance.now();
       if(this.state==='sleep'){this.say('Huh?! I wasn’t sleeping!');this.wake(now);return;}
       const line=this.pick(['Hehe! You noticed me!','Need a little company?','I like it here.','Let’s explore!','I was just stretching.']);
-      this.state='greet';this.say(line,3800);this.stateUntil=now+2600;
+      this.state='greet';this.activity='noticed';this.gazeX=0;this.gazeY=-1;this.say(line,3800);this.stateUntil=now+2600;
       this.canvas.style.pointerEvents='auto';
       this.paint(now,true);
     }
@@ -310,7 +311,7 @@
     onScroll(){
       if(this.state==='walk'||this.state==='sleep')return;
       if(Math.random()<.28)this.say(this.pick(['Oh! We’re going somewhere?','This page is bigger than my room.','I’ll keep up!']),2600);
-      if(this.state==='idle')this.stateUntil=Math.min(this.stateUntil,performance.now()+900);
+      if(this.state==='idle'){this.activity='curious';this.stateUntil=Math.min(this.stateUntil,performance.now()+900);}
     }
     applyPosition(){
       const b=this.bounds(),x=Math.max(b.minX,Math.min(this.x,b.maxX)),y=Math.max(b.minY,Math.min(this.y,b.maxY));
@@ -321,6 +322,9 @@
     tick(time){
       if(document.hidden){requestAnimationFrame(t=>this.tick(t));return;}
       const dt=this.last?Math.min((time-this.last)/1000,.05):.016;this.last=time;
+      if(time>=this.nextBlink){this.blinkUntil=time+115;this.nextBlink=time+2600+Math.random()*4300;}
+      if(time>=this.nextGlance&&this.state==='idle'){const glance=Math.random();this.gazeX=glance<.33?-1:glance<.66?1:0;this.gazeY=glance>.72?1:0;this.nextGlance=time+900+Math.random()*1700;}
+      if(this.state!=='idle'&&this.state!=='greet'){this.gazeX=0;this.gazeY=0;}
       if(this.state!=='walk'&&time-this.lastObstacleCheck>900){
         this.lastObstacleCheck=time;this.setInteractable();
       }
@@ -350,10 +354,10 @@
       this.lastPaint=time;
       const walking=this.state==='walk',sleeping=this.state==='sleep';
       const frame=Math.floor(time/130);
-      const blink=sleeping||(this.state==='idle'&&time%5200<115);
-      const expression=sleeping?'sleepy':this.state==='greet'?'happy':this.state==='wake'?'sleepy':'normal';
+      const blink=sleeping||time<this.blinkUntil;
+      const expression=sleeping?'sleepy':this.state==='greet'?'happy':this.state==='wake'?'surprised':this.activity==='curious'?'surprised':this.activity==='annoyed'?'annoyed':'normal';
       const bob=sleeping?(Math.floor(time/700)%2):walking?frame%2:(Math.floor(time/520)%2);
-      drawSprite(this.ctx,{expression,blink,walking,sleeping,step:frame%4,wave:frame%4,bob});
+      const sway=walking?0:Math.round(Math.sin(time/760)*0.5);\n      drawSprite(this.ctx,{expression,blink,walking,sleeping,step:frame%4,wave:frame%4,bob:bob+sway,gazeX:this.gazeX,gazeY:this.gazeY});
     }
   }
 
