@@ -2566,7 +2566,7 @@ function showProfileTab(tab){activeProfileTab=tab;$$('#profileTabs button').forE
       const status=String(item.list_status&&item.list_status.status||'');
       if(Object.prototype.hasOwnProperty.call(statusCounts,status)&&status!=='all')statusCounts[status]+=1;
     });
-    $('[data-status-count]').forEach(node=>{node.textContent=String(statusCounts[node.dataset.statusCount]??0);});
+    $$('[data-status-count]').forEach(node=>{node.textContent=String(statusCounts[node.dataset.statusCount]??0);});
     const term=($('#malListSearch').value||'').toLowerCase();
     let items=malRemote.filter(item=>String(item.node&&item.node.title||'').toLowerCase().includes(term));
     if(activeMalStatus!=='all')items=items.filter(item=>(item.list_status&&item.list_status.status||'')===activeMalStatus);
