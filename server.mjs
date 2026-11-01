@@ -1805,7 +1805,7 @@ if(req.method==='POST' && url.pathname==='/api/mangascrape/discover') {
           robots:'index,follow,max-image-preview:large'
         },
         discover:{
-          title:'Discover Anime & Manga — Trending Series, Genres & Search | Hekomi',
+          title:'Anime & Manga Discovery — Search & Trending | Hekomi',
           description:'Explore trending anime and manga, search series by title, filter by genre and format, and find your next favourite story with Hekomi.',
           robots:'index,follow,max-image-preview:large'
         },
@@ -1827,7 +1827,18 @@ if(req.method==='POST' && url.pathname==='/api/mangascrape/discover') {
       };
       const seo=pageSeo[pageName]||pageSeo.home;
       const canonicalPath=appPath==='/'?'/':appPath;
-      body=Buffer.from(data.toString('utf8')
+      let html=data.toString('utf8');
+      // This shared shell contains several hidden route views. Emit only the active route's H1.
+      html=html.replace(/<h1\b([^>]*)>/gi,'<h2$1>').replace(/<\/h1>/gi,'</h2>');
+      const pageHeadingIds={home:'homeHeroTitle',discover:'catalogTitle',anime:'animePageTitle',manga:'mangaPageTitle',profile:'profilePageTitle'};
+      const pageHeadingId=pageHeadingIds[pageName]||pageHeadingIds.home;
+      const headingOpen='<h2 id="'+pageHeadingId+'">';
+      const headingStart=html.indexOf(headingOpen);
+      if(headingStart>=0){
+        const selected=html.slice(headingStart).replace(headingOpen,'<h1 id="'+pageHeadingId+'">').replace('</h2>','</h1>');
+        html=html.slice(0,headingStart)+selected;
+      }
+      body=Buffer.from(html
         .replaceAll('__HEKOMI_PUBLIC_URL__',origin)
         .replaceAll('__HEKOMI_CANONICAL_URL__',origin+canonicalPath)
         .replaceAll('__HEKOMI_PAGE__',pageRoutes.has(appPath)?pageName:'home')
