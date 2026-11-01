@@ -991,7 +991,7 @@ async function malRequest(req, res, pathname, query) {
   if (pathname === '/search') apiPath='/anime?q='+encodeURIComponent(query.get('q')||'')+'&limit=10&fields='+animeFields;
   if (pathname === '/details') { const id=Number(query.get('id')); if(!Number.isSafeInteger(id)||id<1)return send(res,400,{error:'A valid anime ID is required.'}); apiPath='/anime/'+id+'?fields='+animeFields; }
   if (pathname === '/me') apiPath='/users/@me?fields=name,picture';
-  if (pathname === '/list') apiPath='/users/@me/animelist?limit=100&fields=list_status,updated_at,alternative_titles,synopsis,mean,rank,popularity,num_list_users,num_scoring_users,genres,num_episodes,media_type,main_picture,start_date,end_date,status,start_season,broadcast,source,average_episode_duration,rating,studios,updated_at';
+  if (pathname === '/list') apiPath='/users/@me/animelist?limit=1000&fields=list_status,updated_at,alternative_titles,synopsis,mean,rank,popularity,num_list_users,num_scoring_users,genres,num_episodes,media_type,main_picture,start_date,end_date,status,start_season,broadcast,source,average_episode_duration,rating,studios,updated_at';
   if (pathname === '/update') {
     const data = await readBody(req);
     if (!Number.isInteger(Number(data.id))) return send(res,400,{error:'A valid anime ID is required.'});
@@ -1004,11 +1004,79 @@ async function malRequest(req, res, pathname, query) {
   if (session) headers.Authorization = 'Bearer ' + session.accessToken;
   if (body) headers['Content-Type'] = 'application/x-www-form-urlencoded';
   try {
-    const r = await fetch('https://api.myanimelist.net/v2' + apiPath, { method, headers, body, signal: AbortSignal.timeout(12000) });
-    const txt = await r.text();
-    let data;
-    try { data = JSON.parse(txt); } catch { data = { message: txt.slice(0, 500) }; }
-    return send(res, r.status, data);
+    const malApiOrigin = 'https://api.myanimelist.net';
+    const requestJson = async target => {
+      const response = await fetch(target, { method, headers, body, signal: AbortSignal.timeout(12000) });
+      const text = await response.text();
+      let data;
+      try { data = JSON.parse(text); } catch { data = { message: text.slice(0, 500) }; }
+      return { response, data };
+    };
+
+    if (pathname === '/list') {
+      const listPath = '/v2/users/@me/animelist';
+      const entries = [];
+      const seenEntryIds = new Set();
+      const seenPages = new Set();
+      let nextPage = malApiOrigin + '/v2' + apiPath;
+      let firstData = null;
+      let lastPaging = {};
+      let pagesLoaded = 0;
+
+      while (nextPage) {
+        const pageUrl = new URL(nextPage);
+        if (pageUrl.origin !== malApiOrigin || decodeURIComponent(pageUrl.pathname) !== listPath) {
+          return send(res, 502, { error: 'MyAnimeList returned an unexpected list pagination URL.' });
+        }
+        const canonicalPageUrl = pageUrl.href;
+        if (seenPages.has(canonicalPageUrl)) {
+          return send(res, 502, { error: 'MyAnimeList repeated a list page. Hekomi did not apply an incomplete sync.' });
+        }
+        seenPages.add(canonicalPageUrl);
+
+        const { response, data } = await requestJson(canonicalPageUrl);
+        if (!response.ok) return send(res, response.status, data);
+        if (!firstData) firstData = data;
+
+        const pageEntries = Array.isArray(data.data) ? data.data : [];
+        for (const entry of pageEntries) {
+          const entryId = Number(entry && entry.node && entry.node.id);
+          if (Number.isSafeInteger(entryId) && entryId > 0) {
+            if (seenEntryIds.has(entryId)) continue;
+            seenEntryIds.add(entryId);
+          }
+          entries.push(entry);
+        }
+
+        lastPaging = data.paging && typeof data.paging === 'object' ? data.paging : {};
+        const rawNext = typeof lastPaging.next === 'string' ? lastPaging.next.trim() : '';
+        pagesLoaded += 1;
+        if (!rawNext) {
+          nextPage = '';
+          break;
+        }
+        if (pagesLoaded >= 1000) {
+          return send(res, 502, { error: 'Your MyAnimeList list exceeded Hekomi’s pagination safety limit. No partial list was applied.' });
+        }
+
+        const nextUrl = new URL(rawNext, canonicalPageUrl);
+        if (nextUrl.origin !== malApiOrigin || decodeURIComponent(nextUrl.pathname) !== listPath) {
+          return send(res, 502, { error: 'MyAnimeList returned an unexpected next-page URL. Hekomi did not apply an incomplete sync.' });
+        }
+        nextPage = nextUrl.href;
+        await new Promise(resolve => setTimeout(resolve, 1050));
+      }
+
+      const base = firstData || {};
+      return send(res, 200, {
+        ...base,
+        data: entries,
+        paging: { ...(base.paging || {}), ...lastPaging, next: null }
+      });
+    }
+
+    const { response, data } = await requestJson(malApiOrigin + '/v2' + apiPath);
+    return send(res, response.status, data);
   } catch (e) {
     return send(res, 502, { error: 'Could not reach the MyAnimeList API: ' + e.message });
   }
