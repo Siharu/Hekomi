@@ -1185,21 +1185,35 @@ async function fetchAllAnimeCollection({season=null,seasonYear=null,status=null}
 
 const syoboiCalendarCache = new Map();
 const syoboiCalendarInFlight = new Map();
+
 function syoboiRows(value) {
-  if (Array.isArray(value)) return value.map(entry => Array.isArray(entry) ? entry[1] : entry).filter(item => item && typeof item === 'object');
-  if (value && typeof value === 'object') return Object.values(value).filter(item => item && typeof item === 'object');
-  return [];
+  if (Array.isArray(value)) {
+    return value.map(entry => {
+      if (Array.isArray(entry) && entry.length >= 2 && entry[1] && typeof entry[1] === 'object') return entry[1];
+      return entry;
+    }).filter(item => item && typeof item === 'object' && !Array.isArray(item));
+  }
+  if (!value || typeof value !== 'object') return [];
+  if ('TID' in value || 'PID' in value || 'tid' in value || 'pid' in value) return [value];
+  return Object.entries(value).map(([id,item]) => {
+    if (Array.isArray(item) && item.length >= 2 && item[1] && typeof item[1] === 'object') return {_key:id,...item[1]};
+    if (item && typeof item === 'object' && !Array.isArray(item)) return {_key:id,...item};
+    return null;
+  }).filter(Boolean);
+}
+function syoboiField(record, name) {
+  if (!record || typeof record !== 'object') return undefined;
+  return record[name] ?? record[name.toLowerCase()] ?? record[name.toUpperCase()];
 }
 function parseSyoboiDate(value) {
   if (value == null || value === '') return null;
-  if (typeof value === 'number' || /^\d{10,13}$/.test(String(value))) {
-    const number = Number(value);
-    if (Number.isFinite(number) && number > 1000000000 && number < 10000000000000) {
-      const date = new Date(number < 100000000000 ? number * 1000 : number);
-      return Number.isNaN(date.getTime()) ? null : date;
-    }
-  }
   const raw = String(value).trim();
+  if (/^\d{9,13}$/.test(raw)) {
+    const number = Number(raw);
+    const millis = raw.length <= 10 ? number * 1000 : number;
+    const date = new Date(millis);
+    return Number.isNaN(date.getTime()) ? null : date;
+  }
   const compact = raw.match(/^(\d{4})(\d{2})(\d{2})[_T ]?(\d{2})(\d{2})(\d{2})$/);
   if (compact) {
     const [,y,m,d,h,minute,second] = compact;
@@ -1230,38 +1244,54 @@ async function getSyoboiCalendar(rawStart,rawDays) {
     try {
       const endpoint=new URL('https://cal.syoboi.jp/json.php');
       endpoint.searchParams.set('Req','ProgramByDate,TitleLarge');
-      endpoint.searchParams.set('start',start);
-      endpoint.searchParams.set('days',String(days));
-      const response=await fetch(endpoint,{headers:{'Accept':'application/json','User-Agent':'Hekomi/0.4 (+https://hekomi.vercel.app; anime broadcast calendar)'},signal:AbortSignal.timeout(14000)});
+      // The documented API parameter names are Start and Days.
+      endpoint.searchParams.set('Start',start);
+      endpoint.searchParams.set('Days',String(days));
+      const response=await fetch(endpoint,{headers:{'Accept':'application/json','User-Agent':'Hekomi/0.5 (+https://hekomi.vercel.app; anime broadcast calendar)'},signal:AbortSignal.timeout(14000)});
       if(!response.ok)throw new Error('Syoboi Calendar returned HTTP '+response.status+'.');
       const payload=await response.json();
-      const titleRows=syoboiRows(payload&&payload.Titles),programRows=syoboiRows(payload&&payload.Programs);
-      if(!payload||!payload.Programs||typeof payload.Programs!=='object')throw new Error('Syoboi Calendar returned an unexpected schedule response.');
-      const titles=new Map(titleRows.map(item=>[String(item.TID),item])),now=Date.now();
+      const titleRows=syoboiRows(payload&&payload.Titles);
+      const programRows=syoboiRows(payload&&payload.Programs);
+      if(!payload||!payload.Programs||typeof payload.Programs!=='object')throw new Error('Syoboi Calendar returned an unexpected response (missing Programs).');
+      const titles=new Map(titleRows.map(item=>{
+        const tid=String(syoboiField(item,'TID')??item._key??'');
+        return [tid,item];
+      }).filter(([tid])=>tid));
+      const now=Date.now();
       const programs=programRows.map(item=>{
-        const tid=String(item.TID||''),title=titles.get(tid)||{},category=Number(title.Cat);
-        if(![1,7,10].includes(category))return null;
-        const startAt=parseSyoboiDate(item.StTime);
+        const tid=String(syoboiField(item,'TID')??'');
+        const title=titles.get(tid)||{};
+        const startAt=parseSyoboiDate(syoboiField(item,'StTime'));
         if(!startAt)return null;
-        const episodeNumber=Number(item.Count);
+        const episodeRaw=syoboiField(item,'Count');
+        const episodeNumber=Number(episodeRaw);
+        const category=Number(syoboiField(title,'Cat'));
+        const titleName=syoboiField(title,'Title')||syoboiField(title,'ShortTitle')||syoboiField(item,'Title');
+        if(!titleName)return null;
         return {
-          id:String(item.PID||tid+'-'+item.StTime),tid:Number(tid)||null,
-          title:String(title.Title||title.ShortTitle||item.Title||'Untitled anime'),
-          shortTitle:String(title.ShortTitle||''),
+          id:String(syoboiField(item,'PID')||tid+'-'+syoboiField(item,'StTime')),
+          tid:Number(tid)||null,
+          title:String(titleName),
+          shortTitle:String(syoboiField(title,'ShortTitle')||''),
           episode:Number.isFinite(episodeNumber)&&episodeNumber>0?episodeNumber:null,
-          subtitle:String(item.SubTitle||item.SubTitle2||''),channel:String(item.ChName||''),
-          firstAired:title.FirstYear&&title.FirstMonth?String(title.FirstYear)+'-'+String(title.FirstMonth).padStart(2,'0'):null,
-          firstEnded:title.FirstEndYear&&title.FirstEndMonth?String(title.FirstEndYear)+'-'+String(title.FirstEndMonth).padStart(2,'0'):null,
-          listingType:category===10?'REBROADCAST':category===7?'OVA':'TV',
+          subtitle:String(syoboiField(item,'SubTitle2')||syoboiField(item,'SubTitle')||''),
+          channel:String(syoboiField(item,'ChName')||''),
+          firstAired:syoboiField(title,'FirstYear')&&syoboiField(title,'FirstMonth')?String(syoboiField(title,'FirstYear'))+'-'+String(syoboiField(title,'FirstMonth')).padStart(2,'0'):null,
+          firstEnded:syoboiField(title,'FirstEndYear')&&syoboiField(title,'FirstEndMonth')?String(syoboiField(title,'FirstEndYear'))+'-'+String(syoboiField(title,'FirstEndMonth')).padStart(2,'0'):null,
+          listingType:category===10?'REBROADCAST':category===7?'OVA':category===2?'MOVIE':'TV',
           isPremiere:Number.isFinite(episodeNumber)&&episodeNumber===1&&category!==10,
           date:syoboiDateKey(startAt),airingAt:startAt.toISOString(),
           time:new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Tokyo',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(startAt),
-          status:startAt.getTime()>now?'upcoming':'aired',category,
+          status:startAt.getTime()>now?'upcoming':'aired',category:Number.isFinite(category)?category:null,
           url:Number(tid)>0?'https://cal.syoboi.jp/tid/'+Number(tid):'https://cal.syoboi.jp/'
         };
       }).filter(Boolean).sort((a,b)=>a.airingAt.localeCompare(b.airingAt));
-      const data={start,days,programs,total:programs.length,source:'Syoboi Calendar',timezone:'Asia/Tokyo',updatedAt:new Date().toISOString()};
-      const isHistorical=startDate.getTime()+days*86400000<now;
+      if(programRows.length&&!programs.length) {
+        const fields=Object.keys(programRows[0]||{}).join(', ');
+        throw new Error('Syoboi returned '+programRows.length+' program records, but Hekomi could not parse them. Fields: '+fields);
+      }
+      const data={start,days,programs,total:programs.length,rawProgramCount:programRows.length,titleCount:titleRows.length,source:'Syoboi Calendar',timezone:'Asia/Tokyo',updatedAt:new Date().toISOString()};
+      const isHistorical=startDate.getTime()+days*86400000<Date.now();
       syoboiCalendarCache.set(key,{data,expiresAt:Date.now()+(isHistorical?12*60*60*1000:10*60*1000)});
       if(syoboiCalendarCache.size>48)syoboiCalendarCache.delete(syoboiCalendarCache.keys().next().value);
       return data;
