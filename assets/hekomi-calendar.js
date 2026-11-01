@@ -34,7 +34,9 @@
       const subtitle=item.subtitle?'<p class="hk-cal-event-subtitle">'+escapeHtml(item.subtitle)+'</p>':'';
       const channel=item.channel?'<span>'+escapeHtml(item.channel)+'</span>':'';
       const stateLabel=item.status==='upcoming'?'UPCOMING':'AIRED';
-      return '<article class="hk-cal-event" data-state="'+escapeHtml(item.status)+'"><div class="hk-cal-event-time">'+escapeHtml(item.time||'—')+'<small style="display:block;color:var(--muted);font-size:8px;font-weight:600">JST</small></div><div><h4><a href="'+escapeHtml(item.url)+'" target="_blank" rel="noopener noreferrer">'+escapeHtml(item.title)+'</a></h4><p class="hk-cal-event-subtitle">'+episode+'</p>'+subtitle+'<div class="hk-cal-event-meta">'+channel+'<span class="hk-cal-event-state">'+stateLabel+'</span></div></div></article>';
+      const runRange=item.firstAired?'<p class="hk-cal-event-subtitle">Series run: '+escapeHtml(item.firstAired)+(item.firstEnded?' → '+escapeHtml(item.firstEnded):'')+'</p>':'';
+      const typeLabel=item.isPremiere?'PREMIERE':item.listingType||'TV';
+      return '<article class="hk-cal-event" data-state="'+escapeHtml(item.status)+'"><div class="hk-cal-event-time">'+escapeHtml(item.time||'—')+'<small style="display:block;color:var(--muted);font-size:8px;font-weight:600">JST</small></div><div><h4><a href="'+escapeHtml(item.url)+'" target="_blank" rel="noopener noreferrer">'+escapeHtml(item.title)+'</a></h4><p class="hk-cal-event-subtitle">'+episode+'</p>'+subtitle+runRange+'<div class="hk-cal-event-meta"><span>'+escapeHtml(typeLabel)+'</span>'+channel+'<span class="hk-cal-event-state">'+stateLabel+'</span></div></div></article>';
     }).join('');
   }
   function renderGrid(){
