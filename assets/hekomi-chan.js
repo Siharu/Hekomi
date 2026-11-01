@@ -114,7 +114,8 @@
   }
   function drawFaceDetails(ctx,expression){
     blocks(ctx,[[18,30,2,4,'skin1'],[45,30,2,4,'skin1'],[21,37,4,2,'blush'],[41,37,4,2,'blush'],[31,36,2,3,'skin0'],[32,37,2,2,'skin2']]);
-    if(expression==='surprised')blocks(ctx,[[31,40,4,4,'skin0'],[32,40,2,2,'ink']]);\n    else if(expression==='annoyed')blocks(ctx,[[29,39,6,2,'eye0'],[30,41,4,1,'eye0']]);
+    if(expression==='surprised')blocks(ctx,[[31,40,4,4,'skin0'],[32,40,2,2,'ink']]);
+    else if(expression==='annoyed')blocks(ctx,[[29,39,6,2,'eye0'],[30,41,4,1,'eye0']]);
     else if(expression==='sleepy')blocks(ctx,[[30,40,5,1,'eye0'],[34,41,2,1,'skin0']]);
     else if(expression==='happy')blocks(ctx,[[29,39,2,2,'eye0'],[31,41,4,2,'eye0'],[35,39,2,2,'eye0']]);
     else blocks(ctx,[[30,40,5,1,'eye0'],[34,41,2,1,'eye0']]);
