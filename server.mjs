@@ -1324,7 +1324,7 @@ function renderMediaPage(req,kind,media) {
       {'@type':'ListItem',position:3,name:media.title}
     ]
   };
-  const jsonLd = JSON.stringify({'@context':'https://schema.org','@graph':[seriesSchema,breadcrumbSchema]}).replace(/</g,'\\\\u003c');
+  const jsonLd = JSON.stringify({'@context':'https://schema.org','@graph':[seriesSchema,breadcrumbSchema]}).replace(/</g,'\\u003c');
   const coverHtml = cover ? '<img class="detail-cover" src="'+htmlEscape(cover)+'" alt="Cover artwork for '+htmlEscape(media.title)+' ('+label+')" title="Cover artwork for '+htmlEscape(media.title)+'" width="280" height="420" fetchpriority="high" decoding="async" referrerpolicy="no-referrer">' : '<div class="detail-cover detail-cover-missing" role="img" aria-label="No cover artwork available">H</div>';
   const detailBackdropHtml = cover ? '<div class="detail-art-backdrop" aria-hidden="true"><img src="'+htmlEscape(cover)+'" alt="" fetchpriority="high" decoding="async" referrerpolicy="no-referrer"></div>' : '<div class="detail-art-backdrop detail-art-backdrop-empty" aria-hidden="true"></div>';
   const metaImage = cover || (origin + '/assets/hekomi-social.svg');
