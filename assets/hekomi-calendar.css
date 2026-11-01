@@ -72,3 +72,56 @@
  .hk-calendar-day-cell .hk-cal-event-count{min-width:15px;padding:0 3px}
 }
 @media(prefers-reduced-motion:reduce){.hk-calendar-day-cell,.hk-cal-event,.hk-calendar-toolbar button{transition:none}}
+
+
+/* Motion system: calm, directional and lightweight */
+.hk-calendar-month-label h3{transition:opacity .22s ease,transform .32s cubic-bezier(.2,.75,.25,1)}
+.hk-calendar-grid{transform-origin:50% 0}
+.hk-calendar-grid.is-changing{animation:hk-calendar-month-in .42s cubic-bezier(.2,.75,.25,1) both}
+.hk-calendar-grid.is-changing .hk-calendar-day-cell:not(.is-outside){animation:hk-calendar-tile-in .34s cubic-bezier(.2,.75,.25,1) both;animation-delay:calc(min(var(--hk-tile-index,0),27)*9ms)}
+.hk-calendar-day-cell{will-change:transform,background-color,border-color}
+.hk-calendar-day-cell:active:not(:disabled){transform:scale(.94)}
+.hk-calendar-day-cell.is-selected{animation:hk-calendar-select .28s cubic-bezier(.2,.8,.2,1) both}
+.hk-calendar-day-cell.is-today .hk-cal-day-number{transition:color .2s ease,text-shadow .2s ease}
+.hk-calendar-day-cell.is-selected .hk-cal-day-number{color:var(--violet,#b9a6ff)}
+.hk-calendar-day-cell.is-selected .hk-cal-event-count{background:rgba(185,166,255,.2);color:var(--violet,#b9a6ff)}
+.hk-calendar-day{transition:border-color .25s ease,background-color .25s ease}
+.hk-calendar-events.is-updating{animation:hk-calendar-panel-in .28s ease both}
+.hk-cal-event{animation:hk-calendar-event-in .34s cubic-bezier(.2,.75,.25,1) both;animation-delay:calc(var(--hk-event-index,0)*45ms)}
+.hk-cal-event:hover{transform:translateY(-1px)}
+.hk-calendar-toolbar button:active{transform:scale(.96)}
+.hk-calendar-toolbar .hk-cal-arrow{transition:transform .2s cubic-bezier(.2,.8,.2,1),border-color .18s,background .18s}
+.hk-calendar-toolbar .hk-cal-arrow:hover{transform:translateY(-2px)}
+.hk-calendar-toolbar .hk-cal-today:hover{transform:translateY(-1px)}
+.hk-calendar-toolbar button:focus-visible,.hk-calendar-day-cell:focus-visible{outline:2px solid var(--violet,#b9a6ff);outline-offset:3px}
+@keyframes hk-calendar-month-in{
+  from{opacity:.35;transform:translate3d(var(--hk-cal-shift,12px),5px,0) scale(.992);filter:blur(2px)}
+  to{opacity:1;transform:translate3d(0,0,0) scale(1);filter:blur(0)}
+}
+@keyframes hk-calendar-tile-in{
+  from{opacity:0;transform:translate3d(0,7px,0) scale(.97)}
+  to{opacity:1;transform:translate3d(0,0,0) scale(1)}
+}
+@keyframes hk-calendar-select{
+  0%{transform:scale(.92)}
+  65%{transform:scale(1.035)}
+  100%{transform:scale(1)}
+}
+@keyframes hk-calendar-panel-in{
+  from{opacity:.55;transform:translateY(5px)}
+  to{opacity:1;transform:translateY(0)}
+}
+@keyframes hk-calendar-event-in{
+  from{opacity:0;transform:translateY(8px)}
+  to{opacity:1;transform:translateY(0)}
+}
+@media(max-width:760px){
+  .hk-calendar-grid.is-changing{animation-duration:.32s}
+  .hk-cal-event{animation-duration:.28s}
+}
+@media(prefers-reduced-motion:reduce){
+  .hk-calendar-grid.is-changing,.hk-calendar-grid.is-changing .hk-calendar-day-cell:not(.is-outside),
+  .hk-calendar-day-cell.is-selected,.hk-calendar-events.is-updating,.hk-cal-event{animation:none!important}
+  .hk-calendar-day-cell,.hk-cal-event,.hk-calendar-toolbar button,.hk-calendar-day,
+  .hk-calendar-month-label h3,.hk-calendar-day-cell .hk-cal-day-number{transition:none!important}
+}
