@@ -15,7 +15,10 @@
   const fmtDay=new Intl.DateTimeFormat('en-US',{timeZone:'UTC',weekday:'long',month:'long',day:'numeric',year:'numeric'});
   const fmtMonth=new Intl.DateTimeFormat('en-US',{timeZone:'UTC',month:'long',year:'numeric'});
   function setMonth(year,month,day){
+    const previous=state.year&&state.month?Date.UTC(state.year,state.month-1,1):0;
     const normalized=new Date(Date.UTC(year,month-1,1));
+    const next=Date.UTC(normalized.getUTCFullYear(),normalized.getUTCMonth(),1);
+    state.direction=previous&&next<previous?-1:1;
     state.year=normalized.getUTCFullYear();state.month=normalized.getUTCMonth()+1;
     const last=new Date(Date.UTC(state.year,state.month,0)).getUTCDate();
     state.selected=keyFor(state.year,state.month,Math.max(1,Math.min(last,Number(day)||1)));
@@ -26,6 +29,11 @@
   }
   function renderEvents(){
     selectedLabel.textContent=fmtDay.format(dateFromKey(state.selected));
+    eventsNode.classList.remove('is-updating');
+    if(!window.matchMedia('(prefers-reduced-motion: reduce)').matches){
+      void eventsNode.offsetWidth;
+      eventsNode.classList.add('is-updating');
+    }
     const items=selectedItems();
     el('hkCalDayCount').textContent=state.loading?'LOADING':items.length+' '+(items.length===1?'BROADCAST':'BROADCASTS');
     if(state.loading){eventsNode.innerHTML='<div class="hk-cal-loading">Loading broadcast records…</div>';return;}
@@ -39,7 +47,7 @@
       const channel=item.channel?'<span>'+escape(item.channel)+'</span>':'';
       const type=item.isPremiere?'PREMIERE':item.listingType||'TV';
       return '<article class="hk-cal-event" data-state="'+escape(item.status)+'"><div class="hk-cal-event-time">'+escape(item.time||'—')+'<small style="display:block;color:var(--muted);font-size:8px;font-weight:600">JST</small></div><div><h4><a href="'+escape(item.url||'https://cal.syoboi.jp/')+'" target="_blank" rel="noopener noreferrer">'+escape(item.title)+'</a></h4><p class="hk-cal-event-subtitle">'+episode+'</p>'+subtitle+run+'<div class="hk-cal-event-meta"><span>'+escape(type)+'</span>'+channel+'<span class="hk-cal-event-state">'+stateLabel+'</span></div></div></article>';
-    }).join('');
+    }).map((markup,index)=>markup.replace('<article class="hk-cal-event"','<article style="--hk-event-index:'+index+'" class="hk-cal-event"')).join('');
   }
   function renderGrid(){
     const offset=new Date(Date.UTC(state.year,state.month-1,1)).getUTCDay();
@@ -57,6 +65,13 @@
       html.push('<button type="button" class="'+classes+'" data-calendar-date="'+key+'" aria-pressed="'+(key===state.selected)+'" aria-label="'+key+(count?', '+count+' broadcasts':'')+'"><span class="hk-cal-day-number">'+day+'</span>'+countHtml+'</button>');
     }
     grid.innerHTML=html.join('');
+    grid.querySelectorAll('.hk-calendar-day-cell:not(.is-outside)').forEach((cell,index)=>cell.style.setProperty('--hk-tile-index',index));
+    grid.style.setProperty('--hk-cal-shift',(state.direction||1)>0?'12px':'-12px');
+    grid.classList.remove('is-changing');
+    if(!window.matchMedia('(prefers-reduced-motion: reduce)').matches){
+      void grid.offsetWidth;
+      grid.classList.add('is-changing');
+    }
     monthLabel.textContent=fmtMonth.format(new Date(Date.UTC(state.year,state.month-1,1)));
     el('hkCalMonthTotal').textContent=state.loading?'UPDATING…':state.error?'SOURCE ERROR':state.programs.length+' '+(state.programs.length===1?'ENTRY':'ENTRIES');
     renderEvents();
