@@ -1183,6 +1183,90 @@ async function fetchAllAnimeCollection({season=null,seasonYear=null,status=null}
   return {anime:all,total,hasMore:hasNextPage,source:'AniList',pagesFetched:page-1};
 }
 
+const syoboiCalendarCache = new Map();
+const syoboiCalendarInFlight = new Map();
+function syoboiRows(value) {
+  if (Array.isArray(value)) return value.map(entry => Array.isArray(entry) ? entry[1] : entry).filter(item => item && typeof item === 'object');
+  if (value && typeof value === 'object') return Object.values(value).filter(item => item && typeof item === 'object');
+  return [];
+}
+function parseSyoboiDate(value) {
+  if (value == null || value === '') return null;
+  if (typeof value === 'number' || /^\d{10,13}$/.test(String(value))) {
+    const number = Number(value);
+    if (Number.isFinite(number) && number > 1000000000 && number < 10000000000000) {
+      const date = new Date(number < 100000000000 ? number * 1000 : number);
+      return Number.isNaN(date.getTime()) ? null : date;
+    }
+  }
+  const raw = String(value).trim();
+  const compact = raw.match(/^(\d{4})(\d{2})(\d{2})[_T ]?(\d{2})(\d{2})(\d{2})$/);
+  if (compact) {
+    const [,y,m,d,h,minute,second] = compact;
+    return new Date(Date.UTC(Number(y),Number(m)-1,Number(d),Number(h)-9,Number(minute),Number(second)));
+  }
+  const separated = raw.match(/^(\d{4})[-/](\d{2})[-/](\d{2})[ T](\d{1,2}):(\d{2})(?::(\d{2}))?/);
+  if (separated) {
+    const [,y,m,d,h,minute,second='0'] = separated;
+    return new Date(Date.UTC(Number(y),Number(m)-1,Number(d),Number(h)-9,Number(minute),Number(second)));
+  }
+  const parsed = new Date(raw);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+function syoboiDateKey(date) {
+  const parts = new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Tokyo',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(date);
+  const part = type => parts.find(item=>item.type===type)?.value || '00';
+  return part('year')+'-'+part('month')+'-'+part('day');
+}
+async function getSyoboiCalendar(rawStart,rawDays) {
+  const start=String(rawStart||''),days=Math.floor(Number(rawDays)||0);
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(start)||days<1||days>32)throw new Error('Choose a valid calendar month.');
+  const startDate=new Date(start+'T00:00:00Z');
+  if(Number.isNaN(startDate.getTime())||startDate.toISOString().slice(0,10)!==start)throw new Error('Choose a valid calendar date.');
+  const key=start+':'+days,cached=syoboiCalendarCache.get(key);
+  if(cached&&Date.now()<cached.expiresAt)return cached.data;
+  if(syoboiCalendarInFlight.has(key))return syoboiCalendarInFlight.get(key);
+  const request=(async()=>{
+    try {
+      const endpoint=new URL('https://cal.syoboi.jp/json.php');
+      endpoint.searchParams.set('Req','ProgramByDate,TitleLarge');
+      endpoint.searchParams.set('start',start);
+      endpoint.searchParams.set('days',String(days));
+      const response=await fetch(endpoint,{headers:{'Accept':'application/json','User-Agent':'Hekomi/0.4 (+https://hekomi.vercel.app; anime broadcast calendar)'},signal:AbortSignal.timeout(14000)});
+      if(!response.ok)throw new Error('Syoboi Calendar returned HTTP '+response.status+'.');
+      const payload=await response.json();
+      const titleRows=syoboiRows(payload&&payload.Titles),programRows=syoboiRows(payload&&payload.Programs);
+      if(!payload||!payload.Programs||typeof payload.Programs!=='object')throw new Error('Syoboi Calendar returned an unexpected schedule response.');
+      const titles=new Map(titleRows.map(item=>[String(item.TID),item])),now=Date.now();
+      const programs=programRows.map(item=>{
+        const tid=String(item.TID||''),title=titles.get(tid)||{},category=Number(title.Cat);
+        if(![1,7,10].includes(category))return null;
+        const startAt=parseSyoboiDate(item.StTime);
+        if(!startAt)return null;
+        const episodeNumber=Number(item.Count);
+        return {
+          id:String(item.PID||tid+'-'+item.StTime),tid:Number(tid)||null,
+          title:String(title.Title||title.ShortTitle||item.Title||'Untitled anime'),
+          shortTitle:String(title.ShortTitle||''),
+          episode:Number.isFinite(episodeNumber)&&episodeNumber>0?episodeNumber:null,
+          subtitle:String(item.SubTitle||item.SubTitle2||''),channel:String(item.ChName||''),
+          date:syoboiDateKey(startAt),airingAt:startAt.toISOString(),
+          time:new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Tokyo',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(startAt),
+          status:startAt.getTime()>now?'upcoming':'aired',category,
+          url:Number(tid)>0?'https://cal.syoboi.jp/tid/'+Number(tid):'https://cal.syoboi.jp/'
+        };
+      }).filter(Boolean).sort((a,b)=>a.airingAt.localeCompare(b.airingAt));
+      const data={start,days,programs,total:programs.length,source:'Syoboi Calendar',timezone:'Asia/Tokyo',updatedAt:new Date().toISOString()};
+      const isHistorical=startDate.getTime()+days*86400000<now;
+      syoboiCalendarCache.set(key,{data,expiresAt:Date.now()+(isHistorical?12*60*60*1000:10*60*1000)});
+      if(syoboiCalendarCache.size>48)syoboiCalendarCache.delete(syoboiCalendarCache.keys().next().value);
+      return data;
+    } finally { syoboiCalendarInFlight.delete(key); }
+  })();
+  syoboiCalendarInFlight.set(key,request);
+  return request;
+}
+
 async function getPublicCatalog(force=false) {
   if (!force && publicCatalogCache.data && Date.now() < publicCatalogCache.expiresAt) return publicCatalogCache.data;
   if (publicCatalogInFlight) return publicCatalogInFlight;
@@ -1629,6 +1713,14 @@ const server=http.createServer(async(req,res)=>{
     return res.end('User-agent: *\nAllow: /\nDisallow: /api/\nSitemap: '+base+'/sitemap.xml\n');
   }
   if(req.method==='GET' && url.pathname==='/sitemap.xml') return serveSitemap(req,res);
+  if(req.method==='GET' && url.pathname==='/api/calendar') {
+    try {
+      const data=await getSyoboiCalendar(url.searchParams.get('start'),url.searchParams.get('days'));
+      return send(res,200,data,{'Cache-Control':'public, max-age=300, stale-while-revalidate=900'});
+    } catch(e) {
+      return send(res,502,{error:'The anime broadcast calendar could not be loaded. '+(e.message||'Please try again shortly.')});
+    }
+  }
   if(req.method==='GET' && url.pathname==='/api/catalog') {
     try { return send(res,200,await getPublicCatalog(url.searchParams.get('refresh')==='1'),{'Cache-Control':'public, max-age=300'}); }
     catch(e) { return send(res,502,{error:'The public catalog is temporarily unavailable. '+(e.message||'')}); }
