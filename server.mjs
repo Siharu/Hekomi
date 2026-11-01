@@ -1320,7 +1320,7 @@ function renderMediaPage(req,kind,media) {
     '@type':'BreadcrumbList',
     itemListElement:[
       {'@type':'ListItem',position:1,name:'Home',item:origin+'/'},
-      {'@type':'ListItem',position:2,name:label,item:origin+'/discover'},
+      {'@type':'ListItem',position:2,name:label,item:origin+'/catalog/'+kind},
       {'@type':'ListItem',position:3,name:media.title}
     ]
   };
@@ -1365,7 +1365,7 @@ body[data-detail-genre="drama"] .detail-art-backdrop{--detail-accent:#b2a1d8}
 @media(prefers-color-scheme:light){.detail-art-backdrop img{opacity:.14}.detail-art-backdrop:after{background:linear-gradient(180deg,#f6f1f988 0%,#f6f1f9e8 50%,#f6f1f9 100%),linear-gradient(90deg,#f6f1f9dd,transparent 70%)}}
 </style>`;
   const trailerPlayerScript = trailerVideoId ? '<script>(function(){document.querySelectorAll("[data-trailer-play]").forEach(function(button){button.addEventListener("click",function(){var id=button.getAttribute("data-trailer-id");if(!/^[A-Za-z0-9_-]{11}$/.test(id||""))return;var stage=button.closest("[data-trailer-stage]");if(!stage)return;var frame=document.createElement("iframe");frame.src="https://www.youtube-nocookie.com/embed/"+encodeURIComponent(id)+"?autoplay=1&playsinline=1&rel=0";frame.title="YouTube anime trailer";frame.allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share";frame.allowFullscreen=true;frame.referrerPolicy="strict-origin-when-cross-origin";frame.loading="eager";stage.replaceChildren(frame);},{once:true});});})();</script>' : '';
-  const genreTags = (media.genres||[]).map(g=>'<span class="genre-pill">'+htmlEscape(g)+'</span>').join('');
+  const genreTags = (media.genres||[]).map(g=>{const name=String(g||'');const match=SEO_GENRES.find(item=>item.name.toLowerCase()===name.toLowerCase());return match?'<a class="genre-pill" href="/genres/'+kind+'/'+match.slug+'">'+htmlEscape(name)+'</a>':'<span class="genre-pill">'+htmlEscape(name)+'</span>';}).join('');
   const descriptionHtml = synopsis ? '<p class="detail-synopsis">'+htmlEscape(synopsis).replace(/\n/g,'<br>')+'</p>' : '<p class="detail-synopsis">No synopsis is available from the catalog source yet.</p>';
   return [
     '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">',
@@ -1376,9 +1376,9 @@ body[data-detail-genre="drama"] .detail-art-backdrop{--detail-accent:#b2a1d8}
     '<script type="application/ld+json">'+jsonLd+'</script>',
     trailerStyles,
     detailVisualStyles,
-    '<style>*{box-sizing:border-box}body{margin:0;min-height:100vh;color:#f2f4f8;background:radial-gradient(ellipse at 75% 0,rgba(116,75,160,.2),transparent 45%),#080916;font:16px/1.65 Inter,ui-sans-serif,system-ui,-apple-system,sans-serif}.detail-wrap{width:min(1120px,calc(100% - 36px));margin:auto}.detail-header{height:76px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #292d4b}.detail-brand{color:#c6b7ff;font-weight:850;font-size:21px;text-decoration:none;letter-spacing:.03em}.detail-back{color:#c6b7ff;text-decoration:none;font-size:13px}.breadcrumbs{margin:25px 0;color:#9ca4c4;font-size:12px}.breadcrumbs a{color:#b9a6ff;text-decoration:none}.detail-hero{display:grid;grid-template-columns:minmax(180px,280px) minmax(0,1fr);gap:clamp(25px,5vw,65px);align-items:start;padding:20px 0 45px}.detail-cover{display:block;width:100%;height:auto;aspect-ratio:2/3;object-fit:cover;border-radius:15px;border:1px solid #ffffff1c;background:#151327;box-shadow:0 25px 55px #0008}.detail-cover-missing{display:grid;place-items:center;color:#b9a6ff;font-size:70px}.detail-type{color:#8be1cf;font-size:11px;letter-spacing:.17em;font-weight:850;text-transform:uppercase}.detail-title{font-size:clamp(32px,5vw,55px);line-height:1.05;letter-spacing:-.05em;margin:9px 0 13px}.detail-score{display:inline-flex;gap:8px;align-items:center;padding:7px 11px;border-radius:9px;background:#19172a;border:1px solid #41385b;color:#e3d7ff;font-weight:750;font-size:13px}.detail-genres{display:flex;gap:7px;flex-wrap:wrap;margin:16px 0}.genre-pill{font-size:12px;color:#c4bdd9;border:1px solid #39334a;border-radius:99px;padding:5px 9px}.detail-synopsis{margin:18px 0 23px;color:#c3c5d1;white-space:normal}.detail-actions{display:flex;flex-wrap:wrap;gap:10px}.detail-primary,.detail-secondary{display:inline-flex;align-items:center;justify-content:center;text-decoration:none;padding:10px 15px;border-radius:11px;font-weight:750;font-size:13px}.detail-primary{background:#b9a6ff;color:#171222}.detail-secondary{border:1px solid #39334a;color:#e8e3f3}.detail-info{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin:0 0 28px}.info-cell{border:1px solid #292d4b;background:#101327;border-radius:12px;padding:12px}.info-cell dt{font-size:11px;color:#9ca4c4;text-transform:uppercase;letter-spacing:.08em}.info-cell dd{margin:5px 0 0;font-size:14px;font-weight:750}.detail-credit{border-top:1px solid #292d4b;padding:19px 0 35px;color:#8f96ad;font-size:11px}.detail-credit a{color:#b9a6ff}@media(max-width:650px){.detail-hero{grid-template-columns:110px minmax(0,1fr);gap:17px;padding-top:8px}.detail-title{font-size:28px}.detail-cover{border-radius:9px}.detail-synopsis{grid-column:1/-1;margin-top:10px}.detail-info{grid-template-columns:repeat(2,minmax(0,1fr))}.detail-header{height:64px}.detail-wrap{width:calc(100% - 26px)}}@media(prefers-color-scheme:light){body{background:#f6f1f9;color:#282333}.detail-header,.detail-credit{border-color:#ded2e5}.detail-brand,.breadcrumbs a,.detail-back,.detail-credit a{color:#7050a4}.detail-type{color:#287a6b}.detail-score{background:#eee6f6;border-color:#d9cae8;color:#4c3670}.genre-pill,.detail-secondary{color:#554563;border-color:#ded2e5}.detail-synopsis{color:#61576a}.info-cell{background:#fffaff;border-color:#ded2e5}.info-cell dt{color:#756b7b}.detail-primary{background:#7050a4;color:#fff}}</style>',
+    '<style>*{box-sizing:border-box}body{margin:0;min-height:100vh;color:#f2f4f8;background:radial-gradient(ellipse at 75% 0,rgba(116,75,160,.2),transparent 45%),#080916;font:16px/1.65 Inter,ui-sans-serif,system-ui,-apple-system,sans-serif}.detail-wrap{width:min(1120px,calc(100% - 36px));margin:auto}.detail-header{height:76px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #292d4b}.detail-brand{color:#c6b7ff;font-weight:850;font-size:21px;text-decoration:none;letter-spacing:.03em}.detail-back{color:#c6b7ff;text-decoration:none;font-size:13px}.breadcrumbs{margin:25px 0;color:#9ca4c4;font-size:12px}.breadcrumbs a{color:#b9a6ff;text-decoration:none}.detail-hero{display:grid;grid-template-columns:minmax(180px,280px) minmax(0,1fr);gap:clamp(25px,5vw,65px);align-items:start;padding:20px 0 45px}.detail-cover{display:block;width:100%;height:auto;aspect-ratio:2/3;object-fit:cover;border-radius:15px;border:1px solid #ffffff1c;background:#151327;box-shadow:0 25px 55px #0008}.detail-cover-missing{display:grid;place-items:center;color:#b9a6ff;font-size:70px}.detail-type{color:#8be1cf;font-size:11px;letter-spacing:.17em;font-weight:850;text-transform:uppercase}.detail-title{font-size:clamp(32px,5vw,55px);line-height:1.05;letter-spacing:-.05em;margin:9px 0 13px}.detail-score{display:inline-flex;gap:8px;align-items:center;padding:7px 11px;border-radius:9px;background:#19172a;border:1px solid #41385b;color:#e3d7ff;font-weight:750;font-size:13px}.detail-genres{display:flex;gap:7px;flex-wrap:wrap;margin:16px 0}.genre-pill{text-decoration:none;transition:background .2s,border-color .2s}.genre-pill:hover{background:#ffffff10;border-color:#8e82b4}.genre-pill{font-size:12px;color:#c4bdd9;border:1px solid #39334a;border-radius:99px;padding:5px 9px}.detail-synopsis{margin:18px 0 23px;color:#c3c5d1;white-space:normal}.detail-actions{display:flex;flex-wrap:wrap;gap:10px}.detail-primary,.detail-secondary{display:inline-flex;align-items:center;justify-content:center;text-decoration:none;padding:10px 15px;border-radius:11px;font-weight:750;font-size:13px}.detail-primary{background:#b9a6ff;color:#171222}.detail-secondary{border:1px solid #39334a;color:#e8e3f3}.detail-info{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin:0 0 28px}.info-cell{border:1px solid #292d4b;background:#101327;border-radius:12px;padding:12px}.info-cell dt{font-size:11px;color:#9ca4c4;text-transform:uppercase;letter-spacing:.08em}.info-cell dd{margin:5px 0 0;font-size:14px;font-weight:750}.detail-credit{border-top:1px solid #292d4b;padding:19px 0 35px;color:#8f96ad;font-size:11px}.detail-credit a{color:#b9a6ff}@media(max-width:650px){.detail-hero{grid-template-columns:110px minmax(0,1fr);gap:17px;padding-top:8px}.detail-title{font-size:28px}.detail-cover{border-radius:9px}.detail-synopsis{grid-column:1/-1;margin-top:10px}.detail-info{grid-template-columns:repeat(2,minmax(0,1fr))}.detail-header{height:64px}.detail-wrap{width:calc(100% - 26px)}}@media(prefers-color-scheme:light){body{background:#f6f1f9;color:#282333}.detail-header,.detail-credit{border-color:#ded2e5}.detail-brand,.breadcrumbs a,.detail-back,.detail-credit a{color:#7050a4}.detail-type{color:#287a6b}.detail-score{background:#eee6f6;border-color:#d9cae8;color:#4c3670}.genre-pill,.detail-secondary{color:#554563;border-color:#ded2e5}.detail-synopsis{color:#61576a}.info-cell{background:#fffaff;border-color:#ded2e5}.info-cell dt{color:#756b7b}.detail-primary{background:#7050a4;color:#fff}}</style>',
     '</head><body data-detail-genre="'+detailGenre+'">'+detailBackdropHtml+'<div class="detail-wrap"><header class="detail-header"><a class="detail-brand" href="/">Hekomi</a><a class="detail-back" href="/">← Back to discovery</a></header>',
-    '<nav class="breadcrumbs" aria-label="Breadcrumb"><a href="/">Home</a> / <a href="/discover">'+label+'</a> / <span aria-current="page">'+htmlEscape(media.title)+'</span></nav>',
+    '<nav class="breadcrumbs" aria-label="Breadcrumb"><a href="/">Home</a> / <a href="/catalog/'+kind+'">'+label+'</a> / <span aria-current="page">'+htmlEscape(media.title)+'</span></nav>',
     '<main><article class="detail-article"><section class="detail-hero"><div>'+coverHtml+'</div><div><div class="detail-type">'+label+' / '+htmlEscape(media.format||'SERIES')+'</div><h1 class="detail-title">'+htmlEscape(media.title)+'</h1><div class="detail-score">★ '+score+'</div><div class="detail-genres">'+genreTags+'</div>'+descriptionHtml+'<div class="detail-actions"><a class="detail-primary" href="/">Explore Hekomi ↗</a><a class="detail-secondary" href="https://anilist.co/'+kind+'/'+Number(media.id)+'/" target="_blank" rel="noreferrer">Source details ↗</a>'+malLink+'</div></div></section>',
     trailerHtml,
     trailerPlayerScript,
@@ -1386,9 +1386,146 @@ body[data-detail-genre="drama"] .detail-art-backdrop{--detail-accent:#b2a1d8}
     '<footer class="detail-credit">Catalog metadata supplied by <a href="https://anilist.co/" target="_blank" rel="noreferrer">AniList</a>. Cover artwork belongs to its respective rights holders. Hekomi is an independent project and is not affiliated with AniList, MyAnimeList, studios, or publishers.</footer></div></body></html>'
   ].join('');
 }
+
+const SEO_GENRES = [
+  {
+    slug:'action',name:'Action',
+    anime:'Action anime puts momentum first: high-pressure confrontations, training arcs, tactical fights and characters forced to adapt. This collection is a starting point for exploring the genre, with a full series page behind every title.',
+    manga:'Explore action manga built around decisive clashes, ambitious journeys and characters tested by difficult choices. Each listing opens a title page with its catalog synopsis, genres and available details.'
+  },
+  {
+    slug:'adventure',name:'Adventure',
+    anime:'Adventure anime is about the pull of the unknown: unfamiliar places, long journeys, discoveries and the people met along the way. Browse popular starting points and follow the detail pages to compare each series.',
+    manga:'Adventure manga follows journeys that keep expanding, from new worlds and strange places to personal quests. This collection makes it easier to move from one premise to the next without relying on a title search.'
+  },
+  {
+    slug:'fantasy',name:'Fantasy',
+    anime:'Fantasy anime ranges from elaborate magic systems and other worlds to folklore, myth and quiet wonder. Use this collection to explore different kinds of fantasy, then open each series for its synopsis and catalog details.',
+    manga:'Discover fantasy manga shaped by magic, mythology, invented worlds and unusual rules. The titles below are drawn from the live catalog, so each series page can be checked before adding it to a reading list.'
+  },
+  {
+    slug:'horror',name:'Horror',
+    anime:'Horror anime explores dread in many forms, including supernatural threats, unsettling mysteries and psychological fear. Start with the titles below and compare their premises, genres and release information.',
+    manga:'Horror manga can build tension through the uncanny, body horror, folklore or an atmosphere that slowly turns hostile. Browse the current catalog and open a series page for its synopsis and listed genres.'
+  },
+  {
+    slug:'mystery',name:'Mystery',
+    anime:'Mystery anime rewards attention: hidden motives, incomplete clues and stories that invite you to question what you have seen. This collection is a practical route into mystery titles from the wider anime catalog.',
+    manga:'Explore mystery manga where secrets, investigations and uncertain motives drive the story. Each listing leads to a detail page, making it easier to compare premises before choosing what to read.'
+  },
+  {
+    slug:'psychological',name:'Psychological',
+    anime:'Psychological anime turns inward, examining perception, pressure, identity and the choices people make under stress. Browse the popular catalog picks below and open a title to read its full synopsis and metadata.',
+    manga:'Psychological manga focuses on inner conflict, shifting perspectives and the tension between what characters believe and what is true. Explore the live catalog below rather than relying on a static recommendation list.'
+  },
+  {
+    slug:'romance',name:'Romance',
+    anime:'Romance anime covers everything from quiet character studies to dramatic relationships and comedy. This collection gives you a genre-first way to discover titles and compare their catalog details.',
+    manga:'Find romance manga across different tones, from gentle everyday relationships to high-drama stories. Open any title for its synopsis, genre information and available publication details.'
+  },
+  {
+    slug:'sci-fi',name:'Sci-Fi',
+    anime:'Science-fiction anime uses technology, space, speculative futures and unfamiliar systems to explore what might come next. Browse the titles below and follow their detail pages for more context.',
+    manga:'Sci-fi manga explores imagined technologies, futures and realities, from grounded speculation to far-reaching space stories. This collection links directly to individual series pages in the Hekomi catalog.'
+  },
+  {
+    slug:'slice-of-life',name:'Slice of Life',
+    anime:'Slice of life anime finds its stories in everyday routines, friendships, family and small changes over time. Explore the catalog below for a calmer route into anime discovery.',
+    manga:'Slice of life manga gives everyday moments room to matter, following relationships, routines and gradual personal change. Browse current catalog entries and open each title for its synopsis.'
+  },
+  {
+    slug:'supernatural',name:'Supernatural',
+    anime:'Supernatural anime brings spirits, unexplained phenomena and otherworldly rules into its stories. Browse the available titles below and use each detail page to check the premise and genres.',
+    manga:'Explore supernatural manga about spirits, strange encounters and the hidden side of ordinary places. The listings connect to individual series pages with source metadata and synopses.'
+  }
+];
+
+function seoCatalogPath(kind, genre) {
+  return genre ? '/genres/' + kind + '/' + genre.slug : '/catalog/' + kind;
+}
+
+function renderSeoCatalogPage(req, kind, genre, items) {
+  const origin = publicOrigin(req);
+  const isAnime = kind === 'anime';
+  const kindLabel = isAnime ? 'Anime' : 'Manga';
+  const title = genre
+    ? 'Popular ' + genre.name + ' ' + kindLabel + ' to Discover | Hekomi'
+    : (isAnime ? 'Anime Discovery & Popular Series | Hekomi' : 'Manga Discovery & Popular Series | Hekomi');
+  const description = genre
+    ? (genre.name + ' ' + kindLabel.toLowerCase() + ': ' + genre[isAnime ? 'anime' : 'manga']).replace(/\s+/g,' ').slice(0,158)
+    : (isAnime
+      ? 'Explore popular anime by genre, compare series synopses and open detailed catalog pages for release information, scores and more.'
+      : 'Explore popular manga by genre, compare series synopses and open detailed catalog pages for story information, genres and more.');
+  const canonicalPath = seoCatalogPath(kind, genre);
+  const canonical = origin + canonicalPath;
+  const heading = genre ? 'Explore ' + genre.name + ' ' + kindLabel : 'Explore ' + kindLabel;
+  const intro = genre
+    ? genre[isAnime ? 'anime' : 'manga']
+    : (isAnime
+      ? 'A genre-first way to find your next series. Browse popular anime, move between themes, and open a title for its synopsis, genres, score and release details.'
+      : 'A genre-first way to find your next read. Browse popular manga, move between themes, and open a title for its synopsis, genres and available publication details.');
+  const safeItems = (Array.isArray(items) ? items : []).filter(item => Number.isSafeInteger(Number(item.id)) && Number(item.id) > 0).slice(0,24);
+  const itemList = safeItems.map((item,index) => ({
+    '@type':'ListItem',
+    position:index + 1,
+    name:item.title,
+    url:origin + '/series/' + kind + '/' + Number(item.id) + '-' + mediaSlug(item.title)
+  }));
+  const jsonLd = JSON.stringify({
+    '@context':'https://schema.org',
+    '@graph':[
+      {'@type':'CollectionPage',name:title,description,url:canonical,isPartOf:{'@type':'WebSite',name:'Hekomi',url:origin+'/'}},
+      {'@type':'ItemList',name:heading + ' catalog',itemListElement:itemList},
+      {'@type':'BreadcrumbList',itemListElement:[
+        {'@type':'ListItem',position:1,name:'Home',item:origin+'/'},
+        {'@type':'ListItem',position:2,name:kindLabel,item:origin+'/catalog/'+kind},
+        ...(genre ? [{'@type':'ListItem',position:3,name:genre.name + ' ' + kindLabel,item:canonical}] : [])
+      ]}
+    ]
+  }).replace(/</g,'\\u003c');
+  const genreNav = SEO_GENRES.map(entry => {
+    const selected = genre && genre.slug === entry.slug;
+    return '<a class="genre-link' + (selected ? ' is-current' : '') + '" href="' + seoCatalogPath(kind,entry) + '"' + (selected ? ' aria-current="page"' : '') + '>' + htmlEscape(entry.name) + '</a>';
+  }).join('');
+  const cards = safeItems.map(item => {
+    const itemUrl = '/series/' + kind + '/' + Number(item.id) + '-' + mediaSlug(item.title);
+    const cover = item.cover && /^https:\/\//i.test(item.cover) ? item.cover : '';
+    const score = Number(item.averageScore) > 0 ? (Number(item.averageScore)/10).toFixed(1) : '';
+    const synopsis = String(item.description || '').replace(/\s+/g,' ').trim();
+    const shortSynopsis = synopsis.length > 190 ? synopsis.slice(0,187).replace(/\s+\S*$/,'') + '…' : synopsis;
+    const coverHtml = cover
+      ? '<img src="' + htmlEscape(cover) + '" alt="Cover artwork for ' + htmlEscape(item.title) + '" loading="lazy" decoding="async" width="160" height="240" referrerpolicy="no-referrer">'
+      : '<span class="cover-fallback" aria-hidden="true">H</span>';
+    const status = String(item.status || '').replace(/_/g,' ').toLowerCase().replace(/\b\w/g,ch=>ch.toUpperCase());
+    const format = String(item.format || '').replace(/_/g,' ');
+    return '<article class="series-card"><a class="series-cover" href="' + htmlEscape(itemUrl) + '">' + coverHtml + '</a><div class="series-copy"><div class="series-meta">' + (format ? '<span>' + htmlEscape(format) + '</span>' : '') + (status ? '<span>' + htmlEscape(status) + '</span>' : '') + (score ? '<span>★ ' + score + '/10</span>' : '') + '</div><h2><a href="' + htmlEscape(itemUrl) + '">' + htmlEscape(item.title) + '</a></h2><p>' + htmlEscape(shortSynopsis || 'Open the series page for its catalog synopsis and available details.') + '</p><a class="series-more" href="' + htmlEscape(itemUrl) + '">View series details <span aria-hidden="true">↗</span></a></div></article>';
+  }).join('');
+  const breadcrumb = '<nav class="crumbs" aria-label="Breadcrumb"><a href="/">Home</a><span>/</span><a href="/catalog/' + kind + '">' + kindLabel + '</a>' + (genre ? '<span>/</span><span aria-current="page">' + htmlEscape(genre.name) + '</span>' : '') + '</nav>';
+  const catalogLink = isAnime ? '/catalog/manga' : '/catalog/anime';
+  const otherLabel = isAnime ? 'Manga' : 'Anime';
+  const metaImage = origin + '/assets/hekomi-social.svg';
+  return [
+    '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">',
+    '<title>' + htmlEscape(title) + '</title><meta name="description" content="' + htmlEscape(description) + '">',
+    '<meta name="robots" content="index,follow,max-image-preview:large"><meta name="theme-color" content="#080916">',
+    '<link rel="canonical" href="' + htmlEscape(canonical) + '"><link rel="icon" href="/favicon.ico?v=20261101" type="image/x-icon" sizes="any">',
+    '<meta property="og:type" content="website"><meta property="og:site_name" content="Hekomi"><meta property="og:title" content="' + htmlEscape(title) + '"><meta property="og:description" content="' + htmlEscape(description) + '"><meta property="og:url" content="' + htmlEscape(canonical) + '"><meta property="og:image" content="' + htmlEscape(metaImage) + '">',
+    '<meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="' + htmlEscape(title) + '"><meta name="twitter:description" content="' + htmlEscape(description) + '"><meta name="twitter:image" content="' + htmlEscape(metaImage) + '">',
+    '<script type="application/ld+json">' + jsonLd + '</script>',
+    '<style>*{box-sizing:border-box}html{color-scheme:dark}body{margin:0;min-height:100vh;background:radial-gradient(ellipse at 82% 0,#68509a30,transparent 42%),#080916;color:#f1eff8;font:15px/1.65 Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}.catalog-shell{width:min(1160px,calc(100% - 40px));margin:auto}.catalog-header{height:76px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #29283d}.brand{font-size:22px;font-weight:850;letter-spacing:.025em;color:#cbbcff;text-decoration:none}.header-links{display:flex;gap:20px}.header-links a,.crumbs a{color:#b9a9e8;text-decoration:none;font-size:13px}.header-links a:hover,.crumbs a:hover{color:#e4dcff}.crumbs{display:flex;align-items:center;flex-wrap:wrap;gap:10px;margin:25px 0 20px;color:#85849a;font-size:12px}.catalog-hero{padding:28px 0 25px;max-width:820px}.eyebrow{color:#9ce4d2;font-size:10px;font-weight:850;letter-spacing:.2em;text-transform:uppercase}.catalog-hero h1{margin:8px 0 13px;font-size:clamp(34px,6vw,57px);line-height:1.04;letter-spacing:-.055em}.catalog-hero p{max-width:760px;margin:0;color:#b9b8c9;font-size:15px;line-height:1.8}.genre-nav{display:flex;gap:8px;flex-wrap:wrap;margin:22px 0 35px;padding:16px 0;border-top:1px solid #27263a;border-bottom:1px solid #27263a}.genre-link{padding:7px 11px;border:1px solid #37334b;border-radius:99px;color:#c7bddf;text-decoration:none;font-size:12px;transition:background .2s,border-color .2s}.genre-link:hover,.genre-link.is-current{background:#b9a6ff1a;border-color:#8875b8;color:#e6deff}.section-heading{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin:0 0 17px}.section-heading h2{margin:0;font-size:20px;letter-spacing:-.025em}.section-heading span{color:#9693a9;font-size:11px}.series-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.series-card{min-width:0;display:grid;grid-template-columns:112px minmax(0,1fr);gap:15px;padding:12px;border:1px solid #2a293d;border-radius:15px;background:linear-gradient(135deg,#171629d9,#101321e8);box-shadow:0 12px 30px #0002}.series-cover{display:block;overflow:hidden;align-self:start;aspect-ratio:2/3;border-radius:9px;background:#222035}.series-cover img{display:block;width:100%;height:100%;object-fit:cover;transition:transform .3s}.series-card:hover .series-cover img{transform:scale(1.035)}.cover-fallback{display:grid;place-items:center;width:100%;height:100%;color:#b9a6ff;font-size:42px}.series-copy{min-width:0;display:flex;flex-direction:column;align-items:flex-start}.series-meta{display:flex;gap:6px;flex-wrap:wrap;margin:2px 0 8px}.series-meta span{color:#a9e6d7;font-size:9px;text-transform:uppercase;letter-spacing:.07em}.series-meta span+span:before{content:"·";padding-right:6px;color:#5f5a76}.series-copy h2{margin:0 0 7px;font-size:16px;line-height:1.35;letter-spacing:-.02em}.series-copy h2 a{color:#f0ebfa;text-decoration:none}.series-copy p{margin:0;color:#aaa9ba;font-size:11px;line-height:1.65;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}.series-more{margin-top:auto;padding-top:10px;color:#c3b2ff;text-decoration:none;font-size:11px;font-weight:750}.catalog-note{margin:28px 0 0;padding:16px 0 25px;border-top:1px solid #29283d;color:#88869b;font-size:11px}.catalog-note a{color:#bdadf2}.catalog-footer{display:flex;flex-wrap:wrap;gap:10px 18px;padding:20px 0 32px;border-top:1px solid #29283d}.catalog-footer a{color:#a99dc9;text-decoration:none;font-size:12px}.catalog-footer a:hover{color:#eee7ff}@media(max-width:760px){.catalog-shell{width:calc(100% - 28px)}.catalog-header{height:64px}.header-links{gap:12px}.header-links a{font-size:11px}.series-grid{grid-template-columns:1fr}.catalog-hero{padding-top:22px}.series-card{grid-template-columns:100px minmax(0,1fr);gap:12px;padding:10px}.series-copy h2{font-size:15px}}@media(max-width:390px){.header-links{gap:8px}.header-links a{font-size:10px}.series-card{grid-template-columns:86px minmax(0,1fr)}.catalog-hero h1{font-size:35px}}@media(prefers-reduced-motion:reduce){.series-cover img,.genre-link{transition:none}}@media(prefers-color-scheme:light){html{color-scheme:light}body{background:radial-gradient(ellipse at 82% 0,#d8c8ee77,transparent 42%),#f7f3fa;color:#2c2636}.catalog-header,.genre-nav,.catalog-note,.catalog-footer{border-color:#e1d8e8}.brand{color:#7050a4}.header-links a,.crumbs a,.catalog-footer a{color:#765a9b}.crumbs{color:#8e8497}.catalog-hero p{color:#655d6e}.genre-link{border-color:#ded3e8;color:#655575}.genre-link:hover,.genre-link.is-current{background:#8c70b51a;border-color:#9b81bd;color:#543d76}.series-card{border-color:#e1d8e8;background:linear-gradient(135deg,#fffaff,#f3eef8);box-shadow:0 12px 30px #39234b0b}.series-copy h2 a{color:#2c2636}.series-copy p{color:#6c6474}.series-meta span{color:#397c70}.series-more{color:#7050a4}.catalog-note{color:#807587}}</style>',
+    '</head><body><div class="catalog-shell"><header class="catalog-header"><a class="brand" href="/">Hekomi</a><nav class="header-links" aria-label="Main navigation"><a href="/catalog/anime">Anime</a><a href="/catalog/manga">Manga</a><a href="/discover">Full discovery</a></nav></header>',
+    breadcrumb,
+    '<main><section class="catalog-hero"><div class="eyebrow">HEKOMI · GENRE-FIRST DISCOVERY</div><h1>' + htmlEscape(heading) + '</h1><p>' + htmlEscape(intro) + '</p></section>',
+    '<nav class="genre-nav" aria-label="' + kindLabel + ' genres">' + genreNav + '</nav>',
+    '<section aria-labelledby="catalog-list-heading"><div class="section-heading"><h2 id="catalog-list-heading">' + (genre ? 'Popular ' + htmlEscape(genre.name.toLowerCase()) + ' picks' : 'Popular ' + kindLabel.toLowerCase() + ' to start with') + '</h2><span>' + safeItems.length + ' titles · catalog refreshed periodically</span></div><div class="series-grid">' + cards + '</div></section>',
+    '<p class="catalog-note">Catalog details and scores are supplied by <a href="https://anilist.co/" target="_blank" rel="noreferrer">AniList</a>. Cover artwork belongs to its respective rights holders. Hekomi is an independent discovery and tracking project.</p>',
+    '<footer class="catalog-footer"><a href="/">Hekomi home</a><a href="/catalog/' + kind + '">' + kindLabel + ' catalog</a><a href="' + catalogLink + '">Explore ' + otherLabel + '</a><a href="/discover">Search and advanced filters</a></footer></main></div></body></html>'
+  ].join('');
+}
+
 async function serveSitemap(req,res) {
   const origin=publicOrigin(req);
-  const staticPaths=['/','/discover','/manga'];
+  const staticPaths=['/','/discover','/manga','/catalog/anime','/catalog/manga',...SEO_GENRES.flatMap(genre=>['/genres/anime/'+genre.slug,'/genres/manga/'+genre.slug])];
   const entries=staticPaths.map(route=>({loc:origin+route,lastmod:''}));
   const mediaEntries=new Map();
   try {
@@ -1485,6 +1622,23 @@ const server=http.createServer(async(req,res)=>{
     const filters = {type:url.searchParams.get('type'),genreIn:url.searchParams.get('genreIn'),genreNotIn:url.searchParams.get('genreNotIn'),format:url.searchParams.get('format'),status:url.searchParams.get('status'),year:url.searchParams.get('year'),season:url.searchParams.get('season'),minScore:url.searchParams.get('minScore'),sort:url.searchParams.get('sort')};
     try { return send(res,200,await searchPublicCatalog(url.searchParams.get('q'),url.searchParams.get('page'),filters),{'Cache-Control':'public, max-age=300'}); }
     catch(e) { return send(res,400,{error:e.message||'Catalog search failed.'}); }
+  }
+  const catalogRoute=url.pathname.match(/^\/catalog\/(anime|manga)\/?$/i);
+  const genreRoute=url.pathname.match(/^\/genres\/(anime|manga)\/([a-z0-9-]+)\/?$/i);
+  if((req.method==='GET'||req.method==='HEAD') && (catalogRoute||genreRoute)) {
+    const kind=String((catalogRoute||genreRoute)[1]).toLowerCase();
+    const genre=genreRoute?SEO_GENRES.find(item=>item.slug===genreRoute[2].toLowerCase()):null;
+    if(genreRoute&&!genre) return sendHtml(res,404,'<!doctype html><title>Collection not found | Hekomi</title><meta name="robots" content="noindex"><h1>Collection not found</h1><a href="/catalog/'+kind+'">Browse '+kind+'</a>',{'X-Robots-Tag':'noindex'});
+    try {
+      const result=await searchPublicCatalog('',1,{type:kind,genreIn:genre?genre.name:'',sort:'popular'});
+      const items=Array.isArray(result[kind])?result[kind]:[];
+      if(!items.length) throw new Error('The catalog returned no titles for this collection.');
+      const page=renderSeoCatalogPage(req,kind,genre,items);
+      res.writeHead(200,{'Content-Type':'text/html; charset=utf-8','X-Content-Type-Options':'nosniff','Referrer-Policy':'strict-origin-when-cross-origin','Cache-Control':'public, max-age=600, stale-while-revalidate=3600'});
+      return req.method==='HEAD'?res.end():res.end(page);
+    } catch(error) {
+      return sendHtml(res,503,'<!doctype html><title>Catalog temporarily unavailable | Hekomi</title><meta name="robots" content="noindex"><h1>The catalog is temporarily unavailable</h1><p>Please try this collection again shortly.</p><a href="/discover">Open Hekomi discovery</a>',{'X-Robots-Tag':'noindex','Retry-After':'60','Cache-Control':'no-store'});
+    }
   }
   const seriesRoute=url.pathname.match(/^\/series\/(anime|manga)\/(\d+)(?:-[a-z0-9-]*)?\/?$/i);
   if((req.method==='GET'||req.method==='HEAD') && seriesRoute) {
@@ -1845,6 +1999,11 @@ if(req.method==='POST' && url.pathname==='/api/mangascrape/discover') {
         .replaceAll('__HEKOMI_PAGE_TITLE__',htmlEscape(seo.title))
         .replaceAll('__HEKOMI_PAGE_DESCRIPTION__',htmlEscape(seo.description))
         .replaceAll('__HEKOMI_PAGE_ROBOTS__',seo.robots),'utf8');
+      if(!seo.robots.startsWith('noindex')) {
+        const footerLinks=[['Anime catalog','/catalog/anime'],['Manga catalog','/catalog/manga'],['Psychological anime','/genres/anime/psychological'],['Fantasy anime','/genres/anime/fantasy'],['Horror anime','/genres/anime/horror'],['Mystery anime','/genres/anime/mystery'],['Romance anime','/genres/anime/romance'],['Sci-Fi anime','/genres/anime/sci-fi'],['Slice of Life anime','/genres/anime/slice-of-life']];
+        const footer='<style>.hk-seo-footer{width:min(1120px,calc(100% - 36px));margin:44px auto 0;padding:22px 0 30px;border-top:1px solid #ffffff18;display:flex;flex-wrap:wrap;align-items:center;gap:10px 18px;color:#9995aa;font-size:11px}.hk-seo-footer strong{color:#bcb2d7;letter-spacing:.08em;text-transform:uppercase;font-size:9px}.hk-seo-footer a{color:#b9a6ff;text-decoration:none}.hk-seo-footer a:hover{text-decoration:underline}@media(max-width:600px){.hk-seo-footer{gap:9px 13px;margin-top:30px}}</style><footer class="hk-seo-footer" aria-label="Explore Hekomi collections"><strong>Explore Hekomi</strong>'+footerLinks.map(link=>'<a href="'+link[1]+'">'+link[0]+'</a>').join('')+'</footer>';
+        body=Buffer.from(body.toString('utf8').replace('</body>',footer+'</body>'),'utf8');
+      }
       if(seo.robots.startsWith('noindex'))pageRobotsHeader={'X-Robots-Tag':'noindex, follow'};
     }
     res.writeHead(200,{'Content-Type':MIME[path.extname(filePath)]||'application/octet-stream','X-Content-Type-Options':'nosniff','Referrer-Policy':'strict-origin-when-cross-origin','Cache-Control':'no-cache',...pageRobotsHeader});
