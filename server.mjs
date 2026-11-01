@@ -1310,13 +1310,21 @@ function renderMediaPage(req,kind,media) {
     ['Chapters',kind==='manga'?media.chapters:null],['Volumes',kind==='manga'?media.volumes:null]
   ].filter(pair=>pair[1] !== null && pair[1] !== undefined && pair[1] !== '');
   const infoRows = details.map(pair=>'<div class="info-cell"><dt>'+htmlEscape(pair[0])+'</dt><dd>'+htmlEscape(String(pair[1]).replace(/_/g,' '))+'</dd></div>').join('');
-  const schema = {
-    '@context':'https://schema.org',
-    '@type':kind==='anime'?'TVSeries':'ComicSeries',
+  const seriesSchema = {
+    '@type':kind==='anime' && media.format==='MOVIE'?'Movie':kind==='anime'?'TVSeries':'ComicSeries',
     name:media.title,description:synopsis || description,url:canonical,
-    image:cover || undefined,genre:media.genres && media.genres.length ? media.genres : undefined
+    image:cover || undefined,genre:media.genres && media.genres.length ? media.genres : undefined,
+    inLanguage:'en'
   };
-  const jsonLd = JSON.stringify(schema).replace(/</g,'\\u003c');
+  const breadcrumbSchema = {
+    '@type':'BreadcrumbList',
+    itemListElement:[
+      {'@type':'ListItem',position:1,name:'Home',item:origin+'/'},
+      {'@type':'ListItem',position:2,name:'Discover',item:origin+'/discover'},
+      {'@type':'ListItem',position:3,name:media.title}
+    ]
+  };
+  const jsonLd = JSON.stringify({'@context':'https://schema.org','@graph':[seriesSchema,breadcrumbSchema]}).replace(/</g,'\\\\u003c');
   const coverHtml = cover ? '<img class="detail-cover" src="'+htmlEscape(cover)+'" alt="Cover artwork for '+htmlEscape(media.title)+' ('+label+')" title="Cover artwork for '+htmlEscape(media.title)+'" width="280" height="420" fetchpriority="high" decoding="async" referrerpolicy="no-referrer">' : '<div class="detail-cover detail-cover-missing" role="img" aria-label="No cover artwork available">H</div>';
   const detailBackdropHtml = cover ? '<div class="detail-art-backdrop" aria-hidden="true"><img src="'+htmlEscape(cover)+'" alt="" fetchpriority="high" decoding="async" referrerpolicy="no-referrer"></div>' : '<div class="detail-art-backdrop detail-art-backdrop-empty" aria-hidden="true"></div>';
   const metaImage = cover || (origin + '/assets/hekomi-social.svg');
@@ -1363,8 +1371,8 @@ body[data-detail-genre="drama"] .detail-art-backdrop{--detail-accent:#b2a1d8}
     '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">',
     '<title>'+htmlEscape(pageTitle)+'</title><meta name="description" content="'+htmlEscape(description)+'">',
     '<meta name="robots" content="index,follow,max-image-preview:large"><meta name="theme-color" content="#080916">',
-    '<link rel="canonical" href="'+htmlEscape(canonical)+'"><link rel="icon" href="/Anime%20Manga%20Duality%20Emblem.ico" type="image/png">',
-    '<meta property="og:type" content="article"><meta property="og:site_name" content="Hekomi"><meta property="og:title" content="'+htmlEscape(pageTitle)+'"><meta property="og:description" content="'+htmlEscape(description)+'"><meta property="og:url" content="'+htmlEscape(canonical)+'"><meta property="og:image" content="'+htmlEscape(metaImage)+'"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="'+htmlEscape(pageTitle)+'"><meta name="twitter:description" content="'+htmlEscape(description)+'"><meta name="twitter:image" content="'+htmlEscape(metaImage)+'">',
+    '<link rel="canonical" href="'+htmlEscape(canonical)+'"><link rel="icon" href="/favicon.ico?v=20261101" type="image/x-icon" sizes="any">',
+    '<meta property="og:type" content="website"><meta property="og:site_name" content="Hekomi"><meta property="og:title" content="'+htmlEscape(pageTitle)+'"><meta property="og:description" content="'+htmlEscape(description)+'"><meta property="og:url" content="'+htmlEscape(canonical)+'"><meta property="og:image" content="'+htmlEscape(metaImage)+'"><meta property="og:image:alt" content="Cover artwork for '+htmlEscape(media.title)+'"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="'+htmlEscape(pageTitle)+'"><meta name="twitter:description" content="'+htmlEscape(description)+'"><meta name="twitter:image" content="'+htmlEscape(metaImage)+'"><meta name="twitter:image:alt" content="Cover artwork for '+htmlEscape(media.title)+'">',
     '<script type="application/ld+json">'+jsonLd+'</script>',
     trailerStyles,
     detailVisualStyles,
@@ -1380,19 +1388,34 @@ body[data-detail-genre="drama"] .detail-art-backdrop{--detail-accent:#b2a1d8}
 }
 async function serveSitemap(req,res) {
   const origin=publicOrigin(req);
-  let urls=[origin+'/'];
+  const staticPaths=['/','/discover','/manga'];
+  const entries=staticPaths.map(route=>({loc:origin+route,lastmod:''}));
+  const mediaEntries=new Map();
   try {
     const catalog=await getPublicCatalog();
-    for (const media of [...(catalog.anime||[]),...(catalog.manga||[])]) {
-      const kind=media.type==='ANIME'?'anime':'manga';
-      urls.push(origin+'/series/'+kind+'/'+Number(media.id)+'-'+mediaSlug(media.title));
+    const mediaItems=[
+      ...(catalog.anime||[]),...(catalog.manga||[]),
+      ...(catalog.airing||[]),...(catalog.seasonal||[])
+    ];
+    for(const media of mediaItems) {
+      const kind=String(media.type||'').toUpperCase()==='ANIME'?'anime':
+        String(media.type||'').toUpperCase()==='MANGA'?'manga':'';
+      const id=Number(media.id);
+      if(!kind||!Number.isSafeInteger(id)||id<1)continue;
+      const loc=origin+'/series/'+kind+'/'+id+'-'+mediaSlug(media.title);
+      const timestamp=Number(media.updatedAt)||0;
+      const lastmod=timestamp>0?new Date(timestamp*1000).toISOString().slice(0,10):'';
+      const existing=mediaEntries.get(loc);
+      if(!existing||lastmod>existing.lastmod)mediaEntries.set(loc,{loc,lastmod});
     }
   } catch {}
+  entries.push(...mediaEntries.values());
+  const xmlEscape=value=>String(value).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&apos;');
   const body='<?xml version="1.0" encoding="UTF-8"?>' +
     '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' +
-    [...new Set(urls)].map(u=>'<url><loc>'+u.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')+'</loc></url>').join('') +
+    entries.map(entry=>'<url><loc>'+xmlEscape(entry.loc)+'</loc>'+(entry.lastmod?'<lastmod>'+xmlEscape(entry.lastmod)+'</lastmod>':'')+'</url>').join('') +
     '</urlset>';
-  res.writeHead(200,{'Content-Type':'application/xml; charset=utf-8','X-Content-Type-Options':'nosniff','Cache-Control':'public, max-age=900'});
+  res.writeHead(200,{'Content-Type':'application/xml; charset=utf-8','X-Content-Type-Options':'nosniff','Cache-Control':'public, max-age=1800'});
   res.end(body);
 }
 
@@ -1771,24 +1794,49 @@ if(req.method==='POST' && url.pathname==='/api/mangascrape/discover') {
   try {
     const data=await fs.readFile(filePath);
     let body=data;
+    let pageRobotsHeader={};
     if(filePath===path.join(__dirname,'index.html')) {
       const origin=publicOrigin(req);
       const pageName=appPath==='/'?'home':appPath.slice(1);
-      const pageTitles={
-        home:'Hekomi — Anime &amp; Manga Discovery, Tracking &amp; Reading',
-        discover:'Discover Anime &amp; Manga — Hekomi',
-        anime:'Anime List &amp; MyAnimeList Tracker — Hekomi',
-        manga:'Manga Library &amp; Website Discovery — Hekomi',
-        profile:'Your Hekomi Profile &amp; Settings'
+      const pageSeo={
+        home:{
+          title:'Hekomi — Discover Anime & Manga, Track Your Watchlist',
+          description:'Discover anime and manga by genre, explore trending series, track your MyAnimeList watchlist, and keep your manga library in one place.',
+          robots:'index,follow,max-image-preview:large'
+        },
+        discover:{
+          title:'Discover Anime & Manga — Trending Series, Genres & Search | Hekomi',
+          description:'Explore trending anime and manga, search series by title, filter by genre and format, and find your next favourite story with Hekomi.',
+          robots:'index,follow,max-image-preview:large'
+        },
+        anime:{
+          title:'Anime Tracker & MyAnimeList Client | Hekomi',
+          description:'Manage your anime watchlist with a MyAnimeList-connected tracker. Organize watching, completed, on-hold, dropped and plan-to-watch titles.',
+          robots:'noindex,follow'
+        },
+        manga:{
+          title:'Manga Discovery & Personal Library | Hekomi',
+          description:'Discover manga, search series, organize your reading library, and manage manga sources in Hekomi’s personal reading workspace.',
+          robots:'index,follow,max-image-preview:large'
+        },
+        profile:{
+          title:'Your Hekomi Profile & Settings',
+          description:'Manage your Hekomi profile, connected accounts, recommendations and personal discovery preferences.',
+          robots:'noindex,follow'
+        }
       };
+      const seo=pageSeo[pageName]||pageSeo.home;
       const canonicalPath=appPath==='/'?'/':appPath;
       body=Buffer.from(data.toString('utf8')
         .replaceAll('__HEKOMI_PUBLIC_URL__',origin)
         .replaceAll('__HEKOMI_CANONICAL_URL__',origin+canonicalPath)
         .replaceAll('__HEKOMI_PAGE__',pageRoutes.has(appPath)?pageName:'home')
-        .replaceAll('__HEKOMI_PAGE_TITLE__',pageTitles[pageName]||pageTitles.home),'utf8');
+        .replaceAll('__HEKOMI_PAGE_TITLE__',htmlEscape(seo.title))
+        .replaceAll('__HEKOMI_PAGE_DESCRIPTION__',htmlEscape(seo.description))
+        .replaceAll('__HEKOMI_PAGE_ROBOTS__',seo.robots),'utf8');
+      if(seo.robots.startsWith('noindex'))pageRobotsHeader={'X-Robots-Tag':'noindex, follow'};
     }
-    res.writeHead(200,{'Content-Type':MIME[path.extname(filePath)]||'application/octet-stream','X-Content-Type-Options':'nosniff','Referrer-Policy':'strict-origin-when-cross-origin','Cache-Control':'no-cache'});
+    res.writeHead(200,{'Content-Type':MIME[path.extname(filePath)]||'application/octet-stream','X-Content-Type-Options':'nosniff','Referrer-Policy':'strict-origin-when-cross-origin','Cache-Control':'no-cache',...pageRobotsHeader});
     return req.method==='HEAD'?res.end():res.end(body);
   }
   catch { return send(res,404,'Not found'); }
