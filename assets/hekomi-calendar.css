@@ -1,0 +1,73 @@
+/* Hekomi homepage anime broadcast calendar */
+.hk-calendar{position:relative;isolation:isolate;margin:0 0 30px;padding:clamp(17px,2.6vw,28px);overflow:hidden;border:1px solid rgba(169,240,219,.19);border-radius:23px;background:radial-gradient(ellipse at 92% 0%,rgba(197,181,255,.13),transparent 38%),linear-gradient(135deg,#111a1a 0%,#11151b 56%,#171421 100%);box-shadow:0 22px 60px rgba(0,0,0,.16),inset 0 1px rgba(255,255,255,.035)}
+.hk-calendar:before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;opacity:.2;background-image:linear-gradient(rgba(255,255,255,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.025) 1px,transparent 1px);background-size:32px 32px;mask-image:linear-gradient(120deg,#000,transparent 75%)}
+.hk-calendar-heading{display:flex;align-items:flex-end;justify-content:space-between;gap:18px;margin-bottom:20px}
+.hk-calendar-heading h2{margin:6px 0 5px;font-size:clamp(27px,4vw,38px);letter-spacing:-.055em;line-height:1.05}
+.hk-calendar-heading p{margin:0;color:var(--muted);font-size:13px;max-width:540px}
+.hk-calendar-toolbar{display:flex;align-items:center;gap:7px;flex:0 0 auto}
+.hk-calendar-toolbar button{min-height:40px;border:1px solid var(--line);border-radius:11px;background:rgba(255,255,255,.035);color:var(--text);cursor:pointer}
+.hk-calendar-toolbar button:hover{border-color:rgba(169,240,219,.45);background:rgba(169,240,219,.08)}
+.hk-calendar-toolbar .hk-cal-today{padding:0 13px;color:#baf5e4;font-size:12px;font-weight:700}
+.hk-calendar-toolbar .hk-cal-arrow{width:40px;font-size:22px;line-height:1}
+.hk-calendar-layout{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(270px,.85fr);gap:15px;align-items:stretch}
+.hk-calendar-month,.hk-calendar-day{min-width:0;border:1px solid rgba(255,255,255,.075);border-radius:17px;background:rgba(8,13,16,.43)}
+.hk-calendar-month{padding:16px}
+.hk-calendar-month-label{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:14px}
+.hk-calendar-month-label h3{margin:0;font-size:20px;letter-spacing:-.035em}
+.hk-calendar-month-label>span{color:#a9f0dba6;font-size:9px;font-weight:800;letter-spacing:.12em}
+.hk-calendar-weekdays,.hk-calendar-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px}
+.hk-calendar-weekdays{margin-bottom:6px}
+.hk-calendar-weekdays span{text-align:center;color:var(--muted);font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;padding:5px 0}
+.hk-calendar-day-cell{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:5px;min-width:0;min-height:68px;padding:9px 3px 6px;border:1px solid transparent;border-radius:10px;background:rgba(255,255,255,.025);color:var(--text);cursor:pointer;transition:background .16s,border-color .16s,transform .16s}
+.hk-calendar-day-cell:hover{background:rgba(169,240,219,.075);border-color:rgba(169,240,219,.2)}
+.hk-calendar-day-cell.is-selected{background:linear-gradient(145deg,rgba(169,240,219,.17),rgba(197,181,255,.1));border-color:rgba(169,240,219,.52);box-shadow:inset 0 1px rgba(255,255,255,.06)}
+.hk-calendar-day-cell.is-today .hk-cal-day-number{color:#a9f0db}
+.hk-calendar-day-cell.is-outside{opacity:.3}
+.hk-calendar-day-cell:disabled{cursor:default}
+.hk-cal-day-number{font-size:13px;font-weight:750;line-height:1.2}
+.hk-cal-event-count{display:flex;align-items:center;justify-content:center;min-width:20px;height:17px;padding:0 5px;border-radius:999px;background:rgba(169,240,219,.13);color:#baf5e4;font-size:9px;font-weight:800}
+.hk-cal-day-dots{display:flex;gap:3px;min-height:4px}
+.hk-cal-day-dots i{width:4px;height:4px;border-radius:50%;background:#a9f0db}
+.hk-calendar-legend{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:13px;color:var(--muted);font-size:10px}
+.hk-calendar-legend>span:first-child{display:flex;align-items:center;gap:7px}
+.hk-legend-dot{width:7px;height:7px;border-radius:50%;background:#a9f0db;box-shadow:0 0 10px #a9f0db66}
+.hk-calendar-day{display:flex;flex-direction:column;padding:16px;min-height:100%}
+.hk-calendar-day-heading{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;padding-bottom:13px;border-bottom:1px solid rgba(255,255,255,.08)}
+.hk-calendar-day-heading h3{margin:5px 0 0;font-size:18px;letter-spacing:-.03em}
+.hk-calendar-day-count{flex:0 0 auto;color:#baf5e4;font-size:10px;font-weight:800;letter-spacing:.06em}
+.hk-calendar-events{display:flex;flex-direction:column;gap:8px;padding-top:12px;max-height:390px;overflow:auto;overscroll-behavior:contain}
+.hk-cal-event{display:grid;grid-template-columns:52px minmax(0,1fr);gap:10px;padding:10px;border:1px solid rgba(255,255,255,.065);border-radius:12px;background:rgba(255,255,255,.025)}
+.hk-cal-event-time{padding-top:2px;color:#a9f0db;font-size:11px;font-weight:800;font-variant-numeric:tabular-nums}
+.hk-cal-event h4{margin:0;font-size:12px;line-height:1.4;font-weight:750}
+.hk-cal-event h4 a{color:var(--text);text-decoration:none}
+.hk-cal-event h4 a:hover{color:#a9f0db}
+.hk-cal-event-subtitle{margin:3px 0 0;color:var(--muted);font-size:10px;line-height:1.45}
+.hk-cal-event-meta{display:flex;align-items:center;flex-wrap:wrap;gap:6px;margin-top:7px;color:var(--muted);font-size:9px}
+.hk-cal-event-state{padding:3px 6px;border-radius:999px;background:rgba(169,240,219,.1);color:#a9f0db;font-weight:800;text-transform:uppercase;letter-spacing:.06em}
+.hk-cal-event[data-state="upcoming"] .hk-cal-event-state{background:rgba(197,181,255,.13);color:#d0c2ff}
+.hk-cal-empty,.hk-cal-loading{display:grid;place-items:center;min-height:90px;padding:16px;text-align:center;color:var(--muted);font-size:12px;line-height:1.55}
+.hk-calendar-foot{display:flex;justify-content:space-between;gap:12px;margin-top:13px;color:var(--muted);font-size:10px}
+.hk-calendar-foot a{color:#a9f0db;text-decoration:none}
+.hk-calendar-foot a:hover{text-decoration:underline}
+@media(max-width:760px){
+ .hk-calendar{padding:15px;border-radius:18px;margin-bottom:22px}
+ .hk-calendar-heading{align-items:flex-start;flex-direction:column;gap:13px;margin-bottom:14px}
+ .hk-calendar-heading h2{font-size:29px}
+ .hk-calendar-toolbar{width:100%}.hk-calendar-toolbar .hk-cal-today{flex:1}
+ .hk-calendar-layout{grid-template-columns:minmax(0,1fr);gap:10px}
+ .hk-calendar-month{padding:10px}
+ .hk-calendar-month-label{margin-bottom:10px}.hk-calendar-month-label h3{font-size:18px}
+ .hk-calendar-weekdays,.hk-calendar-grid{gap:3px}
+ .hk-calendar-weekdays span{font-size:9px}
+ .hk-calendar-day-cell{min-height:53px;padding:7px 1px 5px;border-radius:8px;gap:4px}
+ .hk-cal-day-number{font-size:12px}.hk-cal-event-count{height:15px;min-width:17px;font-size:8px;padding:0 4px}
+ .hk-cal-day-dots i{width:3px;height:3px}
+ .hk-calendar-day{padding:13px;min-height:180px}
+ .hk-calendar-events{max-height:340px}
+ .hk-calendar-foot{flex-direction:column;gap:4px}
+}
+@media(max-width:370px){
+ .hk-calendar-month{padding:8px}.hk-calendar-day-cell{min-height:47px}
+ .hk-calendar-day-cell .hk-cal-event-count{min-width:15px;padding:0 3px}
+}
+@media(prefers-reduced-motion:reduce){.hk-calendar-day-cell{transition:none}}
