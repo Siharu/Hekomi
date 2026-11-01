@@ -1444,6 +1444,33 @@ function seoCatalogPath(kind, genre) {
   return genre ? '/genres/' + kind + '/' + genre.slug : '/catalog/' + kind;
 }
 
+async function getSeoCatalogItems(kind, genre) {
+  const mediaType = kind === 'anime' ? 'ANIME' : 'MANGA';
+  const genreArgument = genre ? ',genre_in:$genreIn' : '';
+  const query = 'query HekomiSeoCollection($page:Int!,$genreIn:[String]) { results: Page(page:$page,perPage:24) { pageInfo { currentPage hasNextPage } media(type:' + mediaType + genreArgument + ',sort:[POPULARITY_DESC],isAdult:false) { ' + MEDIA_CATALOG_FIELDS + ' } } }';
+  const data = await requestAniList(query,{page:1,genreIn:genre?[genre.name]:null});
+  const results = data.results && Array.isArray(data.results.media) ? data.results.media : [];
+  return results.map(packMedia).filter(Boolean);
+}
+
+async function getSeoCatalogFallback(kind, genre) {
+  const catalog = await getPublicCatalog();
+  const source = kind === 'anime'
+    ? [...(catalog.anime||[]),...(catalog.airing||[]),...(catalog.seasonal||[])]
+    : [...(catalog.manga||[])];
+  const unique = new Map();
+  for (const item of source) {
+    const id = Number(item && item.id);
+    if (Number.isSafeInteger(id) && id > 0 && !unique.has(id)) unique.set(id,item);
+  }
+  let items = [...unique.values()];
+  if (genre) {
+    items = items.filter(item => (Array.isArray(item.genres)?item.genres:[])
+      .some(name => String(name||'').toLowerCase() === genre.name.toLowerCase()));
+  }
+  return items.sort((a,b)=>(Number(b.popularity)||0)-(Number(a.popularity)||0)).slice(0,24);
+}
+
 function renderSeoCatalogPage(req, kind, genre, items) {
   const origin = publicOrigin(req);
   const isAnime = kind === 'anime';
@@ -1630,18 +1657,14 @@ const server=http.createServer(async(req,res)=>{
     const genre=genreRoute?SEO_GENRES.find(item=>item.slug===genreRoute[2].toLowerCase()):null;
     if(genreRoute&&!genre) return sendHtml(res,404,'<!doctype html><title>Collection not found | Hekomi</title><meta name="robots" content="noindex"><h1>Collection not found</h1><a href="/catalog/'+kind+'">Browse '+kind+'</a>',{'X-Robots-Tag':'noindex'});
     try {
-      let result;
+      let items=[];
       try {
-        result=await searchPublicCatalog('',1,{type:kind,genreIn:genre?genre.name:'',sort:'popular'});
-      } catch(searchError) {
-        console.error('[Hekomi SEO catalog query failed]',{kind,genre:genre&&genre.slug,message:String(searchError&&searchError.message||searchError)});
-        throw searchError;
+        items=await getSeoCatalogItems(kind,genre);
+      } catch(queryError) {
+        console.warn('[Hekomi SEO catalog query fallback]',{kind,genre:genre&&genre.slug,message:String(queryError&&queryError.message||queryError)});
       }
-      const items=Array.isArray(result[kind])?result[kind]:[];
-      if(!items.length) {
-        console.warn('[Hekomi SEO catalog returned no titles]',{kind,genre:genre&&genre.slug,resultKeys:Object.keys(result||{})});
-        throw new Error('The catalog returned no titles for this collection.');
-      }
+      if(!items.length) items=await getSeoCatalogFallback(kind,genre);
+      if(!items.length) throw new Error('The catalog has no matching titles available for this collection.');
       const page=renderSeoCatalogPage(req,kind,genre,items);
       res.writeHead(200,{'Content-Type':'text/html; charset=utf-8','X-Content-Type-Options':'nosniff','Referrer-Policy':'strict-origin-when-cross-origin','Cache-Control':'public, max-age=600, stale-while-revalidate=3600'});
       return req.method==='HEAD'?res.end():res.end(page);
