@@ -1528,7 +1528,9 @@ body[data-page="home"] .home-hero .hero-copy{max-width:780px}
   .primary-nav a,.subnav button{transition:none!important}html{scroll-behavior:auto}
 }
 </style>
+<link rel="stylesheet" href="/assets/hekomi-calendar.css">
 <script defer src="/assets/hekomi-chan.js"></script>
+<script defer src="/assets/hekomi-calendar.js"></script>
 <style>body[data-page="discover"] #catalogTitle{margin:9px 0 8px;font-size:clamp(32px,4vw,46px);line-height:1.06;letter-spacing:-.065em;text-wrap:balance}@media(max-width:760px){body[data-page="discover"] #catalogTitle{font-size:34px}}</style>
 </head>
 <body data-page="__HEKOMI_PAGE__">
@@ -1547,6 +1549,26 @@ body[data-page="home"] .home-hero .hero-copy{max-width:780px}
   </header>
   <main>
     <section id="landing">
+      <section class="hk-calendar" id="hkCalendar" aria-labelledby="hkCalendarTitle">
+        <div class="hk-calendar-heading">
+          <div><span class="eyebrow">HEKOMI / BROADCAST ARCHIVE</span><h2 id="hkCalendarTitle">Anime Calendar</h2><p>Every broadcast has a date. Explore past episodes and see what's scheduled next.</p></div>
+          <div class="hk-calendar-toolbar" aria-label="Calendar navigation"><button type="button" class="hk-cal-today" id="hkCalToday">Today</button><button type="button" class="hk-cal-arrow" id="hkCalPrev" aria-label="Previous month">‹</button><button type="button" class="hk-cal-arrow" id="hkCalNext" aria-label="Next month">›</button></div>
+        </div>
+        <div class="hk-calendar-layout">
+          <div class="hk-calendar-month">
+            <div class="hk-calendar-month-label"><h3 id="hkCalMonthLabel">Loading calendar…</h3><span>JAPAN BROADCAST · JST</span></div>
+            <div class="hk-calendar-weekdays" aria-hidden="true"><span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span></div>
+            <div class="hk-calendar-grid" id="hkCalGrid" role="grid" aria-label="Anime broadcast calendar"><div class="hk-cal-loading">Loading broadcast dates…</div></div>
+            <div class="hk-calendar-legend"><span><i class="hk-legend-dot"></i> Broadcasts scheduled or recorded</span><span id="hkCalMonthTotal">—</span></div>
+          </div>
+          <aside class="hk-calendar-day" aria-labelledby="hkCalSelectedDate">
+            <div class="hk-calendar-day-heading"><div><span class="eyebrow">DAY VIEW</span><h3 id="hkCalSelectedDate">Select a date</h3></div><span class="hk-calendar-day-count" id="hkCalDayCount">—</span></div>
+            <div class="hk-calendar-events" id="hkCalEvents" aria-live="polite"><div class="hk-cal-loading">Preparing the schedule…</div></div>
+          </aside>
+        </div>
+        <div class="hk-calendar-foot"><span>Historical and upcoming Japanese TV broadcast listings.</span><span>Data: <a href="https://cal.syoboi.jp/" target="_blank" rel="noopener noreferrer">Syoboi Calendar ↗</a></span></div>
+      </section>
+
       <section class="hero home-hero" aria-labelledby="homeHeroTitle">
         <div class="hero-copy">
           <div class="hero-kicker"><span class="hero-signal"></span> HEKOMI / YOUR PERSONAL ANIME &amp; MANGA SPACE <span class="hero-edition">DISCOVER · TRACK · READ</span></div>
