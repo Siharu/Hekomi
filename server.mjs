@@ -10,7 +10,7 @@ import { createRequire } from 'node:module';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PORT = Number(process.env.PORT || 4173);
 const USER_AGENT = 'Hekomi/1.0 (personal manga reader; rate-limited public-source requests)';
-const MIME = { '.html':'text/html; charset=utf-8', '.css':'text/css; charset=utf-8', '.js':'text/javascript; charset=utf-8', '.json':'application/json; charset=utf-8', '.svg':'image/svg+xml', '.ico':'image/png', '.webmanifest':'application/manifest+json; charset=utf-8' };
+const MIME = { '.html':'text/html; charset=utf-8', '.css':'text/css; charset=utf-8', '.js':'text/javascript; charset=utf-8', '.json':'application/json; charset=utf-8', '.svg':'image/svg+xml', '.ico':'image/x-icon', '.webmanifest':'application/manifest+json; charset=utf-8' };
 const rate = new Map();
 const require = createRequire(import.meta.url);
 const axios = require('axios');
@@ -1761,10 +1761,12 @@ if(req.method==='POST' && url.pathname==='/api/mangascrape/discover') {
   if(url.pathname.startsWith('/api/mal/')) return malRequest(req,res,url.pathname.slice('/api/mal'.length),url.searchParams).catch(e=>send(res,500,{error:e.message||'MAL request failed.'}));
   if(req.method!=='GET' && req.method!=='HEAD') return send(res,405,{error:'Method not allowed.'});
   const normalizedPath=decodeURIComponent(url.pathname).replace(/\/+$/,'')||'/';
-  const appPath=normalizedPath==='/index.html'?'/':normalizedPath;
+  // Keep the root favicon URL stable while reusing the project's original ICO asset.
+  const assetPath=normalizedPath==='/favicon.ico'?'/Anime Manga Duality Emblem.ico':normalizedPath;
+  const appPath=assetPath==='/index.html'?'/':assetPath;
   const pageRoutes=new Set(['/','/discover','/anime','/manga','/profile']);
   const isAppPage=pageRoutes.has(appPath);
-  let filePath=path.resolve(__dirname, '.'+(isAppPage?'/index.html':normalizedPath));
+  let filePath=path.resolve(__dirname, '.'+(isAppPage?'/index.html':assetPath));
   if(!filePath.startsWith(__dirname+path.sep) && filePath!==path.join(__dirname,'index.html')) return send(res,403,'Forbidden');
   try {
     const data=await fs.readFile(filePath);
