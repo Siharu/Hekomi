@@ -1,90 +1,93 @@
+/* Hekomi dedicated anime calendar client */
 (function(){
   'use strict';
   const root=document.getElementById('hkCalendar');
   if(!root)return;
-  const $=id=>document.getElementById(id);
-  const grid=$('hkCalGrid'),monthLabel=$('hkCalMonthLabel'),selectedLabel=$('hkCalSelectedDate'),eventsNode=$('hkCalEvents');
-  const state={year:0,month:0,selected:'',programs:[],loading:false,error:''};
-  let requestSequence=0;
-  const dateParts=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Tokyo',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());
-  const part=type=>dateParts.find(item=>item.type===type)?.value||'01';
-  const todayKey=part('year')+'-'+part('month')+'-'+part('day');
-  const parseKey=key=>{const [y,m,d]=key.split('-').map(Number);return new Date(Date.UTC(y,m-1,d));};
-  const keyFor=(year,month,day)=>year+'-'+String(month).padStart(2,'0')+'-'+String(day).padStart(2,'0');
-  const escapeHtml=value=>String(value==null?'':value).replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
-  const dayFormatter=new Intl.DateTimeFormat('en-US',{timeZone:'UTC',weekday:'long',month:'long',day:'numeric',year:'numeric'});
-  const monthFormatter=new Intl.DateTimeFormat('en-US',{timeZone:'UTC',month:'long',year:'numeric'});
-  function setMonth(year,month,selectedDay){
-    const date=new Date(Date.UTC(year,month-1,1));
-    state.year=date.getUTCFullYear();state.month=date.getUTCMonth()+1;
-    const max=new Date(Date.UTC(state.year,state.month,0)).getUTCDate();
-    const day=Math.max(1,Math.min(max,Number(selectedDay)||1));
-    state.selected=keyFor(state.year,state.month,day);
+  const el=id=>document.getElementById(id);
+  const grid=el('hkCalGrid'),monthLabel=el('hkCalMonthLabel'),selectedLabel=el('hkCalSelectedDate'),eventsNode=el('hkCalEvents');
+  const state={year:0,month:0,selected:'',programs:[],loading:false,error:'',request:0};
+  const todayParts=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Tokyo',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());
+  const part=type=>todayParts.find(x=>x.type===type)?.value||'01';
+  const today=part('year')+'-'+part('month')+'-'+part('day');
+  const dateFromKey=key=>{const [y,m,d]=key.split('-').map(Number);return new Date(Date.UTC(y,m-1,d));};
+  const keyFor=(y,m,d)=>String(y).padStart(4,'0')+'-'+String(m).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+  const escape=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const fmtDay=new Intl.DateTimeFormat('en-US',{timeZone:'UTC',weekday:'long',month:'long',day:'numeric',year:'numeric'});
+  const fmtMonth=new Intl.DateTimeFormat('en-US',{timeZone:'UTC',month:'long',year:'numeric'});
+  function setMonth(year,month,day){
+    const normalized=new Date(Date.UTC(year,month-1,1));
+    state.year=normalized.getUTCFullYear();state.month=normalized.getUTCMonth()+1;
+    const last=new Date(Date.UTC(state.year,state.month,0)).getUTCDate();
+    state.selected=keyFor(state.year,state.month,Math.max(1,Math.min(last,Number(day)||1)));
     loadMonth();
   }
+  function selectedItems(){
+    return state.programs.filter(item=>item.date===state.selected).sort((a,b)=>String(a.airingAt||'').localeCompare(String(b.airingAt||'')));
+  }
   function renderEvents(){
-    selectedLabel.textContent=dayFormatter.format(parseKey(state.selected));
-    const items=state.programs.filter(item=>item.date===state.selected).sort((a,b)=>String(a.airingAt).localeCompare(String(b.airingAt)));
-    $('hkCalDayCount').textContent=items.length+' '+(items.length===1?'BROADCAST':'BROADCASTS');
-    if(state.loading){eventsNode.innerHTML='<div class="hk-cal-loading">Loading the selected date…</div>';return;}
-    if(state.error){eventsNode.innerHTML='<div class="hk-cal-empty">'+escapeHtml(state.error)+'</div>';return;}
-    if(!items.length){eventsNode.innerHTML='<div class="hk-cal-empty">No anime broadcast records for this date.<br>Try another day or browse a different month.</div>';return;}
+    selectedLabel.textContent=fmtDay.format(dateFromKey(state.selected));
+    const items=selectedItems();
+    el('hkCalDayCount').textContent=state.loading?'LOADING':items.length+' '+(items.length===1?'BROADCAST':'BROADCASTS');
+    if(state.loading){eventsNode.innerHTML='<div class="hk-cal-loading">Loading broadcast records…</div>';return;}
+    if(state.error){eventsNode.innerHTML='<div class="hk-cal-empty">'+escape(state.error)+'</div>';return;}
+    if(!items.length){eventsNode.innerHTML='<div class="hk-cal-empty">No broadcast records are listed for this date.<br>Try another date or month.</div>';return;}
     eventsNode.innerHTML=items.map(item=>{
-      const episode=item.episode?'Episode '+escapeHtml(item.episode):'Broadcast listing';
-      const subtitle=item.subtitle?'<p class="hk-cal-event-subtitle">'+escapeHtml(item.subtitle)+'</p>':'';
-      const channel=item.channel?'<span>'+escapeHtml(item.channel)+'</span>':'';
+      const episode=item.episode?'Episode '+escape(item.episode):'Broadcast listing';
+      const subtitle=item.subtitle?'<p class="hk-cal-event-subtitle">'+escape(item.subtitle)+'</p>':'';
+      const run=item.firstAired?'<p class="hk-cal-event-subtitle">Series run: '+escape(item.firstAired)+(item.firstEnded?' → '+escape(item.firstEnded):'')+'</p>':'';
       const stateLabel=item.status==='upcoming'?'UPCOMING':'AIRED';
-      const runRange=item.firstAired?'<p class="hk-cal-event-subtitle">Series run: '+escapeHtml(item.firstAired)+(item.firstEnded?' → '+escapeHtml(item.firstEnded):'')+'</p>':'';
-      const typeLabel=item.isPremiere?'PREMIERE':item.listingType||'TV';
-      return '<article class="hk-cal-event" data-state="'+escapeHtml(item.status)+'"><div class="hk-cal-event-time">'+escapeHtml(item.time||'—')+'<small style="display:block;color:var(--muted);font-size:8px;font-weight:600">JST</small></div><div><h4><a href="'+escapeHtml(item.url)+'" target="_blank" rel="noopener noreferrer">'+escapeHtml(item.title)+'</a></h4><p class="hk-cal-event-subtitle">'+episode+'</p>'+subtitle+runRange+'<div class="hk-cal-event-meta"><span>'+escapeHtml(typeLabel)+'</span>'+channel+'<span class="hk-cal-event-state">'+stateLabel+'</span></div></div></article>';
+      const channel=item.channel?'<span>'+escape(item.channel)+'</span>':'';
+      const type=item.isPremiere?'PREMIERE':item.listingType||'TV';
+      return '<article class="hk-cal-event" data-state="'+escape(item.status)+'"><div class="hk-cal-event-time">'+escape(item.time||'—')+'<small style="display:block;color:var(--muted);font-size:8px;font-weight:600">JST</small></div><div><h4><a href="'+escape(item.url||'https://cal.syoboi.jp/')+'" target="_blank" rel="noopener noreferrer">'+escape(item.title)+'</a></h4><p class="hk-cal-event-subtitle">'+episode+'</p>'+subtitle+run+'<div class="hk-cal-event-meta"><span>'+escape(type)+'</span>'+channel+'<span class="hk-cal-event-state">'+stateLabel+'</span></div></div></article>';
     }).join('');
   }
   function renderGrid(){
-    const first=new Date(Date.UTC(state.year,state.month-1,1)).getUTCDay();
-    const totalDays=new Date(Date.UTC(state.year,state.month,0)).getUTCDate();
-    const weeks=Math.ceil((first+totalDays)/7);
-    const eventCounts=new Map();
-    state.programs.forEach(item=>eventCounts.set(item.date,(eventCounts.get(item.date)||0)+1));
-    const cells=[];
-    for(let index=0;index<weeks*7;index++){
-      const day=index-first+1;
-      if(day<1||day>totalDays){cells.push('<div class="hk-calendar-day-cell is-outside" aria-hidden="true"></div>');continue;}
-      const key=keyFor(state.year,state.month,day),count=eventCounts.get(key)||0;
-      const classes=['hk-calendar-day-cell',key===state.selected?'is-selected':'',key===todayKey?'is-today':''].filter(Boolean).join(' ');
-      const dots=count?'<span class="hk-cal-day-dots" aria-hidden="true">'+Array.from({length:Math.min(3,count)},()=>'<i></i>').join('')+'</span>':'<span class="hk-cal-day-dots" aria-hidden="true"></span>';
-      const countMarkup=count?'<span class="hk-cal-event-count">'+count+'</span>':'';
-      cells.push('<button type="button" class="'+classes+'" data-calendar-date="'+key+'" aria-pressed="'+(key===state.selected?'true':'false')+'" aria-label="'+key+(count?', '+count+' broadcasts':'')+'"><span class="hk-cal-day-number">'+day+'</span>'+countMarkup+(!count?dots:'')+'</button>');
+    const offset=new Date(Date.UTC(state.year,state.month-1,1)).getUTCDay();
+    const days=new Date(Date.UTC(state.year,state.month,0)).getUTCDate();
+    const slots=Math.ceil((offset+days)/7)*7;
+    const counts=new Map();
+    state.programs.forEach(item=>counts.set(item.date,(counts.get(item.date)||0)+1));
+    const html=[];
+    for(let slot=0;slot<slots;slot++){
+      const day=slot-offset+1;
+      if(day<1||day>days){html.push('<div class="hk-calendar-day-cell is-outside" aria-hidden="true"></div>');continue;}
+      const key=keyFor(state.year,state.month,day),count=counts.get(key)||0;
+      const classes=['hk-calendar-day-cell',key===state.selected?'is-selected':'',key===today?'is-today':''].filter(Boolean).join(' ');
+      const countHtml=count?'<span class="hk-cal-event-count">'+count+'</span>':'<span class="hk-cal-day-dots" aria-hidden="true"></span>';
+      html.push('<button type="button" class="'+classes+'" data-calendar-date="'+key+'" aria-pressed="'+(key===state.selected)+'" aria-label="'+key+(count?', '+count+' broadcasts':'')+'"><span class="hk-cal-day-number">'+day+'</span>'+countHtml+'</button>');
     }
-    grid.innerHTML=cells.join('');
-    monthLabel.textContent=monthFormatter.format(new Date(Date.UTC(state.year,state.month-1,1)));
-    const total=state.programs.length;
-    $('hkCalMonthTotal').textContent=state.loading?'UPDATING…':state.error?'SOURCE UNAVAILABLE':total+' '+(total===1?'ENTRY':'ENTRIES');
+    grid.innerHTML=html.join('');
+    monthLabel.textContent=fmtMonth.format(new Date(Date.UTC(state.year,state.month-1,1)));
+    el('hkCalMonthTotal').textContent=state.loading?'UPDATING…':state.error?'SOURCE ERROR':state.programs.length+' '+(state.programs.length===1?'ENTRY':'ENTRIES');
     renderEvents();
   }
   async function loadMonth(){
-    const requestId=++requestSequence;
+    const request=++state.request;
     state.loading=true;state.error='';state.programs=[];renderGrid();
     const start=keyFor(state.year,state.month,1);
     const days=new Date(Date.UTC(state.year,state.month,0)).getUTCDate();
     try{
       const response=await fetch('/api/calendar?start='+encodeURIComponent(start)+'&days='+days,{headers:{Accept:'application/json'},cache:'no-store'});
       const data=await response.json();
-      if(!response.ok)throw new Error(data.error||'The schedule source is unavailable.');
-      if(requestId!==requestSequence)return;
-      state.programs=Array.isArray(data.programs)?data.programs:[];
+      if(!response.ok)throw new Error(data.error||'Calendar source unavailable.');
+      if(!Array.isArray(data.programs))throw new Error('Calendar response is missing its programs list.');
+      if(request!==state.request)return;
+      state.programs=data.programs;
+      if(data.rawProgramCount>0&&!data.programs.length)throw new Error('The source returned '+data.rawProgramCount+' records, but none could be displayed.');
     }catch(error){
-      if(requestId!==requestSequence)return;
-      state.programs=[];state.error=error.message||'The schedule could not be loaded.';
+      if(request!==state.request)return;
+      state.programs=[];state.error=error&&error.message?error.message:'Could not load the anime schedule.';
     }finally{
-      if(requestId===requestSequence){state.loading=false;renderGrid();}
+      if(request===state.request){state.loading=false;renderGrid();}
     }
   }
   grid.addEventListener('click',event=>{
-    const button=event.target.closest('[data-calendar-date]');if(!button)return;
+    const button=event.target.closest('[data-calendar-date]');
+    if(!button)return;
     state.selected=button.dataset.calendarDate;renderGrid();
   });
-  $('hkCalPrev').addEventListener('click',()=>setMonth(state.year,state.month-1,1));
-  $('hkCalNext').addEventListener('click',()=>setMonth(state.year,state.month+1,1));
-  $('hkCalToday').addEventListener('click',()=>setMonth(Number(todayKey.slice(0,4)),Number(todayKey.slice(5,7)),Number(todayKey.slice(8,10))));
-  setMonth(Number(todayKey.slice(0,4)),Number(todayKey.slice(5,7)),Number(todayKey.slice(8,10)));
+  el('hkCalPrev').addEventListener('click',()=>setMonth(state.year,state.month-1,1));
+  el('hkCalNext').addEventListener('click',()=>setMonth(state.year,state.month+1,1));
+  el('hkCalToday').addEventListener('click',()=>setMonth(Number(today.slice(0,4)),Number(today.slice(5,7)),Number(today.slice(8,10))));
+  setMonth(Number(today.slice(0,4)),Number(today.slice(5,7)),Number(today.slice(8,10)));
 })();
