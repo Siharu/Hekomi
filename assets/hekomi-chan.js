@@ -357,7 +357,8 @@
       const blink=sleeping||time<this.blinkUntil;
       const expression=sleeping?'sleepy':this.state==='greet'?'happy':this.state==='wake'?'surprised':this.activity==='curious'?'surprised':this.activity==='annoyed'?'annoyed':'normal';
       const bob=sleeping?(Math.floor(time/700)%2):walking?frame%2:(Math.floor(time/520)%2);
-      const sway=walking?0:Math.round(Math.sin(time/760)*0.5);\n      drawSprite(this.ctx,{expression,blink,walking,sleeping,step:frame%4,wave:frame%4,bob:bob+sway,gazeX:this.gazeX,gazeY:this.gazeY});
+      const sway=walking?0:Math.round(Math.sin(time/760)*0.5);
+      drawSprite(this.ctx,{expression,blink,walking,sleeping,step:frame%4,wave:frame%4,bob:bob+sway,gazeX:this.gazeX,gazeY:this.gazeY});
     }
   }
 
