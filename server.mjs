@@ -1630,13 +1630,23 @@ const server=http.createServer(async(req,res)=>{
     const genre=genreRoute?SEO_GENRES.find(item=>item.slug===genreRoute[2].toLowerCase()):null;
     if(genreRoute&&!genre) return sendHtml(res,404,'<!doctype html><title>Collection not found | Hekomi</title><meta name="robots" content="noindex"><h1>Collection not found</h1><a href="/catalog/'+kind+'">Browse '+kind+'</a>',{'X-Robots-Tag':'noindex'});
     try {
-      const result=await searchPublicCatalog('',1,{type:kind,genreIn:genre?genre.name:'',sort:'popular'});
+      let result;
+      try {
+        result=await searchPublicCatalog('',1,{type:kind,genreIn:genre?genre.name:'',sort:'popular'});
+      } catch(searchError) {
+        console.error('[Hekomi SEO catalog query failed]',{kind,genre:genre&&genre.slug,message:String(searchError&&searchError.message||searchError)});
+        throw searchError;
+      }
       const items=Array.isArray(result[kind])?result[kind]:[];
-      if(!items.length) throw new Error('The catalog returned no titles for this collection.');
+      if(!items.length) {
+        console.warn('[Hekomi SEO catalog returned no titles]',{kind,genre:genre&&genre.slug,resultKeys:Object.keys(result||{})});
+        throw new Error('The catalog returned no titles for this collection.');
+      }
       const page=renderSeoCatalogPage(req,kind,genre,items);
       res.writeHead(200,{'Content-Type':'text/html; charset=utf-8','X-Content-Type-Options':'nosniff','Referrer-Policy':'strict-origin-when-cross-origin','Cache-Control':'public, max-age=600, stale-while-revalidate=3600'});
       return req.method==='HEAD'?res.end():res.end(page);
     } catch(error) {
+      console.error('[Hekomi SEO landing page failed]',{kind,genre:genre&&genre.slug,message:String(error&&error.message||error)});
       return sendHtml(res,503,'<!doctype html><title>Catalog temporarily unavailable | Hekomi</title><meta name="robots" content="noindex"><h1>The catalog is temporarily unavailable</h1><p>Please try this collection again shortly.</p><a href="/discover">Open Hekomi discovery</a>',{'X-Robots-Tag':'noindex','Retry-After':'60','Cache-Control':'no-store'});
     }
   }
