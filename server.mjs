@@ -1214,10 +1214,19 @@ function parseSyoboiDate(value) {
     const date = new Date(millis);
     return Number.isNaN(date.getTime()) ? null : date;
   }
-  const compact = raw.match(/^(\d{4})(\d{2})(\d{2})[_T ]?(\d{2})(\d{2})(\d{2})$/);
+  // Syoboi timestamps are commonly YYYYMMDD_HHMMSS, but some
+  // responses/clients expose the compact YYYYMMDDHHMM form.
+  const compact = raw.match(/^(\d{4})(\d{2})(\d{2})[_T ]?(\d{2})(\d{2})(\d{2})?$/);
   if (compact) {
-    const [,y,m,d,h,minute,second] = compact;
-    return new Date(Date.UTC(Number(y),Number(m)-1,Number(d),Number(h)-9,Number(minute),Number(second)));
+    const [,y,m,d,h,minute,second='0'] = compact;
+    const parts=[Number(y),Number(m),Number(d),Number(h),Number(minute),Number(second)];
+    if(parts[1]<1||parts[1]>12||parts[2]<1||parts[2]>31||parts[3]>47||parts[4]>59||parts[5]>59)return null;
+    return new Date(Date.UTC(parts[0],parts[1]-1,parts[2],parts[3]-9,parts[4],parts[5]));
+  }
+  const wrapped = raw.match(/^\\?\/?Date\\?\/?\((-?\d+)\\?\)?\/?$/i);
+  if (wrapped) {
+    const date = new Date(Number(wrapped[1]));
+    return Number.isNaN(date.getTime()) ? null : date;
   }
   const separated = raw.match(/^(\d{4})[-/](\d{2})[-/](\d{2})[ T](\d{1,2}):(\d{2})(?::(\d{2}))?/);
   if (separated) {
@@ -1250,9 +1259,29 @@ async function getSyoboiCalendar(rawStart,rawDays) {
       const response=await fetch(endpoint,{headers:{'Accept':'application/json','User-Agent':'Hekomi/0.5 (+https://hekomi.vercel.app; anime broadcast calendar)'},signal:AbortSignal.timeout(14000)});
       if(!response.ok)throw new Error('Syoboi Calendar returned HTTP '+response.status+'.');
       const payload=await response.json();
-      const titleRows=syoboiRows(payload&&payload.Titles);
+      let titleRows=syoboiRows(payload&&(payload.Titles||payload.TitleLarge||payload.Title));
       const programRows=syoboiRows(payload&&payload.Programs);
       if(!payload||!payload.Programs||typeof payload.Programs!=='object')throw new Error('Syoboi Calendar returned an unexpected response (missing Programs).');
+
+      // ProgramByDate can return valid program rows even when the chained
+      // TitleLarge block is omitted by an intermediary/API response variant.
+      // Resolve those TIDs explicitly rather than dropping every broadcast.
+      const programTids=[...new Set(programRows.map(item=>String(syoboiField(item,'TID')??'')).filter(tid=>/^\d+$/.test(tid)))];
+      const titleIdsInResponse=new Set(titleRows.map(item=>String(syoboiField(item,'TID')??item._key??'')));
+      const missingTids=programTids.filter(tid=>!titleIdsInResponse.has(tid));
+      if(missingTids.length){
+        const extraRows=[];
+        for(let offset=0;offset<missingTids.length;offset+=80){
+          const titleUrl=new URL('https://cal.syoboi.jp/json.php');
+          titleUrl.searchParams.set('Req','TitleLarge');
+          titleUrl.searchParams.set('TID',missingTids.slice(offset,offset+80).join(','));
+          const titleResponse=await fetch(titleUrl,{headers:{'Accept':'application/json','User-Agent':'Hekomi/0.5 (+https://hekomi.vercel.app; anime broadcast calendar)'},signal:AbortSignal.timeout(12000)});
+          if(!titleResponse.ok)continue;
+          const titlePayload=await titleResponse.json();
+          extraRows.push(...syoboiRows(titlePayload&&(titlePayload.Titles||titlePayload.TitleLarge||titlePayload.Title)));
+        }
+        if(extraRows.length)titleRows=titleRows.concat(extraRows);
+      }
       const titles=new Map(titleRows.map(item=>{
         const tid=String(syoboiField(item,'TID')??item._key??'');
         return [tid,item];
@@ -1288,7 +1317,10 @@ async function getSyoboiCalendar(rawStart,rawDays) {
       }).filter(Boolean).sort((a,b)=>a.airingAt.localeCompare(b.airingAt));
       if(programRows.length&&!programs.length) {
         const fields=Object.keys(programRows[0]||{}).join(', ');
-        throw new Error('Syoboi returned '+programRows.length+' program records, but Hekomi could not parse them. Fields: '+fields);
+        const sample=programRows[0]||{};
+        const timeValue=syoboiField(sample,'StTime');
+        const titleValue=syoboiField(titles.get(String(syoboiField(sample,'TID')??''))||{},'Title');
+        throw new Error('Syoboi returned '+programRows.length+' program records, but Hekomi could not map them. '+(timeValue==null?'Missing StTime.':parseSyoboiDate(timeValue)?'Airing times parsed, but title metadata is missing.':'Unrecognized StTime format: '+String(timeValue).slice(0,48)+'.')+' Title records: '+titleRows.length+'. Fields: '+fields);
       }
       const data={start,days,programs,total:programs.length,rawProgramCount:programRows.length,titleCount:titleRows.length,source:'Syoboi Calendar',timezone:'Asia/Tokyo',updatedAt:new Date().toISOString()};
       const isHistorical=startDate.getTime()+days*86400000<Date.now();
