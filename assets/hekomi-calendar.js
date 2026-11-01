@@ -5,6 +5,7 @@
   const $=id=>document.getElementById(id);
   const grid=$('hkCalGrid'),monthLabel=$('hkCalMonthLabel'),selectedLabel=$('hkCalSelectedDate'),eventsNode=$('hkCalEvents');
   const state={year:0,month:0,selected:'',programs:[],loading:false,error:''};
+  let requestSequence=0;
   const dateParts=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Tokyo',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());
   const part=type=>dateParts.find(item=>item.type===type)?.value||'01';
   const todayKey=part('year')+'-'+part('month')+'-'+part('day');
@@ -49,7 +50,7 @@
       const key=keyFor(state.year,state.month,day),count=eventCounts.get(key)||0;
       const classes=['hk-calendar-day-cell',key===state.selected?'is-selected':'',key===todayKey?'is-today':''].filter(Boolean).join(' ');
       const dots=count?'<span class="hk-cal-day-dots" aria-hidden="true">'+Array.from({length:Math.min(3,count)},()=>'<i></i>').join('')+'</span>':'<span class="hk-cal-day-dots" aria-hidden="true"></span>';
-      const countMarkup=count?'<span class="hk-cal-event-count">'+count+'</span>':'<span class="hk-cal-day-dots" aria-hidden="true"></span>';
+      const countMarkup=count?'<span class="hk-cal-event-count">'+count+'</span>':'';
       cells.push('<button type="button" class="'+classes+'" data-calendar-date="'+key+'" aria-pressed="'+(key===state.selected?'true':'false')+'" aria-label="'+key+(count?', '+count+' broadcasts':'')+'"><span class="hk-cal-day-number">'+day+'</span>'+countMarkup+(!count?dots:'')+'</button>');
     }
     grid.innerHTML=cells.join('');
@@ -59,19 +60,21 @@
     renderEvents();
   }
   async function loadMonth(){
-    if(state.loading)return;
-    state.loading=true;state.error='';renderGrid();
+    const requestId=++requestSequence;
+    state.loading=true;state.error='';state.programs=[];renderGrid();
     const start=keyFor(state.year,state.month,1);
     const days=new Date(Date.UTC(state.year,state.month,0)).getUTCDate();
     try{
       const response=await fetch('/api/calendar?start='+encodeURIComponent(start)+'&days='+days,{headers:{Accept:'application/json'},cache:'no-store'});
       const data=await response.json();
       if(!response.ok)throw new Error(data.error||'The schedule source is unavailable.');
+      if(requestId!==requestSequence)return;
       state.programs=Array.isArray(data.programs)?data.programs:[];
     }catch(error){
+      if(requestId!==requestSequence)return;
       state.programs=[];state.error=error.message||'The schedule could not be loaded.';
     }finally{
-      state.loading=false;renderGrid();
+      if(requestId===requestSequence){state.loading=false;renderGrid();}
     }
   }
   grid.addEventListener('click',event=>{
