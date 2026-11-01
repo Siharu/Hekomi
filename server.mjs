@@ -1085,9 +1085,9 @@ async function malRequest(req, res, pathname, query) {
 
 const ANILIST_ENDPOINT = 'https://graphql.anilist.co';
 const MEDIA_CATALOG_FIELDS = 'id idMal type title { romaji english native } coverImage { color extraLarge large medium } bannerImage description(asHtml:false) genres averageScore popularity favourites status episodes chapters volumes season seasonYear format countryOfOrigin source duration startDate { year month day } endDate { year month day } studios(isMain:true) { nodes { name } } nextAiringEpisode { airingAt timeUntilAiring episode } trailer { id site thumbnail } siteUrl updatedAt isLicensed isAdult';
-const HOME_CATALOG_QUERY = 'query HekomiHomeCatalog($season:MediaSeason!,$seasonYear:Int!) { anime: Page(page:1,perPage:10) { media(type:ANIME,sort:[TRENDING_DESC,POPULARITY_DESC],isAdult:false) { ' + MEDIA_CATALOG_FIELDS + ' } } manga: Page(page:1,perPage:10) { media(type:MANGA,sort:[TRENDING_DESC,POPULARITY_DESC],isAdult:false) { ' + MEDIA_CATALOG_FIELDS + ' } } airing: Page(page:1,perPage:10) { media(type:ANIME,status:RELEASING,sort:[POPULARITY_DESC],isAdult:false) { ' + MEDIA_CATALOG_FIELDS + ' } } seasonal: Page(page:1,perPage:10) { media(type:ANIME,season:$season,seasonYear:$seasonYear,sort:[POPULARITY_DESC],isAdult:false) { ' + MEDIA_CATALOG_FIELDS + ' } } }';
+const HOME_CATALOG_QUERY = 'query HekomiHomeCatalog { anime: Page(page:1,perPage:10) { media(type:ANIME,sort:[TRENDING_DESC,POPULARITY_DESC],isAdult:false) { ' + MEDIA_CATALOG_FIELDS + ' } } manga: Page(page:1,perPage:10) { media(type:MANGA,sort:[TRENDING_DESC,POPULARITY_DESC],isAdult:false) { ' + MEDIA_CATALOG_FIELDS + ' } } }';
 function currentAnimeSeason(date=new Date()) { const month=date.getUTCMonth()+1; return month<=3?'WINTER':month<=6?'SPRING':month<=9?'SUMMER':'FALL'; }
-const SEASON_CATALOG_QUERY = 'query HekomiSeasonCatalog($season:MediaSeason!,$seasonYear:Int!) { seasonal: Page(page:1,perPage:18) { media(type:ANIME,season:$season,seasonYear:$seasonYear,sort:[POPULARITY_DESC],isAdult:false) { ' + MEDIA_CATALOG_FIELDS + ' } } }';
+const FULL_ANIME_COLLECTION_QUERY = 'query HekomiFullAnimeCollection($page:Int!,$season:MediaSeason,$seasonYear:Int) { results: Page(page:$page,perPage:50) { pageInfo { currentPage hasNextPage total } media(type:ANIME,season:$season,seasonYear:$seasonYear,status:RELEASING,sort:[POPULARITY_DESC],isAdult:false) { ' + MEDIA_CATALOG_FIELDS + ' } } }';
 const seasonCatalogCache = new Map();
 const CATALOG_SEARCH_QUERY = 'query HekomiCatalogSearch($search:String!,$page:Int!) { anime: Page(page:$page,perPage:24) { pageInfo { currentPage hasNextPage } media(search:$search,type:ANIME,sort:[SEARCH_MATCH],isAdult:false) { ' + MEDIA_CATALOG_FIELDS + ' } } manga: Page(page:$page,perPage:24) { pageInfo { currentPage hasNextPage } media(search:$search,type:MANGA,sort:[SEARCH_MATCH],isAdult:false) { ' + MEDIA_CATALOG_FIELDS + ' } } }';
 const MEDIA_DETAIL_QUERY = 'query HekomiMediaDetail($id:Int!) { Media(id:$id) { ' + MEDIA_CATALOG_FIELDS + ' } }';
@@ -1159,19 +1159,48 @@ function packMedia(item) {
     startDate:item.startDate||null,endDate:item.endDate||null,updatedAt:Number(item.updatedAt)||null
   };
 }
+async function fetchAllAnimeCollection({season=null,seasonYear=null,status=null}={}) {
+  const all=[];
+  const seen=new Set();
+  const maxPages=12;
+  let hasNextPage=true,page=1,total=0;
+  while(hasNextPage&&page<=maxPages) {
+    const query = status
+      ? 'query HekomiFullAiring($page:Int!) { results: Page(page:$page,perPage:50) { pageInfo { currentPage hasNextPage total } media(type:ANIME,status:RELEASING,sort:[POPULARITY_DESC],isAdult:false) { ' + MEDIA_CATALOG_FIELDS + ' } } }'
+      : 'query HekomiFullSeason($page:Int!,$season:MediaSeason!,$seasonYear:Int!) { results: Page(page:$page,perPage:50) { pageInfo { currentPage hasNextPage total } media(type:ANIME,season:$season,seasonYear:$seasonYear,sort:[POPULARITY_DESC],isAdult:false) { ' + MEDIA_CATALOG_FIELDS + ' } } }';
+    const variables=status?{page}:{page,season,seasonYear};
+    const payload=await requestAniList(query,variables);
+    const result=payload.results||{};
+    const pageInfo=result.pageInfo||{};
+    for(const raw of (Array.isArray(result.media)?result.media:[])) {
+      const media=packMedia(raw);
+      if(media&&!seen.has(media.id)){seen.add(media.id);all.push(media);}
+    }
+    total=Number(pageInfo.total)||total;
+    hasNextPage=!!pageInfo.hasNextPage;
+    page++;
+  }
+  return {anime:all,total,hasMore:hasNextPage,source:'AniList',pagesFetched:page-1};
+}
+
 async function getPublicCatalog(force=false) {
   if (!force && publicCatalogCache.data && Date.now() < publicCatalogCache.expiresAt) return publicCatalogCache.data;
   if (publicCatalogInFlight) return publicCatalogInFlight;
   publicCatalogInFlight = (async()=>{
     try {
       const now = new Date();
-      const data = await requestAniList(HOME_CATALOG_QUERY,{season:currentAnimeSeason(now),seasonYear:now.getUTCFullYear()});
+      const season=currentAnimeSeason(now),seasonYear=now.getUTCFullYear();
+      const [data,airing,seasonal]=await Promise.all([
+        requestAniList(HOME_CATALOG_QUERY,{}),
+        fetchAllAnimeCollection({status:'RELEASING'}),
+        fetchAllAnimeCollection({season,seasonYear})
+      ]);
       const result = {
         anime:(data.anime && data.anime.media || []).map(packMedia).filter(Boolean),
         manga:(data.manga && data.manga.media || []).map(packMedia).filter(Boolean),
-        airing:(data.airing && data.airing.media || []).map(packMedia).filter(Boolean),
-        seasonal:(data.seasonal && data.seasonal.media || []).map(packMedia).filter(Boolean),
-        season:currentAnimeSeason(now),seasonYear:now.getUTCFullYear(),
+        airing:airing.anime,airingTotal:airing.total,airingHasMore:airing.hasMore,
+        seasonal:seasonal.anime,seasonalTotal:seasonal.total,seasonalHasMore:seasonal.hasMore,
+        season,seasonYear,
         source:'AniList',updatedAt:new Date().toISOString(),stale:false
       };
       publicCatalogCache.data = result;
@@ -1191,8 +1220,8 @@ async function getSeasonCatalog(rawSeason,rawYear) {
   if(year<1940||year>new Date().getUTCFullYear()+2) throw new Error('Choose a valid season year.');
   const key=season+':'+year, cached=seasonCatalogCache.get(key);
   if(cached&&Date.now()<cached.expiresAt)return cached.data;
-  const payload=await requestAniList(SEASON_CATALOG_QUERY,{season,seasonYear:year});
-  const data={season,seasonYear:year,anime:(payload.seasonal&&payload.seasonal.media||[]).map(packMedia).filter(Boolean),source:'AniList',updatedAt:new Date().toISOString()};
+  const collection=await fetchAllAnimeCollection({season,seasonYear:year});
+  const data={season,seasonYear:year,anime:collection.anime,total:collection.total,hasMore:collection.hasMore,pagesFetched:collection.pagesFetched,source:'AniList',updatedAt:new Date().toISOString()};
   seasonCatalogCache.set(key,{data,expiresAt:Date.now()+30*60*1000});
   if(seasonCatalogCache.size>24)seasonCatalogCache.delete(seasonCatalogCache.keys().next().value);
   return data;
