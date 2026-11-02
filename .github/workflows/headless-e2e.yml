@@ -7,10 +7,12 @@ on:
       - 'index.html'
       - 'server.mjs'
       - 'assets/**'
+      - 'lib/**'
       - 'package.json'
       - 'package-lock.json'
       - 'playwright.config.js'
       - 'tests/e2e/**'
+      - 'tests/unit/**'
       - '.github/workflows/headless-e2e.yml'
   push:
     branches: [main]
@@ -41,6 +43,8 @@ jobs:
           node-version: '22'
       - name: Install dependencies
         run: npm install --no-audit --no-fund
+      - name: Run unit tests
+        run: npm run test:unit
       - name: Install Playwright Chromium
         run: npx playwright install --with-deps chromium
       - name: Run headless browser tests
