@@ -46,7 +46,7 @@ async function mockCalendar(page) {
     route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(scheduleFixture()) })
   );
   await page.route('https://cdn.example.test/**', route =>
-    route.fulfill({ status: 200, contentType: 'image/gif', body: 'R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=' , isBase64: true })
+    route.fulfill({ status: 200, contentType: 'image/gif', body: Buffer.from('R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=', 'base64') })
   );
 }
 
