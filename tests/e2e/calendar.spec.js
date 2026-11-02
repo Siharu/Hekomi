@@ -42,7 +42,7 @@ function scheduleFixture() {
 }
 
 async function mockCalendar(page) {
-  await page.route('**/api/calendar?*', route =>
+  await page.route('**/api/calendar**', route =>
     route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(scheduleFixture()) })
   );
   await page.route('https://cdn.example.test/**', route =>
@@ -69,11 +69,12 @@ test('local AniList-backed watching entry adds its cover to the matching broadca
     ]));
   }, { cover: localCover });
   await mockCalendar(page);
-  await page.route('**/api/mal/list', route =>
+  await page.route('**/api/mal/list**', route =>
     route.fulfill({ status: 401, contentType: 'application/json', body: JSON.stringify({ error: 'Sign in first.' }) })
   );
 
   await page.goto('/');
+  await page.waitForResponse(response => response.url().includes('/api/calendar'));
   const events = page.locator('.hk-cal-event');
   await expect(events).toHaveCount(2);
   const frieren = events.filter({ hasText: watchedTitle });
@@ -106,6 +107,7 @@ test('signed-in MAL watching entry supplies a poster when no local copy exists',
   );
 
   await page.goto('/');
+  await page.waitForResponse(response => response.url().includes('/api/calendar'));
   const frieren = page.locator('.hk-cal-event').filter({ hasText: watchedTitle });
   await expect(frieren).toHaveAttribute('data-watching', 'true');
   await expect(frieren.locator('.hk-cal-event-cover')).toHaveAttribute('src', malCover);
@@ -126,6 +128,7 @@ test('calendar cards remain within the mobile viewport', async ({ page }) => {
   );
 
   await page.goto('/');
+  await page.waitForResponse(response => response.url().includes('/api/calendar'));
   await expect(page.locator('.hk-cal-event-cover')).toBeVisible();
   const dimensions = await page.evaluate(() => ({
     viewport: document.documentElement.clientWidth,
