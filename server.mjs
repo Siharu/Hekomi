@@ -6,7 +6,7 @@ import dns from 'node:dns/promises';
 import net from 'node:net';
 import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
-import { applyAniListAiringFallback, applyAniListTitleMetadata, extractSyoboiProgramRows, normalizeSyoboiPrograms, syoboiField, syoboiRows } from './lib/syoboi-calendar.mjs';
+import { applyAniListAiringFallback, applyAniListTitleMetadata, extractSyoboiProgramRows, filterSyoboiPlaceholderPrograms, normalizeSyoboiPrograms, syoboiField, syoboiRows } from './lib/syoboi-calendar.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PORT = Number(process.env.PORT || 4173);
@@ -1205,6 +1205,53 @@ async function getSyoboiAniListFallbackAnime() {
   return syoboiAniListFallbackCache.pending;
 }
 
+const syoboiTitleLookupCache = new Map();
+
+function containsJapaneseText(value) {
+  return /[\\p{Script=Han}\\p{Script=Hiragana}\\p{Script=Katakana}]/u.test(String(value || ''));
+}
+
+async function applyAniListSearchTitleMetadata(programs) {
+  const lookupTitles = [...new Set((Array.isArray(programs) ? programs : [])
+    .filter(program => program && !program.anilistId && !program.titleUnavailable && containsJapaneseText(program.title))
+    .map(program => String(program.title).trim())
+    .filter(Boolean))];
+  const uncachedTitles = lookupTitles.filter(title => {
+    const cached = syoboiTitleLookupCache.get(title);
+    return !cached || Date.now() >= cached.expiresAt;
+  }).slice(0, 12);
+
+  if (uncachedTitles.length) {
+    const lookups = uncachedTitles.map((title, index) =>
+      'lookup' + index + ': Page(page:1,perPage:12) { media(search:' +
+      JSON.stringify(title) +
+      ',type:ANIME,sort:[SEARCH_MATCH],isAdult:false) { ' + MEDIA_CATALOG_FIELDS + ' } }'
+    ).join('\\n');
+    const payload = await requestAniList('query HekomiSyoboiTitleLookups { ' + lookups + ' }', {});
+    uncachedTitles.forEach((title, index) => {
+      const rows = payload['lookup' + index] && payload['lookup' + index].media;
+      const anime = Array.isArray(rows) ? rows.map(packMedia).filter(Boolean) : [];
+      const uniqueAnime = [...new Map(anime.map(item => [item.id, item])).values()];
+      syoboiTitleLookupCache.set(title, {
+        anime: uniqueAnime,
+        expiresAt: Date.now() + 6 * 60 * 60 * 1000
+      });
+    });
+    while (syoboiTitleLookupCache.size > 240) {
+      syoboiTitleLookupCache.delete(syoboiTitleLookupCache.keys().next().value);
+    }
+  }
+
+  return (Array.isArray(programs) ? programs : []).map(program => {
+    if (!program || program.anilistId || program.titleUnavailable || !containsJapaneseText(program.title)) {
+      return program;
+    }
+    const cached = syoboiTitleLookupCache.get(String(program.title).trim());
+    if (!cached || Date.now() >= cached.expiresAt || !cached.anime.length) return program;
+    return applyAniListTitleMetadata([program], cached.anime)[0];
+  });
+}
+
 let syoboiLastRequestAt = 0;
 let syoboiRequestQueue = Promise.resolve();
 async function fetchSyoboi(endpoint, options) {
@@ -1330,20 +1377,19 @@ async function getSyoboiCalendar(rawStart, rawDays) {
 
       const now = new Date();
       let programs = normalizeSyoboiPrograms(programRows, titleRows, feedRows, now);
-      let aniListFallbackCount = 0;
-      let aniListMetadataCount = 0;
       try {
         const airingAnime = await getSyoboiAniListFallbackAnime();
         programs = applyAniListAiringFallback(programs, airingAnime, 300);
         programs = applyAniListTitleMetadata(programs, airingAnime);
-        aniListFallbackCount = programs.filter(item =>
-          item.metadataSource === 'AniList' && item.titleUnavailable === false
-        ).length;
-        aniListMetadataCount = programs.filter(item =>
-          item.metadataSource === 'AniList' && Boolean(item.cover && item.anilistId)
-        ).length;
       } catch {
         // Keep the Syoboi schedule visible when AniList metadata is unavailable.
+      }
+      try {
+        // Older series and rebroadcasts are not in the current airing catalogue.
+        // Search Japanese titles directly so they can still receive English names and covers.
+        programs = await applyAniListSearchTitleMetadata(programs);
+      } catch {
+        // Preserve the source schedule if the optional title lookup is unavailable.
       }
       if (!programs.length) {
         const sample = programRows[0] || {};
@@ -1354,12 +1400,22 @@ async function getSyoboiCalendar(rawStart, rawDays) {
         );
       }
 
+      const beforePlaceholderFilter = programs.length;
+      programs = filterSyoboiPlaceholderPrograms(programs);
+      const filteredPlaceholderCount = beforePlaceholderFilter - programs.length;
       const unresolvedTitles = programs.filter(item => item.titleUnavailable).length;
+      const aniListFallbackCount = programs.filter(item =>
+        item.metadataSource === 'AniList' && item.titleUnavailable === false
+      ).length;
+      const aniListMetadataCount = programs.filter(item =>
+        item.metadataSource === 'AniList' && Boolean(item.cover && item.anilistId)
+      ).length;
       const data = {
         start, days, programs, total: programs.length,
         rawProgramCount: programRows.length,
         titleCount: titleRows.length,
         fallbackProgramCount: feedRows.length,
+        filteredPlaceholderCount,
         unresolvedTitleCount: unresolvedTitles,
         aniListFallbackCount,
         aniListMetadataCount,
