@@ -42,12 +42,19 @@ function scheduleFixture() {
 }
 
 async function mockCalendar(page) {
-  await page.route('**/api/calendar**', route =>
+  await page.route(url => url.pathname === '/api/calendar', route =>
     route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(scheduleFixture()) })
   );
-  await page.route('https://cdn.example.test/**', route =>
+  await page.route(url => url.hostname === 'cdn.example.test', route =>
     route.fulfill({ status: 200, contentType: 'image/gif', body: Buffer.from('R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=', 'base64') })
   );
+}
+async function openCalendar(page) {
+  const responsePromise = page.waitForResponse(response => new URL(response.url()).pathname === '/api/calendar');
+  await page.goto('/');
+  const response = await responsePromise;
+  expect(response.status()).toBe(200);
+  await expect(page.locator('#hkCalMonthTotal')).not.toContainText('UPDATING');
 }
 
 test('local AniList-backed watching entry adds its cover to the matching broadcast only', async ({ page }) => {
@@ -69,12 +76,11 @@ test('local AniList-backed watching entry adds its cover to the matching broadca
     ]));
   }, { cover: localCover });
   await mockCalendar(page);
-  await page.route('**/api/mal/list**', route =>
+  await page.route(url => url.pathname === '/api/mal/list', route =>
     route.fulfill({ status: 401, contentType: 'application/json', body: JSON.stringify({ error: 'Sign in first.' }) })
   );
 
-  await page.goto('/');
-  await page.waitForResponse(response => response.url().includes('/api/calendar'));
+  await openCalendar(page);
   const events = page.locator('.hk-cal-event');
   await expect(events).toHaveCount(2);
   const frieren = events.filter({ hasText: watchedTitle });
@@ -88,7 +94,7 @@ test('local AniList-backed watching entry adds its cover to the matching broadca
 test('signed-in MAL watching entry supplies a poster when no local copy exists', async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem('folio_local_anime_v1', '[]'));
   await mockCalendar(page);
-  await page.route('**/api/mal/list', route =>
+  await page.route(url => url.pathname === '/api/mal/list', route =>
     route.fulfill({
       status: 200,
       contentType: 'application/json',
