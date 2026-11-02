@@ -13,7 +13,7 @@
   const keyFor=(y,m,d)=>String(y).padStart(4,'0')+'-'+String(m).padStart(2,'0')+'-'+String(d).padStart(2,'0');
   const escape=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const safeCover=value=>{try{const url=new URL(String(value||''));return url.protocol==='https:'?url.href:'';}catch{return '';}};
-  const normalizeTitle=value=>String(value||'').normalize('NFKC').toLocaleLowerCase().replace(/[\\p{P}\\p{S}\\p{Z}\\s]+/gu,'').trim();
+  const normalizeTitle=value=>String(value||'').normalize('NFKC').toLocaleLowerCase().replace(/[\p{P}\p{S}\p{Z}\s]+/gu,'').trim();
   let remoteWatchlist=[],remoteWatchlistFetchedAt=0,remoteWatchlistTask=null;
   function readLocalAnime(){
     try{const value=JSON.parse(localStorage.getItem('folio_local_anime_v1')||'[]');return Array.isArray(value)?value:[];}
