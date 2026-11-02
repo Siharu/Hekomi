@@ -1,0 +1,48 @@
+name: Headless browser tests
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'index.html'
+      - 'server.mjs'
+      - 'assets/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'playwright.config.js'
+      - 'tests/e2e/**'
+      - '.github/workflows/headless-e2e.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'index.html'
+      - 'server.mjs'
+      - 'assets/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'playwright.config.js'
+      - 'tests/e2e/**'
+      - '.github/workflows/headless-e2e.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Run headless browser tests
+        run: npm run test:e2e
