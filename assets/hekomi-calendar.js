@@ -104,9 +104,14 @@
       const stateLabel=item.status==='upcoming'?'UPCOMING':'AIRED';
       const channel=item.channel?'<span>'+escape(item.channel)+'</span>':'';
       const type=item.isPremiere?'PREMIERE':item.listingType||'TV';
-      const poster=watched&&watched.cover?'<img class="hk-cal-event-cover" src="'+escape(watched.cover)+'" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer">':'';
+      const cover=safeCover(item.cover)||(watched&&watched.cover)||'';
+      const profileUrl=item.animeUrl||(item.anilistId?'/series/anime/'+Number(item.anilistId)+'-'+String(title).toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,''):'');
+      const href=profileUrl||item.url||'https://cal.syoboi.jp/';
+      const internal=href.startsWith('/');
+      const linkAttrs=internal?'':' target="_blank" rel="noopener noreferrer"';
+      const poster=cover?'<a class="hk-cal-event-cover-link" href="'+escape(href)+'"'+linkAttrs+' aria-label="Open '+escape(title)+' profile"><img class="hk-cal-event-cover" src="'+escape(cover)+'" alt="'+escape(title)+' cover" loading="lazy" decoding="async" referrerpolicy="no-referrer"></a>':'';
       const watchTag=watched?'<span class="hk-cal-event-watch-tag">IN YOUR WATCHLIST</span>':'';
-      return '<article class="hk-cal-event" data-state="'+escape(item.status)+'"'+(watched?' data-watching="true"':'')+'><div class="hk-cal-event-time">'+escape(item.time||'—')+'<small style="display:block;color:var(--muted);font-size:8px;font-weight:600">JST</small></div><div class="hk-cal-event-content">'+poster+'<div class="hk-cal-event-copy"><h4><a href="'+escape(item.url||'https://cal.syoboi.jp/')+'" target="_blank" rel="noopener noreferrer">'+escape(title)+'</a></h4>'+watchTag+'<p class="hk-cal-event-subtitle">'+episode+'</p>'+subtitle+run+'<div class="hk-cal-event-meta"><span>'+escape(type)+'</span>'+channel+'<span class="hk-cal-event-state">'+stateLabel+'</span></div></div></div></article>';
+      return '<article class="hk-cal-event" data-state="'+escape(item.status)+'"'+(watched?' data-watching="true"':'')+(item.anilistId?' data-anime-id="'+escape(item.anilistId)+'"':'')+'><div class="hk-cal-event-time">'+escape(item.time||'—')+'<small style="display:block;color:var(--muted);font-size:8px;font-weight:600">JST</small></div><div class="hk-cal-event-content">'+poster+'<div class="hk-cal-event-copy"><h4><a href="'+escape(href)+'"'+linkAttrs+'>'+escape(title)+'</a></h4>'+watchTag+'<p class="hk-cal-event-subtitle">'+episode+'</p>'+subtitle+run+'<div class="hk-cal-event-meta"><span>'+escape(type)+'</span>'+channel+'<span class="hk-cal-event-state">'+stateLabel+'</span></div></div></div></article>';
     }).map((markup,index)=>markup.replace('<article class="hk-cal-event"','<article style="--hk-event-index:'+index+'" class="hk-cal-event"')).join('');
   }
   function renderGrid(){
