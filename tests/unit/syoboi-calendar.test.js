@@ -4,6 +4,7 @@ import {
   applyAniListAiringFallback,
   applyAniListTitleMetadata,
   extractSyoboiProgramRows,
+  filterSyoboiPlaceholderPrograms,
   normalizeSyoboiPrograms,
   parseSyoboiDate
 } from '../../lib/syoboi-calendar.mjs';
@@ -167,4 +168,34 @@ test('does not attach an AniList cover or profile when title aliases are ambiguo
   assert.equal(unchanged.title, '葬送のフリーレン');
   assert.equal(unchanged.cover, undefined);
   assert.equal(unchanged.anilistId, undefined);
+});
+
+
+test('filters only unidentified generic broadcast placeholders', () => {
+  const namedJapaneseBroadcast = {
+    title: '乙女ゲー世界はモブに厳しい世界です',
+    titleUnavailable: false
+  };
+  const translatedBroadcast = {
+    title: 'One-Punch Man',
+    titleUnavailable: false
+  };
+  const unresolvedPlaceholder = {
+    title: 'Anime broadcast #8027',
+    titleUnavailable: true
+  };
+  const genericButResolved = {
+    title: 'Anime broadcast #12',
+    titleUnavailable: false
+  };
+
+  assert.deepEqual(
+    filterSyoboiPlaceholderPrograms([
+      namedJapaneseBroadcast,
+      translatedBroadcast,
+      unresolvedPlaceholder,
+      genericButResolved
+    ]),
+    [namedJapaneseBroadcast, translatedBroadcast, genericButResolved]
+  );
 });
