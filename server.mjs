@@ -1228,7 +1228,7 @@ async function fetchSyoboiRssPrograms(start, days) {
 
 async function getSyoboiCalendar(rawStart, rawDays) {
   const start = String(rawStart || ''), days = Math.floor(Number(rawDays) || 0);
-  if (!/^\\d{4}-\\d{2}-\\d{2}$/.test(start) || days < 1 || days > 32) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(start) || days < 1 || days > 32) {
     throw new Error('Choose a valid calendar month.');
   }
   const startDate = new Date(start + 'T00:00:00Z');
