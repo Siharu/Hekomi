@@ -444,7 +444,6 @@
       this.lastRecommendedId=Number(pick.id)||0;
       const title=String(pick.titleEnglish||pick.title||pick.titleRomaji||'this airing anime');
       const slug=title.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,90)||'series';
-        .replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,90)||'series';
       if(this.recommendLink){
         this.recommendLink.href='/series/anime/'+Number(pick.id)+'-'+slug;
         this.recommendLink.textContent='Meet '+title+' ↗';
