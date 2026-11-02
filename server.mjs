@@ -1208,7 +1208,7 @@ async function getSyoboiAniListFallbackAnime() {
 const syoboiTitleLookupCache = new Map();
 
 function containsJapaneseText(value) {
-  return /[\\p{Script=Han}\\p{Script=Hiragana}\\p{Script=Katakana}]/u.test(String(value || ''));
+  return /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}]/u.test(String(value || ''));
 }
 
 async function applyAniListSearchTitleMetadata(programs) {
@@ -1226,7 +1226,7 @@ async function applyAniListSearchTitleMetadata(programs) {
       'lookup' + index + ': Page(page:1,perPage:12) { media(search:' +
       JSON.stringify(title) +
       ',type:ANIME,sort:[SEARCH_MATCH],isAdult:false) { ' + MEDIA_CATALOG_FIELDS + ' } }'
-    ).join('\\n');
+    ).join('\n');
     const payload = await requestAniList('query HekomiSyoboiTitleLookups { ' + lookups + ' }', {});
     uncachedTitles.forEach((title, index) => {
       const rows = payload['lookup' + index] && payload['lookup' + index].media;
