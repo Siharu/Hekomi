@@ -2272,6 +2272,8 @@ if(req.method==='POST' && url.pathname==='/api/mangascrape/discover') {
         .replaceAll('__HEKOMI_PAGE_TITLE__',htmlEscape(seo.title))
         .replaceAll('__HEKOMI_PAGE_DESCRIPTION__',htmlEscape(seo.description))
         .replaceAll('__HEKOMI_PAGE_ROBOTS__',seo.robots),'utf8');
+      // Load the optional local Hekomi-chan conversation engine on every app route.
+      body=Buffer.from(body.toString('utf8').replace('</body>','<script type="module" src="/assets/hekomi-core-ui.js"></script></body>'),'utf8');
       if(!seo.robots.startsWith('noindex')) {
         const footerLinks=[['Anime catalog','/catalog/anime'],['Manga catalog','/catalog/manga'],['Psychological anime','/genres/anime/psychological'],['Fantasy anime','/genres/anime/fantasy'],['Horror anime','/genres/anime/horror'],['Mystery anime','/genres/anime/mystery'],['Romance anime','/genres/anime/romance'],['Sci-Fi anime','/genres/anime/sci-fi'],['Slice of Life anime','/genres/anime/slice-of-life']];
         const footer='<style>.hk-seo-footer{width:min(1120px,calc(100% - 36px));margin:44px auto 0;padding:22px 0 30px;border-top:1px solid #ffffff18;display:flex;flex-wrap:wrap;align-items:center;gap:10px 18px;color:#9995aa;font-size:11px}.hk-seo-footer strong{color:#bcb2d7;letter-spacing:.08em;text-transform:uppercase;font-size:9px}.hk-seo-footer a{color:#b9a6ff;text-decoration:none}.hk-seo-footer a:hover{text-decoration:underline}@media(max-width:600px){.hk-seo-footer{gap:9px 13px;margin-top:30px}}</style><footer class="hk-seo-footer" aria-label="Explore Hekomi collections"><strong>Explore Hekomi</strong>'+footerLinks.map(link=>'<a href="'+link[1]+'">'+link[0]+'</a>').join('')+'</footer>';
