@@ -1184,6 +1184,19 @@ async function fetchAllAnimeCollection({season=null,seasonYear=null,status=null}
   return {anime:all,total,hasMore:hasNextPage,source:'AniList',pagesFetched:page-1};
 }
 
+let syoboiLastRequestAt = 0;
+let syoboiRequestQueue = Promise.resolve();
+async function fetchSyoboi(endpoint, options) {
+  const task = syoboiRequestQueue.then(async () => {
+    const wait = Math.max(0, 1100 - (Date.now() - syoboiLastRequestAt));
+    if (wait) await new Promise(resolve => setTimeout(resolve, wait));
+    syoboiLastRequestAt = Date.now();
+    return fetch(endpoint, options);
+  });
+  syoboiRequestQueue = task.catch(() => {});
+  return task;
+}
+
 const syoboiCalendarCache = new Map();
 const syoboiCalendarInFlight = new Map();
 
@@ -1202,7 +1215,7 @@ async function fetchSyoboiRssPrograms(start, days) {
     endpoint.searchParams.set('start', ymd);
     endpoint.searchParams.set('days', String(chunkDays));
     endpoint.searchParams.set('alt', 'json');
-    const response = await fetch(endpoint, {
+    const response = await fetchSyoboi(endpoint, {
       headers: {
         'Accept': 'application/json',
         'User-Agent': 'Hekomi/1.0 (+https://hekomi.vercel.app; anime broadcast calendar)'
@@ -1247,7 +1260,7 @@ async function getSyoboiCalendar(rawStart, rawDays) {
         endpoint.searchParams.set('Req', 'ProgramByDate,TitleLarge');
         endpoint.searchParams.set('Start', start);
         endpoint.searchParams.set('Days', String(days));
-        const response = await fetch(endpoint, {
+        const response = await fetchSyoboi(endpoint, {
           headers: {
             'Accept': 'application/json',
             'User-Agent': 'Hekomi/1.0 (+https://hekomi.vercel.app; anime broadcast calendar)'
