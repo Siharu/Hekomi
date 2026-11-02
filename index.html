@@ -1533,6 +1533,140 @@ body[data-page="home"] .home-hero .hero-copy{max-width:780px}
 <script defer src="/assets/hekomi-chan.js?v=20261102-activities-2"></script>
 <script defer src="/assets/hekomi-calendar.js"></script>
 <style>body[data-page="discover"] #catalogTitle{margin:9px 0 8px;font-size:clamp(32px,4vw,46px);line-height:1.06;letter-spacing:-.065em;text-wrap:balance}@media(max-width:760px){body[data-page="discover"] #catalogTitle{font-size:34px}}</style>
+
+<style id="hekomi-header-classic-theme">
+/* Hekomi identity motion: warm, quiet movement rather than a noisy dashboard. */
+@keyframes hkHeaderArrive{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
+@keyframes hkMarkFloat{0%,100%{transform:translateY(0) rotate(0deg)}50%{transform:translateY(-2px) rotate(-1deg)}}
+@keyframes hkMarkOrbit{to{transform:rotate(360deg)}}
+@keyframes hkHeaderSweep{0%,100%{transform:scaleX(.16);opacity:.35}50%{transform:scaleX(1);opacity:.9}}
+.topbar{position:sticky;top:0;z-index:60;isolation:isolate;animation:hkHeaderArrive .55s cubic-bezier(.2,.75,.25,1) both}
+.topbar:after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:2px;transform:scaleX(.16);transform-origin:left;background:linear-gradient(90deg,transparent,#567fc5 24%,#a8c7f2 52%,#6daea6 82%,transparent);opacity:.42;pointer-events:none;animation:hkHeaderSweep 7s ease-in-out 1s infinite}
+.brand{position:relative;isolation:isolate}
+.brandmark{animation:hkMarkFloat 6.5s ease-in-out 1s infinite;filter:drop-shadow(0 4px 8px #172b4d20)}
+.brandmark:after{content:"";position:absolute;inset:-3px;border:1px solid #7794c455;border-radius:15px;transform:rotate(-12deg);pointer-events:none;animation:hkMarkOrbit 18s linear infinite}
+.brand>div:last-child{transition:letter-spacing .25s ease,color .25s ease}
+.brand:hover>div:last-child{letter-spacing:.045em}
+.primary-nav a{position:relative;overflow:hidden;transition:color .2s ease,background .2s ease,border-color .2s ease,transform .2s ease}
+.primary-nav a:hover{transform:translateY(-1px)}
+.primary-nav a:after{content:"";position:absolute;left:13px;right:13px;bottom:4px;height:2px;border-radius:9px;background:currentColor;transform:scaleX(0);transform-origin:center;transition:transform .24s cubic-bezier(.2,.8,.2,1);opacity:.75}
+.primary-nav a[aria-current="page"]:after{transform:scaleX(1)}
+.top-actions .iconbtn{transition:transform .2s ease,background .2s ease,border-color .2s ease}
+.top-actions .iconbtn:hover{transform:translateY(-2px)}
+@media(prefers-reduced-motion:reduce){
+ .topbar,.topbar:after,.brandmark,.brandmark:after{animation:none!important}
+ .primary-nav a,.primary-nav a:after,.top-actions .iconbtn,.brand>div:last-child{transition:none!important}
+}
+
+/* Classic Blue — Hekomi's clean, compact anime-tracker appearance. */
+html[data-theme="classic"]{
+ color-scheme:light;--bg:#f3f6fa;--panel:#fff;--panel2:#f7f9fc;--line:#dce3ec;
+ --muted:#66758a;--text:#243247;--violet:#315c9d;--mint:#287d70;--danger:#b42318;--radius:12px
+}
+html[data-theme="classic"],html[data-theme="classic"] body{background:#f3f6fa;color:#243247}
+html[data-theme="classic"] body{background-image:none}
+html[data-theme="classic"] .app{background:transparent}
+html[data-theme="classic"] .topbar{background:rgba(255,255,255,.96);border-bottom:1px solid #dfe5ed;box-shadow:0 2px 8px #20344d08}
+html[data-theme="classic"] .topbar:after{background:linear-gradient(90deg,transparent,#3c6eb0 26%,#8eb2e6 55%,#62a99b 82%,transparent)}
+html[data-theme="classic"] .brand{color:#1f3657}
+html[data-theme="classic"] .brand small{color:#6b7b91}
+html[data-theme="classic"] .brandmark:after{border-color:#7899c455}
+html[data-theme="classic"] .primary-nav a{color:#53647b}
+html[data-theme="classic"] .primary-nav a:hover{background:#f2f6fb;border-color:#dfe7f1;color:#234c83}
+html[data-theme="classic"] .primary-nav a[aria-current="page"]{color:#254f88;background:#eaf1fb;border-color:#d1deef}
+html[data-theme="classic"] body[data-page="manga"] .primary-nav a[aria-current="page"]{color:#17685e;background:#e8f5f1;border-color:#c9e6dc}
+html[data-theme="classic"] .iconbtn{color:#52657f;background:transparent;border-color:transparent}
+html[data-theme="classic"] .iconbtn:hover{background:#eef3f9;border-color:#d9e2ee;color:#234c83}
+html[data-theme="classic"] .chip,html[data-theme="classic"] .mode-label{color:#53647b;background:#f5f8fc;border-color:#dce4ee}
+html[data-theme="classic"] .hero p,html[data-theme="classic"] .workspace-head p{color:#66758a}
+html[data-theme="classic"] .eyebrow{color:#315c9d}
+html[data-theme="classic"] .choice{background:#fff;border-color:#dce3ec;box-shadow:0 2px 8px #213b5b08}
+html[data-theme="classic"] .choice.manga{background:#fbfefd;border-color:#d6e8e2}
+html[data-theme="classic"] .choice h2,html[data-theme="classic"] .card-title,html[data-theme="classic"] .panel h2{color:#25364b}
+html[data-theme="classic"] .choice p,html[data-theme="classic"] .card-sub,html[data-theme="classic"] .muted{color:#66758a}
+html[data-theme="classic"] .choice-icon{background:#edf3fb;color:#315c9d;border-color:#d9e4f2}
+html[data-theme="classic"] .manga .choice-icon{background:#eaf6f2;color:#287d70;border-color:#d2e9e0}
+html[data-theme="classic"] .choice:after{border-color:#315c9d20;box-shadow:0 0 0 20px #315c9d08,0 0 0 40px #315c9d04}
+html[data-theme="classic"] .choice.manga:after{border-color:#287d7025;box-shadow:0 0 0 20px #287d7008,0 0 0 40px #287d7004}
+html[data-theme="classic"] .workspace-head{background:#fff;border:1px solid #dce3ec;border-radius:12px;box-shadow:0 2px 10px #20344d08}
+html[data-theme="classic"] .workspace-head h1{color:#233c5f;font-family:inherit;font-weight:760;letter-spacing:-.04em}
+html[data-theme="classic"] .panel,html[data-theme="classic"] .card,html[data-theme="classic"] .source-card,html[data-theme="classic"] .resultitem,html[data-theme="classic"] .searchbox,html[data-theme="classic"] .modal{
+ background:#fff!important;border-color:#dce3ec!important;color:#243247;box-shadow:0 2px 8px #20344d08
+}
+html[data-theme="classic"] .card,html[data-theme="classic"] .source-card,html[data-theme="classic"] .resultitem{border-radius:10px}
+html[data-theme="classic"] .searchbox{background:#fff!important}
+html[data-theme="classic"] .searchbox span{color:#6a7a90}
+html[data-theme="classic"] .searchbox input,html[data-theme="classic"] .input,html[data-theme="classic"] select.input,html[data-theme="classic"] textarea.input{
+ background:#fff!important;color:#243247!important;border:1px solid #d4deea!important
+}
+html[data-theme="classic"] input::placeholder,html[data-theme="classic"] textarea::placeholder{color:#8794a6!important}
+html[data-theme="classic"] .input:focus,html[data-theme="classic"] .searchbox:focus-within{border-color:#6d91c4!important;box-shadow:0 0 0 3px #315c9d18}
+html[data-theme="classic"] .btn,html[data-theme="classic"] .btn-secondary,html[data-theme="classic"] .iconbtn,html[data-theme="classic"] .mini-btn,html[data-theme="classic"] .filter{
+ color:#40536d;background:#f8fafc;border-color:#dce3ec
+}
+html[data-theme="classic"] .btn:hover,html[data-theme="classic"] .btn-secondary:hover,html[data-theme="classic"] .mini-btn:hover,html[data-theme="classic"] .filter:hover{background:#eff4fa;border-color:#b8c9df;color:#244d84}
+html[data-theme="classic"] .btn-primary{background:#315c9d;border-color:#315c9d;color:#fff}
+html[data-theme="classic"] .btn-primary:hover{background:#264d88;color:#fff}
+html[data-theme="classic"] .btn-mint{background:#287d70;border-color:#287d70;color:#fff}
+html[data-theme="classic"] .filter.active{background:#eaf1fb;border-color:#c5d6ed;color:#254f88}
+html[data-theme="classic"] .manga-mode .filter.active{background:#e8f5f1;border-color:#c5e4d9;color:#17685e}
+html[data-theme="classic"] .subnav{border-color:#dce3ec}
+html[data-theme="classic"] .subnav button{color:#66758a}
+html[data-theme="classic"] .subnav button.active{color:#254f88;border-bottom-color:#315c9d}
+html[data-theme="classic"] .manga-mode .subnav button.active{color:#17685e;border-bottom-color:#287d70}
+html[data-theme="classic"] .link{color:#315c9d}
+html[data-theme="classic"] .notice{background:#f2f6fb;border-left-color:#6d91c4;color:#4c5e76}
+html[data-theme="classic"] .notice.success{background:#eef8f2;border-color:#87b99c;color:#286044}
+html[data-theme="classic"] .notice.warn{background:#fff7e9;border-color:#d1a35c;color:#765222}
+html[data-theme="classic"] .notice.error{background:#fff0f0;border-color:#d28b8b;color:#8f3030}
+html[data-theme="classic"] .empty{background:#fff;border-color:#dce3ec;color:#66758a}
+html[data-theme="classic"] .empty strong{color:#243247}
+html[data-theme="classic"] .pill-label{background:#eef3f9;color:#53647b}
+html[data-theme="classic"] .listrow{border-bottom-color:#e8edf3}
+html[data-theme="classic"] .listrow p{color:#66758a}
+html[data-theme="classic"] .footer{border-top-color:#dce3ec;color:#7a8799}
+html[data-theme="classic"] .theme-option{background:#fff;border-color:#dce3ec;color:#243247}
+html[data-theme="classic"] .theme-option[aria-pressed="true"]{border-color:#315c9d;box-shadow:0 0 0 1px #315c9d}
+html[data-theme="classic"] .theme-option small,html[data-theme="classic"] .theme-settings-copy{color:#66758a}
+html[data-theme="classic"] .theme-swatch.classic{background:linear-gradient(145deg,#f3f6fa 0 52%,#315c9d 52% 76%,#287d70 76%);border-color:#dce3ec}
+html[data-theme="classic"] .weeb-stats{background:#fff;border-color:#dce3ec}
+html[data-theme="classic"] .weeb-stats .eyebrow,html[data-theme="classic"] .weeb-type{color:#315c9d}
+html[data-theme="classic"] .weeb-archetype,html[data-theme="classic"] .weeb-metric{background:#f8fafc;border-color:#e1e7ef}
+html[data-theme="classic"] .weeb-metric strong{color:#263b59}
+html[data-theme="classic"] .weeb-metric span,html[data-theme="classic"] .weeb-metric small,html[data-theme="classic"] .weeb-footnote{color:#66758a}
+html[data-theme="classic"] .weeb-genre{border-top-color:#e1e7ef}
+html[data-theme="classic"] .weeb-genre-row{color:#53647b}
+html[data-theme="classic"] .weeb-genre-track{background:#e8edf4}
+html[data-theme="classic"] .profile-table-wrap{background:#fff;border-color:#dce3ec}
+html[data-theme="classic"] .profile-table{color:#243247}
+html[data-theme="classic"] .profile-table th{background:#f5f8fc;color:#53647b}
+html[data-theme="classic"] .profile-table td,html[data-theme="classic"] .profile-table th{border-color:#e5ebf2}
+html[data-theme="classic"] .hk-calendar{background:#fff;border-color:#dce3ec;color:#243247}
+html[data-theme="classic"] .hk-calendar-month,html[data-theme="classic"] .hk-cal-day{background:#f8fafc;border-color:#e2e8f0}
+html[data-theme="classic"] .hk-calendar p,html[data-theme="classic"] .hk-calendar span{color:#66758a}
+html[data-theme="classic"] .hk-calendar h2,html[data-theme="classic"] .hk-calendar h3{color:#243247}
+html[data-theme="classic"] .hk-cal-today,html[data-theme="classic"] .hk-cal-arrow{background:#f2f6fb;color:#315c9d;border-color:#dce3ec}
+html[data-theme="classic"] .hk-seo-footer{border-top-color:#dce3ec;color:#748196}
+html[data-theme="classic"] .hk-seo-footer a{color:#315c9d}
+html[data-theme="classic"] .hk-auth-card{background:#fff;color:#243247;border-color:#dce3ec}
+html[data-theme="classic"] .hk-auth-card p,html[data-theme="classic"] .hk-auth-card .muted{color:#66758a}
+html[data-theme="classic"] .hk-auth-card input{background:#fff;color:#243247;border-color:#dce3ec}
+html[data-theme="classic"] .hk-auth-close{color:#53647b}
+html[data-theme="classic"] .toast{background:#233f68;color:#fff}
+html[data-theme="classic"] .hekomi-core-panel{color:#243247}
+html[data-theme="classic"] .hk-core-panel{background:#fff;color:#243247;border-color:#dce3ec}
+html[data-theme="classic"] .hk-core-head{background:linear-gradient(120deg,#edf3fb,#eaf6f2)}
+html[data-theme="classic"] .hk-core-head small{color:#66758a}
+html[data-theme="classic"] .hk-core-msg{background:#f0f4f9;color:#243247}
+html[data-theme="classic"] .hk-core-msg.user{background:#e5eefb;color:#234a7e}
+html[data-theme="classic"] .hk-core-input{background:#fff;color:#243247;border-color:#dce3ec}
+html[data-theme="classic"] .hk-core-foot{color:#66758a}
+html[data-theme="classic"] .hk-core-foot button,html[data-theme="classic"] .hk-core-action{color:#315c9d}
+@media(max-width:760px){
+ html[data-theme="classic"] .primary-nav{border-bottom-color:#e1e7ef}
+ html[data-theme="classic"] .primary-nav a[aria-current="page"]{background:#eaf1fb}
+}
+</style>
 </head>
 <body data-page="__HEKOMI_PAGE__">
 <div class="app-scroll-progress" aria-hidden="true"><span id="appScrollProgressBar"></span></div>
@@ -2056,18 +2190,18 @@ body[data-page="home"] .home-hero .hero-copy{max-width:780px}
   const genreSoundPreferenceKey='hekomi_genre_transition_sound_v1';
   let genreTransitionSoundEnabled=(()=>{try{return localStorage.getItem(genreSoundPreferenceKey)==='1';}catch{return false;}})();
   let genreAudioContext=null,genreNavigationPending=false;
-  const themeModes = new Set(['midnight','late-night','dawn','device']);
-  const themeModeNames = {midnight:'Neon Glass', 'late-night':'Cinematic Anime', dawn:'Minimal Elegance', device:'Device Settings'};
+  const themeModes = new Set(['classic','midnight','late-night','dawn','device']);
+  const themeModeNames = {classic:'Classic Blue',midnight:'Neon Glass', 'late-night':'Cinematic Anime', dawn:'Minimal Elegance', device:'Device Settings'};
   const themeSystemQuery = window.matchMedia('(prefers-color-scheme: light)');
-  let themePreference = (() => { try { const saved=localStorage.getItem(themePreferenceKey); return themeModes.has(saved)?saved:'midnight'; } catch { return 'midnight'; } })();
+  let themePreference = (() => { try { const saved=localStorage.getItem(themePreferenceKey); return themeModes.has(saved)?saved:'classic'; } catch { return 'classic'; } })();
   function applyTheme(mode, announce=false) {
-    if (!themeModes.has(mode)) mode='midnight';
+    if (!themeModes.has(mode)) mode='classic';
     themePreference=mode;
     const resolved=mode==='device' ? (themeSystemQuery.matches?'dawn':'midnight') : mode;
     document.documentElement.dataset.theme=resolved;
     document.documentElement.dataset.themePreference=mode;
     const themeMeta=document.querySelector('meta[name="theme-color"]');
-    if(themeMeta) themeMeta.content=resolved==='dawn'?'#f5f0f7':resolved==='late-night'?'#100d13':'#080916';
+    if(themeMeta) themeMeta.content=resolved==='classic'?'#f3f6fa':resolved==='dawn'?'#f5f0f7':resolved==='late-night'?'#100d13':'#080916';
     try { localStorage.setItem(themePreferenceKey,mode); } catch {}
     $$('[data-theme-choice]').forEach(button=>{
       const selected=button.dataset.themeChoice===mode;
@@ -2077,9 +2211,10 @@ body[data-page="home"] .home-hero .hero-copy{max-width:780px}
   }
   function openThemeSettings() {
     const options=[
-      {value:'midnight',title:'A · Neon Glass',description:'Purple glow, glassy surfaces, and futuristic energy.'},
-      {value:'late-night',title:'C · Cinematic Anime',description:'Deep indigo, dramatic depth, and a dreamy after-hours mood.'},
-      {value:'dawn',title:'B · Minimal Elegance',description:'Clean surfaces, quiet colors, and distraction-free reading.'},
+      {value:'classic',title:'Classic Blue',description:'A clean white-and-blue layout with calm surfaces and clear typography.'},
+      {value:'midnight',title:'Neon Glass',description:'Purple glow, glassy surfaces, and futuristic energy.'},
+      {value:'late-night',title:'Cinematic Anime',description:'Deep indigo, dramatic depth, and a dreamy after-hours mood.'},
+      {value:'dawn',title:'Minimal Elegance',description:'Soft light surfaces, quiet colors, and distraction-free reading.'},
       {value:'device',title:'Device Settings',description:'Follow your device’s light or dark setting.'}
     ];
     const buttons=options.map(option=>
