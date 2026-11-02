@@ -142,3 +142,41 @@ test('calendar cards remain within the mobile viewport', async ({ page }) => {
   }));
   expect(dimensions.content).toBeLessThanOrEqual(dimensions.viewport + 1);
 });
+
+test('AniList ID fallback displays a watched series title and cover when source titles are missing', async ({ page }) => {
+  await page.addInitScript(({ cover }) => {
+    localStorage.setItem('folio_local_anime_v1', JSON.stringify([{
+      id: 'anilist-777',
+      anilistId: 777,
+      title: 'My personal series alias',
+      status: 'watching',
+      cover
+    }]));
+  }, { cover: localCover });
+  await page.route(url => url.pathname === '/api/calendar', route => {
+    const fixture = scheduleFixture();
+    fixture.programs[0] = {
+      ...fixture.programs[0],
+      title: 'Anime broadcast #777',
+      titleUnavailable: true,
+      anilistId: 777,
+      malId: 888
+    };
+    return route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(fixture)
+    });
+  });
+  await page.route(url => url.pathname === '/api/mal/list', route =>
+    route.fulfill({ status: 401, contentType: 'application/json', body: '{}' })
+  );
+  await page.route(url => url.hostname === 'cdn.example.test', route =>
+    route.fulfill({ status: 200, contentType: 'image/gif', body: Buffer.from('R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=', 'base64') })
+  );
+
+  await openCalendar(page);
+  const entry = page.locator('.hk-cal-event').filter({ hasText: 'My personal series alias' });
+  await expect(entry).toHaveAttribute('data-watching', 'true');
+  await expect(entry.locator('.hk-cal-event-cover')).toHaveAttribute('src', localCover);
+});
