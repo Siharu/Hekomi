@@ -281,7 +281,7 @@
       return {minX:8,maxX:Math.max(8,innerWidth-w-8),minY:74,maxY:Math.max(74,innerHeight-h-10),w,h};
     }
     findPerchTarget(){
-      if(!/^\\/series\\/anime\\//i.test(location.pathname))return null;
+      if(!location.pathname.toLowerCase().startsWith('/series/anime/'))return null;
       const card=document.querySelector('.detail-cover:not(.detail-cover-missing)');
       if(!card)return null;
       const rect=card.getBoundingClientRect();
@@ -430,6 +430,7 @@
       this.lastSpecialAt=now;this.state='recommend';this.activity='curious';
       this.root.classList.remove('is-sleeping','is-making-bed','is-eating','is-perching','is-waking-up');
       const token=++this.recommendationToken;
+      this.stateUntil=now+15000;
       this.say('Let me check what is airing right now…',6200,true);
       const list=await this.loadAiringAnime();
       if(this.state!=='recommend'||token!==this.recommendationToken)return;
@@ -442,7 +443,7 @@
       const pick=choices.length?this.pick(choices):this.pick(list);
       this.lastRecommendedId=Number(pick.id)||0;
       const title=String(pick.titleEnglish||pick.title||pick.titleRomaji||'this airing anime');
-      const slug=title.toLowerCase().normalize('NFKD').replace(/[\\u0300-\\u036f]/g,'')
+      const slug=title.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,90)||'series';
         .replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,90)||'series';
       if(this.recommendLink){
         this.recommendLink.href='/series/anime/'+Number(pick.id)+'-'+slug;
