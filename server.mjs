@@ -6,7 +6,7 @@ import dns from 'node:dns/promises';
 import net from 'node:net';
 import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
-import { applyAniListAiringFallback, extractSyoboiProgramRows, normalizeSyoboiPrograms, syoboiField, syoboiRows } from './lib/syoboi-calendar.mjs';
+import { applyAniListAiringFallback, applyAniListTitleMetadata, extractSyoboiProgramRows, normalizeSyoboiPrograms, syoboiField, syoboiRows } from './lib/syoboi-calendar.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PORT = Number(process.env.PORT || 4173);
@@ -1085,7 +1085,7 @@ async function malRequest(req, res, pathname, query) {
 
 
 const ANILIST_ENDPOINT = 'https://graphql.anilist.co';
-const MEDIA_CATALOG_FIELDS = 'id idMal type title { romaji english native } coverImage { color extraLarge large medium } bannerImage description(asHtml:false) genres averageScore popularity favourites status episodes chapters volumes season seasonYear format countryOfOrigin source duration startDate { year month day } endDate { year month day } studios(isMain:true) { nodes { name } } nextAiringEpisode { airingAt timeUntilAiring episode } trailer { id site thumbnail } siteUrl updatedAt isLicensed isAdult';
+const MEDIA_CATALOG_FIELDS = 'id idMal type title { romaji english native } synonyms coverImage { color extraLarge large medium } bannerImage description(asHtml:false) genres averageScore popularity favourites status episodes chapters volumes season seasonYear format countryOfOrigin source duration startDate { year month day } endDate { year month day } studios(isMain:true) { nodes { name } } nextAiringEpisode { airingAt timeUntilAiring episode } trailer { id site thumbnail } siteUrl updatedAt isLicensed isAdult';
 const HOME_CATALOG_QUERY = 'query HekomiHomeCatalog { anime: Page(page:1,perPage:10) { media(type:ANIME,sort:[TRENDING_DESC,POPULARITY_DESC],isAdult:false) { ' + MEDIA_CATALOG_FIELDS + ' } } manga: Page(page:1,perPage:10) { media(type:MANGA,sort:[TRENDING_DESC,POPULARITY_DESC],isAdult:false) { ' + MEDIA_CATALOG_FIELDS + ' } } }';
 function currentAnimeSeason(date=new Date()) { const month=date.getUTCMonth()+1; return month<=3?'WINTER':month<=6?'SPRING':month<=9?'SUMMER':'FALL'; }
 const FULL_ANIME_COLLECTION_QUERY = 'query HekomiFullAnimeCollection($page:Int!,$season:MediaSeason,$seasonYear:Int) { results: Page(page:$page,perPage:50) { pageInfo { currentPage hasNextPage total } media(type:ANIME,season:$season,seasonYear:$seasonYear,status:RELEASING,sort:[POPULARITY_DESC],isAdult:false) { ' + MEDIA_CATALOG_FIELDS + ' } } }';
@@ -1147,6 +1147,7 @@ function packMedia(item) {
     title,titleEnglish:item.title && item.title.english || '',
     titleRomaji:item.title && item.title.romaji || '',
     titleNative:item.title && item.title.native || '',
+    synonyms:Array.isArray(item.synonyms)?item.synonyms.filter(value=>typeof value==='string').slice(0,30):[],
     cover:cover, bannerImage:item.bannerImage || '',
     description:cleanText(item.description || ''),
     genres:Array.isArray(item.genres)?item.genres.slice(0,8):[],
@@ -1330,17 +1331,19 @@ async function getSyoboiCalendar(rawStart, rawDays) {
       const now = new Date();
       let programs = normalizeSyoboiPrograms(programRows, titleRows, feedRows, now);
       let aniListFallbackCount = 0;
-      if (programs.some(item => item.titleUnavailable)) {
-        try {
-          const airingAnime = await getSyoboiAniListFallbackAnime();
-          const enriched = applyAniListAiringFallback(programs, airingAnime, 300);
-          aniListFallbackCount = enriched.filter(item =>
-            item.metadataSource === 'AniList'
-          ).length;
-          programs = enriched;
-        } catch {
-          // Keep the Syoboi schedule visible even when AniList is unavailable.
-        }
+      let aniListMetadataCount = 0;
+      try {
+        const airingAnime = await getSyoboiAniListFallbackAnime();
+        programs = applyAniListAiringFallback(programs, airingAnime, 300);
+        programs = applyAniListTitleMetadata(programs, airingAnime);
+        aniListFallbackCount = programs.filter(item =>
+          item.metadataSource === 'AniList' && item.titleUnavailable === false
+        ).length;
+        aniListMetadataCount = programs.filter(item =>
+          item.metadataSource === 'AniList' && Boolean(item.cover && item.anilistId)
+        ).length;
+      } catch {
+        // Keep the Syoboi schedule visible when AniList metadata is unavailable.
       }
       if (!programs.length) {
         const sample = programRows[0] || {};
@@ -1359,7 +1362,8 @@ async function getSyoboiCalendar(rawStart, rawDays) {
         fallbackProgramCount: feedRows.length,
         unresolvedTitleCount: unresolvedTitles,
         aniListFallbackCount,
-        source: aniListFallbackCount ? 'Syoboi Calendar + RSS2 + AniList fallback' : feedRows.length ? 'Syoboi Calendar + RSS2 fallback' : 'Syoboi Calendar',
+        aniListMetadataCount,
+        source: aniListMetadataCount ? 'Syoboi Calendar + AniList metadata' : feedRows.length ? 'Syoboi Calendar + RSS2 fallback' : 'Syoboi Calendar',
         timezone: 'Asia/Tokyo',
         updatedAt: new Date().toISOString()
       };
