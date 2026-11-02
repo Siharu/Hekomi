@@ -92,7 +92,7 @@
     if(!items.length){eventsNode.innerHTML='<div class="hk-cal-empty">No broadcast records are listed for this date.<br>Try another date or month.</div>';return;}
     eventsNode.innerHTML=items.map(item=>{
       const watched=findWatchedMatch(item);
-      const title=watched&&watched.title||item.title||'Anime broadcast';
+      const title=item.title&&!item.titleUnavailable?item.title:(watched&&watched.title)||item.title||'Anime broadcast';
       const episode=item.episode?'Episode '+escape(item.episode):'Broadcast listing';
       const subtitle=item.subtitle?'<p class="hk-cal-event-subtitle">'+escape(item.subtitle)+'</p>':'';
       const run=item.firstAired?'<p class="hk-cal-event-subtitle">Series run: '+escape(item.firstAired)+(item.firstEnded?' → '+escape(item.firstEnded):'')+'</p>':'';
