@@ -8,7 +8,7 @@ test('Hekomi landing workspace renders its primary choices', async ({ page }) =>
   await expect(page).toHaveTitle(/Hekomi/i);
   await expect(page.getByText('Choose what you\'re here for.')).toBeVisible();
   await expect(page.getByText('MAL Client', { exact: true })).toBeVisible();
-  await expect(page.getByText('Manga Crawler', { exact: true })).toBeVisible();
+  await expect(page.getByText('Manga Library', { exact: true })).toBeVisible();
 
   // Keep this as a baseline regression guard while React is introduced in islands.
   await expect(page.locator('#hekomiChanCanvas')).toBeAttached();
