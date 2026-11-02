@@ -25,24 +25,29 @@
     if(status!=='watching')return null;
     const alternative=node.alternative_titles||node.alternativeTitles||{};
     const titles=[
-      node.title,node.titleEnglish,node.titleRomaji,
+      node.title,node.titleEnglish,node.titleRomaji,node.titleNative,
       alternative.en,alternative.ja,
       ...(Array.isArray(alternative.synonyms)?alternative.synonyms:[]),
       ...(Array.isArray(node.synonyms)?node.synonyms:[])
     ].filter(Boolean).map(normalizeTitle).filter(Boolean);
+    const rawId=String(entry&&entry.id||node.id||'');
+    const anilistId=Number(node.anilistId||(rawId.startsWith('anilist-')?rawId.slice(8):0))||null;
+    const malId=Number(node.malId||(rawId.startsWith('mal-')?rawId.slice(4):(entry&&entry.node?node.id:0)))||null;
     const picture=node.main_picture||node.mainPicture||{};
     const images=node.images&&node.images.jpg||{};
     const cover=safeCover(
       node.cover||node.image||node.picture||picture.large||picture.medium||images.large_image_url||images.image_url||''
     );
-    return titles.length?{titles,cover,title:String(node.title||node.titleEnglish||node.titleRomaji||'')}:null;
+    return (titles.length||anilistId||malId)?{titles,cover,anilistId,malId,title:String(node.title||node.titleEnglish||node.titleRomaji||'')}:null;
   }
   function findWatchedMatch(item){
     const keys=[normalizeTitle(item.title),normalizeTitle(item.shortTitle)].filter(Boolean);
-    if(!keys.length)return null;
     for(const entry of [...readLocalAnime(),...remoteWatchlist]){
       const details=watchEntryDetails(entry);
-      if(details&&details.titles.some(title=>keys.includes(title)))return details;
+      if(!details)continue;
+      const anilistMatch=item.anilistId&&details.anilistId&&Number(item.anilistId)===Number(details.anilistId);
+      const malMatch=item.malId&&details.malId&&Number(item.malId)===Number(details.malId);
+      if(anilistMatch||malMatch||details.titles.some(title=>keys.includes(title)))return details;
     }
     return null;
   }
