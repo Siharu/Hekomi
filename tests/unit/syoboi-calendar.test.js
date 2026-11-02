@@ -2,7 +2,9 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   applyAniListAiringFallback,
+  applyAniListTitleMetadata,
   extractSyoboiProgramRows,
+  filterSyoboiPlaceholderPrograms,
   normalizeSyoboiPrograms,
   parseSyoboiDate
 } from '../../lib/syoboi-calendar.mjs';
@@ -122,4 +124,78 @@ test('does not guess when multiple AniList titles share a broadcast slot', () =>
   const [unchanged] = applyAniListAiringFallback([program], [candidate(1), candidate(2)]);
   assert.equal(unchanged.title, program.title);
   assert.equal(unchanged.titleUnavailable, true);
+});
+
+
+test('matches Japanese Syoboi titles to unique AniList metadata and prefers English titles', () => {
+  const [resolved] = applyAniListTitleMetadata([{
+    title: '葬送のフリーレン',
+    shortTitle: '',
+    titleUnavailable: false,
+    date: '2026-11-02'
+  }], [{
+    id: 777,
+    idMal: 888,
+    title: 'Frieren: Beyond Journey’s End',
+    titleEnglish: 'Frieren: Beyond Journey’s End',
+    titleRomaji: 'Sousou no Frieren',
+    titleNative: '葬送のフリーレン',
+    synonyms: ['Frieren'],
+    cover: 'https://cdn.example.test/frieren.webp',
+    siteUrl: 'https://anilist.co/anime/777'
+  }]);
+
+  assert.equal(resolved.title, 'Frieren: Beyond Journey’s End');
+  assert.equal(resolved.shortTitle, 'Sousou no Frieren');
+  assert.equal(resolved.anilistId, 777);
+  assert.equal(resolved.malId, 888);
+  assert.equal(resolved.cover, 'https://cdn.example.test/frieren.webp');
+  assert.equal(resolved.animeUrl, '/series/anime/777-frieren-beyond-journey-s-end');
+  assert.equal(resolved.sourceTitle, '葬送のフリーレン');
+});
+
+test('does not attach an AniList cover or profile when title aliases are ambiguous', () => {
+  const [unchanged] = applyAniListTitleMetadata([{
+    title: '葬送のフリーレン',
+    titleUnavailable: false
+  }], [1, 2].map(id => ({
+    id,
+    titleEnglish: 'Candidate ' + id,
+    titleNative: '葬送のフリーレン',
+    cover: 'https://cdn.example.test/candidate-' + id + '.webp'
+  })));
+
+  assert.equal(unchanged.title, '葬送のフリーレン');
+  assert.equal(unchanged.cover, undefined);
+  assert.equal(unchanged.anilistId, undefined);
+});
+
+
+test('filters only unidentified generic broadcast placeholders', () => {
+  const namedJapaneseBroadcast = {
+    title: '乙女ゲー世界はモブに厳しい世界です',
+    titleUnavailable: false
+  };
+  const translatedBroadcast = {
+    title: 'One-Punch Man',
+    titleUnavailable: false
+  };
+  const unresolvedPlaceholder = {
+    title: 'Anime broadcast #8027',
+    titleUnavailable: true
+  };
+  const genericButResolved = {
+    title: 'Anime broadcast #12',
+    titleUnavailable: false
+  };
+
+  assert.deepEqual(
+    filterSyoboiPlaceholderPrograms([
+      namedJapaneseBroadcast,
+      translatedBroadcast,
+      unresolvedPlaceholder,
+      genericButResolved
+    ]),
+    [namedJapaneseBroadcast, translatedBroadcast, genericButResolved]
+  );
 });

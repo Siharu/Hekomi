@@ -134,3 +134,12 @@
 .hk-cal-event-watch-tag{display:inline-flex;margin-top:4px;color:var(--mint,#8be1cf);font-family:"IBM Plex Mono",monospace;font-size:7px;font-weight:700;letter-spacing:.08em}
 .hk-cal-event[data-watching="true"]{border-color:rgba(139,225,207,.19);background:linear-gradient(100deg,rgba(139,225,207,.045),rgba(255,255,255,.015))}
 @media(max-width:370px){.hk-cal-event-content{gap:7px}.hk-cal-event-cover{flex-basis:39px;width:39px;height:56px}}
+
+
+/* Matched AniList artwork is available for every resolved broadcast, not only watchlist items. */
+.hk-cal-event-cover-link{display:block;flex:0 0 45px;width:45px;height:64px;border-radius:7px;overflow:hidden;text-decoration:none;outline-offset:3px}
+.hk-cal-event-cover-link .hk-cal-event-cover{width:100%;height:100%;transition:transform .2s ease,filter .2s ease}
+.hk-cal-event-cover-link:hover .hk-cal-event-cover{transform:scale(1.045);filter:brightness(1.08)}
+.hk-cal-event-cover-link:focus-visible,.hk-cal-event h4 a:focus-visible{outline:2px solid var(--violet,#b9a6ff);outline-offset:3px;border-radius:4px}
+@media(max-width:370px){.hk-cal-event-cover-link{flex-basis:39px;width:39px;height:56px}}
+@media(prefers-reduced-motion:reduce){.hk-cal-event-cover-link .hk-cal-event-cover{transition:none}}

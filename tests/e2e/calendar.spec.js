@@ -180,3 +180,49 @@ test('AniList ID fallback displays a watched series title and cover when source 
   await expect(entry).toHaveAttribute('data-watching', 'true');
   await expect(entry.locator('.hk-cal-event-cover')).toHaveAttribute('src', localCover);
 });
+
+
+test('Japanese broadcast title shows AniList artwork and opens the Hekomi anime profile', async ({ page }) => {
+  const date = todayInTokyo();
+  const cover = 'https://cdn.example.test/anime-cover.webp';
+  await page.route(url => url.pathname === '/api/calendar', route => route.fulfill({
+    status: 200,
+    contentType: 'application/json',
+    body: JSON.stringify({
+      start: date.slice(0, 7) + '-01',
+      days: 31,
+      rawProgramCount: 1,
+      timezone: 'Asia/Tokyo',
+      programs: [{
+        id: 'pid-jp-1',
+        tid: 777,
+        title: 'Frieren: Beyond Journey’s End',
+        sourceTitle: '葬送のフリーレン',
+        shortTitle: 'Sousou no Frieren',
+        anilistId: 777,
+        malId: 888,
+        cover,
+        animeUrl: '/series/anime/777-frieren-beyond-journey-s-end',
+        date,
+        time: '20:00',
+        airingAt: date + 'T11:00:00.000Z',
+        episode: 5,
+        status: 'upcoming',
+        listingType: 'TV',
+        channel: 'TOKYO MX'
+      }]
+    })
+  }));
+  await page.route(url => url.hostname === 'cdn.example.test', route =>
+    route.fulfill({ status: 200, contentType: 'image/gif', body: Buffer.from('R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=', 'base64') })
+  );
+  await page.route(url => url.pathname === '/api/mal/list', route =>
+    route.fulfill({ status: 401, contentType: 'application/json', body: '{}' })
+  );
+
+  await openCalendar(page);
+  const event = page.locator('.hk-cal-event').filter({ hasText: 'Frieren: Beyond Journey’s End' });
+  await expect(event.locator('.hk-cal-event-cover')).toHaveAttribute('src', cover);
+  await expect(event.locator('h4 a')).toHaveAttribute('href', '/series/anime/777-frieren-beyond-journey-s-end');
+  await expect(event.locator('.hk-cal-event-cover-link')).toHaveAttribute('href', '/series/anime/777-frieren-beyond-journey-s-end');
+});
