@@ -6,7 +6,7 @@ import dns from 'node:dns/promises';
 import net from 'node:net';
 import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
-import { extractSyoboiProgramRows, normalizeSyoboiPrograms, syoboiField, syoboiRows } from './lib/syoboi-calendar.mjs';
+import { applyAniListAiringFallback, extractSyoboiProgramRows, normalizeSyoboiPrograms, syoboiField, syoboiRows } from './lib/syoboi-calendar.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PORT = Number(process.env.PORT || 4173);
@@ -1184,6 +1184,26 @@ async function fetchAllAnimeCollection({season=null,seasonYear=null,status=null}
   return {anime:all,total,hasMore:hasNextPage,source:'AniList',pagesFetched:page-1};
 }
 
+const syoboiAniListFallbackCache = { data: null, expiresAt: 0, pending: null };
+async function getSyoboiAniListFallbackAnime() {
+  if (syoboiAniListFallbackCache.data && Date.now() < syoboiAniListFallbackCache.expiresAt) {
+    return syoboiAniListFallbackCache.data;
+  }
+  if (syoboiAniListFallbackCache.pending) return syoboiAniListFallbackCache.pending;
+  syoboiAniListFallbackCache.pending = (async () => {
+    try {
+      const collection = await fetchAllAnimeCollection({ status: 'RELEASING' });
+      const anime = Array.isArray(collection.anime) ? collection.anime : [];
+      syoboiAniListFallbackCache.data = anime;
+      syoboiAniListFallbackCache.expiresAt = Date.now() + 15 * 60 * 1000;
+      return anime;
+    } finally {
+      syoboiAniListFallbackCache.pending = null;
+    }
+  })();
+  return syoboiAniListFallbackCache.pending;
+}
+
 let syoboiLastRequestAt = 0;
 let syoboiRequestQueue = Promise.resolve();
 async function fetchSyoboi(endpoint, options) {
@@ -1308,7 +1328,20 @@ async function getSyoboiCalendar(rawStart, rawDays) {
       }
 
       const now = new Date();
-      const programs = normalizeSyoboiPrograms(programRows, titleRows, feedRows, now);
+      let programs = normalizeSyoboiPrograms(programRows, titleRows, feedRows, now);
+      let aniListFallbackCount = 0;
+      if (programs.some(item => item.titleUnavailable)) {
+        try {
+          const airingAnime = await getSyoboiAniListFallbackAnime();
+          const enriched = applyAniListAiringFallback(programs, airingAnime, 300);
+          aniListFallbackCount = enriched.filter(item =>
+            item.metadataSource === 'AniList'
+          ).length;
+          programs = enriched;
+        } catch {
+          // Keep the Syoboi schedule visible even when AniList is unavailable.
+        }
+      }
       if (!programs.length) {
         const sample = programRows[0] || {};
         const timeValue = syoboiField(sample, 'StTime') ?? syoboiField(sample, 'StTimeU');
@@ -1325,7 +1358,8 @@ async function getSyoboiCalendar(rawStart, rawDays) {
         titleCount: titleRows.length,
         fallbackProgramCount: feedRows.length,
         unresolvedTitleCount: unresolvedTitles,
-        source: feedRows.length ? 'Syoboi Calendar + RSS2 fallback' : 'Syoboi Calendar',
+        aniListFallbackCount,
+        source: aniListFallbackCount ? 'Syoboi Calendar + RSS2 + AniList fallback' : feedRows.length ? 'Syoboi Calendar + RSS2 fallback' : 'Syoboi Calendar',
         timezone: 'Asia/Tokyo',
         updatedAt: new Date().toISOString()
       };
