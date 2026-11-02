@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
+  applyAniListAiringFallback,
   extractSyoboiProgramRows,
   normalizeSyoboiPrograms,
   parseSyoboiDate
@@ -67,4 +68,58 @@ test('parses Syoboi compact Japan-local timestamps and Unix epochs', () => {
   assert.equal(parseSyoboiDate('20261102_200000').toISOString(), '2026-11-02T11:00:00.000Z');
   assert.equal(parseSyoboiDate('1793646000').toISOString(), new Date(1793646000 * 1000).toISOString());
   assert.equal(parseSyoboiDate('not-a-date'), null);
+});
+
+
+test('uses a unique AniList airing-time and episode match when Syoboi titles are unavailable', () => {
+  const airingAt = '2026-11-02T11:00:00.000Z';
+  const [resolved] = applyAniListAiringFallback([{
+    id: 'pid-555',
+    tid: 555,
+    title: 'Anime broadcast #555',
+    titleUnavailable: true,
+    airingAt,
+    episode: 5
+  }], [{
+    id: 777,
+    idMal: 888,
+    title: 'Airing series title',
+    titleEnglish: 'Airing series title',
+    titleRomaji: 'Airing Series',
+    cover: 'https://cdn.example.test/airing-series.webp',
+    siteUrl: 'https://anilist.co/anime/777',
+    nextAiringEpisode: {
+      airingAt: Math.floor(Date.parse(airingAt) / 1000),
+      episode: 5
+    }
+  }]);
+
+  assert.equal(resolved.title, 'Airing series title');
+  assert.equal(resolved.shortTitle, 'Airing Series');
+  assert.equal(resolved.titleUnavailable, false);
+  assert.equal(resolved.metadataSource, 'AniList');
+  assert.equal(resolved.anilistId, 777);
+  assert.equal(resolved.malId, 888);
+  assert.equal(resolved.cover, 'https://cdn.example.test/airing-series.webp');
+});
+
+test('does not guess when multiple AniList titles share a broadcast slot', () => {
+  const airingAt = '2026-11-02T11:00:00.000Z';
+  const program = {
+    title: 'Anime broadcast #556',
+    titleUnavailable: true,
+    airingAt,
+    episode: 2
+  };
+  const candidate = id => ({
+    id,
+    title: 'Candidate ' + id,
+    nextAiringEpisode: {
+      airingAt: Math.floor(Date.parse(airingAt) / 1000),
+      episode: 2
+    }
+  });
+  const [unchanged] = applyAniListAiringFallback([program], [candidate(1), candidate(2)]);
+  assert.equal(unchanged.title, program.title);
+  assert.equal(unchanged.titleUnavailable, true);
 });
