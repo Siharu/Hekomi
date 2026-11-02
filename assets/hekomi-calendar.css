@@ -125,3 +125,12 @@
   .hk-calendar-day-cell,.hk-cal-event,.hk-calendar-toolbar button,.hk-calendar-day,
   .hk-calendar-month-label h3,.hk-calendar-day-cell .hk-cal-day-number{transition:none!important}
 }
+
+
+/* Watched-series artwork: only shown when a broadcast matches an actively watched title. */
+.hk-cal-event-content{display:flex;align-items:flex-start;gap:10px;min-width:0}
+.hk-cal-event-cover{display:block;flex:0 0 45px;width:45px;height:64px;object-fit:cover;object-position:center;border:1px solid rgba(255,255,255,.14);border-radius:7px;background:#171923;box-shadow:0 5px 13px rgba(0,0,0,.2)}
+.hk-cal-event-copy{flex:1;min-width:0}
+.hk-cal-event-watch-tag{display:inline-flex;margin-top:4px;color:var(--mint,#8be1cf);font-family:"IBM Plex Mono",monospace;font-size:7px;font-weight:700;letter-spacing:.08em}
+.hk-cal-event[data-watching="true"]{border-color:rgba(139,225,207,.19);background:linear-gradient(100deg,rgba(139,225,207,.045),rgba(255,255,255,.015))}
+@media(max-width:370px){.hk-cal-event-content{gap:7px}.hk-cal-event-cover{flex-basis:39px;width:39px;height:56px}}
