@@ -6,6 +6,7 @@ import dns from 'node:dns/promises';
 import net from 'node:net';
 import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
+import { extractSyoboiProgramRows, normalizeSyoboiPrograms, syoboiField, syoboiRows } from './lib/syoboi-calendar.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PORT = Number(process.env.PORT || 4173);
@@ -1186,153 +1187,151 @@ async function fetchAllAnimeCollection({season=null,seasonYear=null,status=null}
 const syoboiCalendarCache = new Map();
 const syoboiCalendarInFlight = new Map();
 
-function syoboiRows(value) {
-  if (Array.isArray(value)) {
-    return value.map(entry => {
-      if (Array.isArray(entry) && entry.length >= 2 && entry[1] && typeof entry[1] === 'object') return entry[1];
-      return entry;
-    }).filter(item => item && typeof item === 'object' && !Array.isArray(item));
+async function fetchSyoboiRssPrograms(start, days) {
+  const [year, month, day] = start.split('-').map(Number);
+  const allRows = [];
+  // rss2.php documents a maximum 14-day window. Seven-day chunks stay
+  // comfortably within its supported range and avoid month-size requests.
+  for (let offset = 0; offset < days; offset += 7) {
+    const chunkStart = new Date(Date.UTC(year, month - 1, day + offset));
+    const ymd = chunkStart.getUTCFullYear() +
+      String(chunkStart.getUTCMonth() + 1).padStart(2, '0') +
+      String(chunkStart.getUTCDate()).padStart(2, '0') + '0000';
+    const chunkDays = Math.min(7, days - offset);
+    const endpoint = new URL('https://cal.syoboi.jp/rss2.php');
+    endpoint.searchParams.set('start', ymd);
+    endpoint.searchParams.set('days', String(chunkDays));
+    endpoint.searchParams.set('alt', 'json');
+    const response = await fetch(endpoint, {
+      headers: {
+        'Accept': 'application/json',
+        'User-Agent': 'Hekomi/1.0 (+https://hekomi.vercel.app; anime broadcast calendar)'
+      },
+      signal: AbortSignal.timeout(12000)
+    });
+    if (!response.ok) throw new Error('Syoboi RSS fallback returned HTTP ' + response.status + '.');
+    const payload = await response.json();
+    allRows.push(...extractSyoboiProgramRows(payload));
   }
-  if (!value || typeof value !== 'object') return [];
-  if ('TID' in value || 'PID' in value || 'tid' in value || 'pid' in value) return [value];
-  return Object.entries(value).map(([id,item]) => {
-    if (Array.isArray(item) && item.length >= 2 && item[1] && typeof item[1] === 'object') return {_key:id,...item[1]};
-    if (item && typeof item === 'object' && !Array.isArray(item)) return {_key:id,...item};
-    return null;
-  }).filter(Boolean);
+  const unique = new Map();
+  for (const row of allRows) {
+    const pid = String(syoboiField(row, 'PID') ?? '');
+    const key = pid || [
+      syoboiField(row, 'TID'),
+      syoboiField(row, 'StTime') ?? syoboiField(row, 'StTimeU'),
+      syoboiField(row, 'ChID')
+    ].join(':');
+    if (key) unique.set(key, row);
+  }
+  return [...unique.values()];
 }
-function syoboiField(record, name) {
-  if (!record || typeof record !== 'object') return undefined;
-  return record[name] ?? record[name.toLowerCase()] ?? record[name.toUpperCase()];
-}
-function parseSyoboiDate(value) {
-  if (value == null || value === '') return null;
-  const raw = String(value).trim();
-  if (/^\d{9,13}$/.test(raw)) {
-    const number = Number(raw);
-    const millis = raw.length <= 10 ? number * 1000 : number;
-    const date = new Date(millis);
-    return Number.isNaN(date.getTime()) ? null : date;
-  }
-  // Syoboi timestamps are commonly YYYYMMDD_HHMMSS, but some
-  // responses/clients expose the compact YYYYMMDDHHMM form.
-  const compact = raw.match(/^(\d{4})(\d{2})(\d{2})[_T ]?(\d{2})(\d{2})(\d{2})?$/);
-  if (compact) {
-    const [,y,m,d,h,minute,second='0'] = compact;
-    const parts=[Number(y),Number(m),Number(d),Number(h),Number(minute),Number(second)];
-    if(parts[1]<1||parts[1]>12||parts[2]<1||parts[2]>31||parts[3]>47||parts[4]>59||parts[5]>59)return null;
-    return new Date(Date.UTC(parts[0],parts[1]-1,parts[2],parts[3]-9,parts[4],parts[5]));
-  }
-  const wrapped = raw.match(/^\\?\/?Date\\?\/?\((-?\d+)\\?\)?\/?$/i);
-  if (wrapped) {
-    const date = new Date(Number(wrapped[1]));
-    return Number.isNaN(date.getTime()) ? null : date;
-  }
-  const separated = raw.match(/^(\d{4})[-/](\d{2})[-/](\d{2})[ T](\d{1,2}):(\d{2})(?::(\d{2}))?/);
-  if (separated) {
-    const [,y,m,d,h,minute,second='0'] = separated;
-    return new Date(Date.UTC(Number(y),Number(m)-1,Number(d),Number(h)-9,Number(minute),Number(second)));
-  }
-  const parsed = new Date(raw);
-  return Number.isNaN(parsed.getTime()) ? null : parsed;
-}
-function syoboiDateKey(date) {
-  const parts = new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Tokyo',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(date);
-  const part = type => parts.find(item=>item.type===type)?.value || '00';
-  return part('year')+'-'+part('month')+'-'+part('day');
-}
-async function getSyoboiCalendar(rawStart,rawDays) {
-  const start=String(rawStart||''),days=Math.floor(Number(rawDays)||0);
-  if(!/^\d{4}-\d{2}-\d{2}$/.test(start)||days<1||days>32)throw new Error('Choose a valid calendar month.');
-  const startDate=new Date(start+'T00:00:00Z');
-  if(Number.isNaN(startDate.getTime())||startDate.toISOString().slice(0,10)!==start)throw new Error('Choose a valid calendar date.');
-  const key=start+':'+days,cached=syoboiCalendarCache.get(key);
-  if(cached&&Date.now()<cached.expiresAt)return cached.data;
-  if(syoboiCalendarInFlight.has(key))return syoboiCalendarInFlight.get(key);
-  const request=(async()=>{
-    try {
-      const endpoint=new URL('https://cal.syoboi.jp/json.php');
-      endpoint.searchParams.set('Req','ProgramByDate,TitleLarge');
-      // The documented API parameter names are Start and Days.
-      endpoint.searchParams.set('Start',start);
-      endpoint.searchParams.set('Days',String(days));
-      const response=await fetch(endpoint,{headers:{'Accept':'application/json','User-Agent':'Hekomi/0.5 (+https://hekomi.vercel.app; anime broadcast calendar)'},signal:AbortSignal.timeout(14000)});
-      if(!response.ok)throw new Error('Syoboi Calendar returned HTTP '+response.status+'.');
-      const payload=await response.json();
-      let titleRows=syoboiRows(payload&&(payload.Titles||payload.TitleLarge||payload.Title));
-      const programRows=syoboiRows(payload&&payload.Programs);
-      if(!payload||!payload.Programs||typeof payload.Programs!=='object')throw new Error('Syoboi Calendar returned an unexpected response (missing Programs).');
 
-      // ProgramByDate can return valid program rows even when the chained
-      // TitleLarge block is omitted by an intermediary/API response variant.
-      // Resolve those TIDs explicitly rather than dropping every broadcast.
-      const programTids=[...new Set(programRows.map(item=>String(syoboiField(item,'TID')??'')).filter(tid=>/^\d+$/.test(tid)))];
-      const titleIdsInResponse=new Set(titleRows.map(item=>String(syoboiField(item,'TID')??item._key??'')));
-      const missingTids=programTids.filter(tid=>!titleIdsInResponse.has(tid));
-      if(missingTids.length){
-        const extraRows=[];
-        for(let offset=0;offset<missingTids.length;offset+=80){
-          const titleUrl=new URL('https://cal.syoboi.jp/json.php');
-          titleUrl.searchParams.set('Req','TitleLarge');
-          titleUrl.searchParams.set('TID',missingTids.slice(offset,offset+80).join(','));
-          const titleResponse=await fetch(titleUrl,{headers:{'Accept':'application/json','User-Agent':'Hekomi/0.5 (+https://hekomi.vercel.app; anime broadcast calendar)'},signal:AbortSignal.timeout(12000)});
-          if(!titleResponse.ok)continue;
-          const titlePayload=await titleResponse.json();
-          extraRows.push(...syoboiRows(titlePayload&&(titlePayload.Titles||titlePayload.TitleLarge||titlePayload.Title)));
+async function getSyoboiCalendar(rawStart, rawDays) {
+  const start = String(rawStart || ''), days = Math.floor(Number(rawDays) || 0);
+  if (!/^\\d{4}-\\d{2}-\\d{2}$/.test(start) || days < 1 || days > 32) {
+    throw new Error('Choose a valid calendar month.');
+  }
+  const startDate = new Date(start + 'T00:00:00Z');
+  if (Number.isNaN(startDate.getTime()) || startDate.toISOString().slice(0, 10) !== start) {
+    throw new Error('Choose a valid calendar date.');
+  }
+  const key = start + ':' + days, cached = syoboiCalendarCache.get(key);
+  if (cached && Date.now() < cached.expiresAt) return cached.data;
+  if (syoboiCalendarInFlight.has(key)) return syoboiCalendarInFlight.get(key);
+
+  const request = (async () => {
+    try {
+      let programRows = [], titleRows = [], primaryError = null;
+      try {
+        const endpoint = new URL('https://cal.syoboi.jp/json.php');
+        endpoint.searchParams.set('Req', 'ProgramByDate,TitleLarge');
+        endpoint.searchParams.set('Start', start);
+        endpoint.searchParams.set('Days', String(days));
+        const response = await fetch(endpoint, {
+          headers: {
+            'Accept': 'application/json',
+            'User-Agent': 'Hekomi/1.0 (+https://hekomi.vercel.app; anime broadcast calendar)'
+          },
+          signal: AbortSignal.timeout(14000)
+        });
+        if (!response.ok) throw new Error('Syoboi Calendar returned HTTP ' + response.status + '.');
+        const payload = await response.json();
+        titleRows = syoboiRows(payload && (payload.Titles || payload.TitleLarge || payload.Title));
+        programRows = extractSyoboiProgramRows(payload && (payload.Programs || payload));
+        if (!programRows.length) throw new Error('Syoboi Calendar returned no programme rows.');
+      } catch (error) {
+        primaryError = error;
+      }
+
+      const titlesByTid = new Map(titleRows.map(item => [
+        String(syoboiField(item, 'TID') ?? item._key ?? ''), item
+      ]));
+      const needsFeedTitles = programRows.some(item => {
+        const tid = String(syoboiField(item, 'TID') ?? '');
+        const metadata = titlesByTid.get(tid) || {};
+        return !(
+          syoboiField(metadata, 'Title') ||
+          syoboiField(metadata, 'ShortTitle') ||
+          syoboiField(item, 'Title') ||
+          syoboiField(item, 'ShortTitle')
+        );
+      });
+
+      let feedRows = [];
+      if (!programRows.length || needsFeedTitles) {
+        try {
+          feedRows = await fetchSyoboiRssPrograms(start, days);
+        } catch (error) {
+          // Retain valid JSON programme rows when the secondary feed is down.
+          if (!programRows.length) primaryError = new Error(
+            (primaryError && primaryError.message ? primaryError.message + ' ' : '') +
+            'RSS title fallback failed: ' + String(error && error.message || error)
+          );
         }
-        if(extraRows.length)titleRows=titleRows.concat(extraRows);
       }
-      const titles=new Map(titleRows.map(item=>{
-        const tid=String(syoboiField(item,'TID')??item._key??'');
-        return [tid,item];
-      }).filter(([tid])=>tid));
-      const now=Date.now();
-      const programs=programRows.map(item=>{
-        const tid=String(syoboiField(item,'TID')??'');
-        const title=titles.get(tid)||{};
-        const startAt=parseSyoboiDate(syoboiField(item,'StTime'));
-        if(!startAt)return null;
-        const episodeRaw=syoboiField(item,'Count');
-        const episodeNumber=Number(episodeRaw);
-        const category=Number(syoboiField(title,'Cat'));
-        const titleName=syoboiField(title,'Title')||syoboiField(title,'ShortTitle')||syoboiField(item,'Title');
-        if(!titleName)return null;
-        return {
-          id:String(syoboiField(item,'PID')||tid+'-'+syoboiField(item,'StTime')),
-          tid:Number(tid)||null,
-          title:String(titleName),
-          shortTitle:String(syoboiField(title,'ShortTitle')||''),
-          episode:Number.isFinite(episodeNumber)&&episodeNumber>0?episodeNumber:null,
-          subtitle:String(syoboiField(item,'SubTitle2')||syoboiField(item,'SubTitle')||''),
-          channel:String(syoboiField(item,'ChName')||''),
-          firstAired:syoboiField(title,'FirstYear')&&syoboiField(title,'FirstMonth')?String(syoboiField(title,'FirstYear'))+'-'+String(syoboiField(title,'FirstMonth')).padStart(2,'0'):null,
-          firstEnded:syoboiField(title,'FirstEndYear')&&syoboiField(title,'FirstEndMonth')?String(syoboiField(title,'FirstEndYear'))+'-'+String(syoboiField(title,'FirstEndMonth')).padStart(2,'0'):null,
-          listingType:category===10?'REBROADCAST':category===7?'OVA':category===2?'MOVIE':'TV',
-          isPremiere:Number.isFinite(episodeNumber)&&episodeNumber===1&&category!==10,
-          date:syoboiDateKey(startAt),airingAt:startAt.toISOString(),
-          time:new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Tokyo',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(startAt),
-          status:startAt.getTime()>now?'upcoming':'aired',category:Number.isFinite(category)?category:null,
-          url:Number(tid)>0?'https://cal.syoboi.jp/tid/'+Number(tid):'https://cal.syoboi.jp/'
-        };
-      }).filter(Boolean).sort((a,b)=>a.airingAt.localeCompare(b.airingAt));
-      if(programRows.length&&!programs.length) {
-        const fields=Object.keys(programRows[0]||{}).join(', ');
-        const sample=programRows[0]||{};
-        const timeValue=syoboiField(sample,'StTime');
-        const titleValue=syoboiField(titles.get(String(syoboiField(sample,'TID')??''))||{},'Title');
-        throw new Error('Syoboi returned '+programRows.length+' program records, but Hekomi could not map them. '+(timeValue==null?'Missing StTime.':parseSyoboiDate(timeValue)?'Airing times parsed, but title metadata is missing.':'Unrecognized StTime format: '+String(timeValue).slice(0,48)+'.')+' Title records: '+titleRows.length+'. Fields: '+fields);
+      if (!programRows.length && feedRows.length) programRows = feedRows;
+      if (!programRows.length) {
+        throw primaryError || new Error('Syoboi did not return any broadcast records.');
       }
-      const data={start,days,programs,total:programs.length,rawProgramCount:programRows.length,titleCount:titleRows.length,source:'Syoboi Calendar',timezone:'Asia/Tokyo',updatedAt:new Date().toISOString()};
-      const isHistorical=startDate.getTime()+days*86400000<Date.now();
-      syoboiCalendarCache.set(key,{data,expiresAt:Date.now()+(isHistorical?12*60*60*1000:10*60*1000)});
-      if(syoboiCalendarCache.size>48)syoboiCalendarCache.delete(syoboiCalendarCache.keys().next().value);
+
+      const now = new Date();
+      const programs = normalizeSyoboiPrograms(programRows, titleRows, feedRows, now);
+      if (!programs.length) {
+        const sample = programRows[0] || {};
+        const timeValue = syoboiField(sample, 'StTime') ?? syoboiField(sample, 'StTimeU');
+        throw new Error(
+          'Syoboi returned ' + programRows.length + ' programme records, but none had a usable airing time. ' +
+          'Sample time: ' + String(timeValue ?? 'missing') + '.'
+        );
+      }
+
+      const unresolvedTitles = programs.filter(item => item.titleUnavailable).length;
+      const data = {
+        start, days, programs, total: programs.length,
+        rawProgramCount: programRows.length,
+        titleCount: titleRows.length,
+        fallbackProgramCount: feedRows.length,
+        unresolvedTitleCount: unresolvedTitles,
+        source: feedRows.length ? 'Syoboi Calendar + RSS2 fallback' : 'Syoboi Calendar',
+        timezone: 'Asia/Tokyo',
+        updatedAt: new Date().toISOString()
+      };
+      const isHistorical = startDate.getTime() + days * 86400000 < Date.now();
+      syoboiCalendarCache.set(key, {
+        data,
+        expiresAt: Date.now() + (isHistorical ? 12 * 60 * 60 * 1000 : 10 * 60 * 1000)
+      });
+      if (syoboiCalendarCache.size > 48) {
+        syoboiCalendarCache.delete(syoboiCalendarCache.keys().next().value);
+      }
       return data;
-    } finally { syoboiCalendarInFlight.delete(key); }
+    } finally {
+      syoboiCalendarInFlight.delete(key);
+    }
   })();
-  syoboiCalendarInFlight.set(key,request);
+  syoboiCalendarInFlight.set(key, request);
   return request;
 }
-
 async function getPublicCatalog(force=false) {
   if (!force && publicCatalogCache.data && Date.now() < publicCatalogCache.expiresAt) return publicCatalogCache.data;
   if (publicCatalogInFlight) return publicCatalogInFlight;
