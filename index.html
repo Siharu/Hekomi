@@ -1667,6 +1667,74 @@ html[data-theme="classic"] .hk-core-foot button,html[data-theme="classic"] .hk-c
  html[data-theme="classic"] .primary-nav a[aria-current="page"]{background:#eaf1fb}
 }
 </style>
+
+<style id="hekomi-mobile-header-dashboard">
+/* Compact mobile header + clean, tracker-style bottom navigation. */
+@media(max-width:760px){
+ html[data-theme="classic"] .app{padding-bottom:calc(104px + env(safe-area-inset-bottom))!important}
+ html[data-theme="classic"] .topbar{
+   min-height:62px;height:auto;display:flex;flex-wrap:nowrap;gap:8px;padding:8px 0;
+   background:rgba(255,255,255,.96);border-bottom:1px solid #dce3ec;box-shadow:0 2px 8px #20344d08
+ }
+ html[data-theme="classic"] .brand{min-width:0;gap:8px;flex:1 1 auto}
+ html[data-theme="classic"] .brandmark{width:34px!important;height:34px!important;flex-basis:34px!important}
+ html[data-theme="classic"] .brand>div:last-child{font-size:16px;letter-spacing:-.02em}
+ html[data-theme="classic"] .brand small{font-size:7px;letter-spacing:.025em;white-space:nowrap}
+ html[data-theme="classic"] .top-actions{gap:4px;flex:0 0 auto}
+ html[data-theme="classic"] .top-actions .chip{display:none}
+ html[data-theme="classic"] .top-actions .iconbtn{width:38px;height:38px;min-width:38px;min-height:38px;background:#f7f9fc;border:1px solid #e0e7f0;color:#52657f}
+ html[data-theme="classic"] .top-actions #headerHome{display:none!important}
+ html[data-theme="classic"] .primary-nav{
+   position:fixed!important;z-index:1000!important;left:12px!important;right:12px!important;
+   bottom:calc(8px + env(safe-area-inset-bottom))!important;order:initial!important;flex:initial!important;
+   width:auto!important;margin:0!important;padding:7px!important;display:grid!important;
+   grid-template-columns:repeat(5,minmax(0,1fr))!important;align-items:stretch;gap:3px!important;
+   overflow:visible!important;border:1px solid #d9e2ee!important;border-radius:17px!important;
+   background:rgba(255,255,255,.96)!important;backdrop-filter:blur(20px) saturate(140%);
+   box-shadow:0 8px 28px #263d5a20
+ }
+ html[data-theme="classic"] .primary-nav a{
+   min-width:0;min-height:50px!important;padding:5px 2px!important;display:flex!important;
+   flex-direction:column;align-items:center;justify-content:center;gap:4px;
+   border:1px solid transparent;border-radius:11px;font-size:9px!important;line-height:1.1;
+   letter-spacing:0!important;white-space:nowrap;text-align:center;color:#62738a
+ }
+ html[data-theme="classic"] .primary-nav a svg{display:block;width:18px;height:18px;flex:0 0 18px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+ html[data-theme="classic"] .primary-nav a span{display:block;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+ html[data-theme="classic"] .primary-nav a:after{display:none}
+ html[data-theme="classic"] .primary-nav a[aria-current="page"]{color:#254f88!important;background:#eaf1fb!important;border-color:#d1deef!important}
+ html[data-theme="classic"] body[data-page="manga"] .primary-nav a[aria-current="page"]{color:#17685e!important;background:#e8f5f1!important;border-color:#c9e6dc!important}
+ html[data-theme="classic"] .view{padding-top:18px}
+ html[data-theme="classic"] .workspace-head{gap:10px;margin:8px 0 15px}
+ html[data-theme="classic"] .workspace-head h1{font-size:clamp(25px,7vw,31px);line-height:1.12}
+ html[data-theme="classic"] .head-actions{width:100%}
+ html[data-theme="classic"] .head-actions button{min-height:44px}
+ html[data-theme="classic"] .subnav{display:flex;gap:8px!important;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;padding-bottom:2px}
+ html[data-theme="classic"] .subnav::-webkit-scrollbar{display:none}
+ html[data-theme="classic"] .subnav button{min-height:42px;flex:0 0 auto;padding:9px 12px}
+ html[data-theme="classic"] .toolbar{gap:10px}
+ html[data-theme="classic"] .searchbox{width:100%;max-width:none;min-height:44px}
+ html[data-theme="classic"] .filterrow{flex-wrap:nowrap;overflow-x:auto;overscroll-behavior-x:contain;padding-bottom:4px}
+ html[data-theme="classic"] .filterrow .filter{flex:0 0 auto;min-height:36px}
+ html[data-theme="classic"] .grid,html[data-theme="classic"] .catalog-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+ html[data-theme="classic"] .card,html[data-theme="classic"] .catalog-card{border-radius:12px}
+ html[data-theme="classic"] .card-body,html[data-theme="classic"] .catalog-card-body{padding:9px;gap:6px}
+ html[data-theme="classic"] .btn,html[data-theme="classic"] .btn-secondary,html[data-theme="classic"] .btn-primary,html[data-theme="classic"] .btn-mint,html[data-theme="classic"] .iconbtn,html[data-theme="classic"] .input,html[data-theme="classic"] select.input{min-height:42px}
+ html[data-theme="classic"] #hekomiCompanion{z-index:66}
+}
+@media(max-width:390px){
+ html[data-theme="classic"] .app{padding-left:12px!important;padding-right:12px!important}
+ html[data-theme="classic"] .brand small{font-size:6.5px;letter-spacing:0}
+ html[data-theme="classic"] .top-actions{gap:3px}
+ html[data-theme="classic"] .top-actions .iconbtn{width:36px;min-width:36px}
+ html[data-theme="classic"] .primary-nav{left:8px!important;right:8px!important}
+ html[data-theme="classic"] .primary-nav a{font-size:8px!important;min-height:48px!important}
+ html[data-theme="classic"] .primary-nav a svg{width:17px;height:17px;flex-basis:17px}
+}
+@media(prefers-reduced-motion:reduce){
+ html[data-theme="classic"] .primary-nav a,html[data-theme="classic"] .subnav button{transition:none!important}
+}
+</style>
 </head>
 <body data-page="__HEKOMI_PAGE__">
 <div class="app-scroll-progress" aria-hidden="true"><span id="appScrollProgressBar"></span></div>
