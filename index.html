@@ -543,6 +543,47 @@ h1,h2,h3,.workspace-head h1,.catalog-heading h2,.showcase-copy h2{font-family:va
 .hk-account-dot{width:9px;height:9px;border-radius:50%;background:#a9f0db;box-shadow:0 0 12px #a9f0db}
 .hk-auth-foot{font-size:12px!important;margin-top:16px}
 
+
+/* Hekomi motion system — calm, cohesive and lightweight. */
+:root{--hk-motion-fast:150ms;--hk-motion-base:220ms;--hk-motion-slow:360ms;--hk-ease:cubic-bezier(.2,.75,.25,1)}
+@media(prefers-reduced-motion:no-preference){
+  html{scroll-behavior:smooth}
+  .view{animation:hk-view-enter 360ms var(--hk-ease) both}
+  .workspace-head,.panel,.weeb-stats,.anime-showcase,.seasonal-shelf{animation:hk-rise-in 420ms var(--hk-ease) both}
+  .workspace-head{animation-delay:35ms}.anime-showcase{animation-delay:55ms}
+  .grid>.card,.shelf>.source-card{animation:hk-card-enter 420ms var(--hk-ease) both}
+  .grid>.card:nth-child(2n),.shelf>.source-card:nth-child(2n){animation-delay:35ms}
+  .grid>.card:nth-child(3n),.shelf>.source-card:nth-child(3n){animation-delay:70ms}
+  .card{transition:transform var(--hk-motion-base) var(--hk-ease),border-color var(--hk-motion-base),box-shadow var(--hk-motion-base)}
+  .card:hover{transform:translateY(-4px);border-color:color-mix(in srgb,var(--violet) 42%,var(--line));box-shadow:0 12px 28px #0002}
+  .cover img{transition:transform 480ms var(--hk-ease),filter 300ms}
+  .card:hover .cover img{transform:scale(1.045);filter:saturate(1.06)}
+  .choice,.source-card,.resultitem,.listrow{transition:transform var(--hk-motion-base) var(--hk-ease),border-color var(--hk-motion-base),background var(--hk-motion-base)}
+  .choice:hover,.source-card:hover{transform:translateY(-3px)}
+  .resultitem:hover{border-color:#514b65}
+  .btn,.btn-secondary,.btn-primary,.btn-mint,.iconbtn,.mini-btn,.filter,.subnav button{transition:transform var(--hk-motion-fast) var(--hk-ease),background var(--hk-motion-fast),border-color var(--hk-motion-fast),color var(--hk-motion-fast)}
+  .btn:active,.btn-secondary:active,.btn-primary:active,.btn-mint:active,.iconbtn:active,.mini-btn:active,.filter:active{transform:scale(.97)}
+  .filter.active{animation:hk-chip-pop 220ms var(--hk-ease)}
+  .subnav button.active{transition:border-color var(--hk-motion-base),color var(--hk-motion-base)}
+  .weeb-genre-fill{transition:width 650ms var(--hk-ease)}
+  .modal-backdrop{animation:hk-fade-in 180ms ease-out both}
+  .modal{animation:hk-modal-in 260ms var(--hk-ease) both}
+  .toast{animation:hk-toast-in 260ms var(--hk-ease) both}
+  .mobile-bottom a,.mobile-bottom button{transition:transform var(--hk-motion-fast) var(--hk-ease),color var(--hk-motion-fast)}
+  .mobile-bottom a:active,.mobile-bottom button:active{transform:scale(.94)}
+}
+@keyframes hk-view-enter{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+@keyframes hk-rise-in{from{opacity:0;transform:translateY(9px)}to{opacity:1;transform:translateY(0)}}
+@keyframes hk-card-enter{from{opacity:0;transform:translateY(10px) scale(.985)}to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes hk-chip-pop{0%{transform:scale(.96)}65%{transform:scale(1.025)}100%{transform:scale(1)}}
+@keyframes hk-fade-in{from{opacity:0}to{opacity:1}}
+@keyframes hk-modal-in{from{opacity:0;transform:translateY(8px) scale(.985)}to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes hk-toast-in{from{opacity:0;transform:translate(-50%,8px)}to{opacity:1;transform:translate(-50%,0)}}
+@media(prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto!important}
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}
+}
+
 </style>
 
 <style>
