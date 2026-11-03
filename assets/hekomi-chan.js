@@ -73,19 +73,60 @@
       [14,57,5,8,'skin0'],[13,60,6,5,'skin1'],[14,64,5,2,'skin2'],[16,62,3,2,'skin2'],[14,58,2,3,'skin1']
     ],dy);
   }
+  // The waving hand is drawn as a connected shoulder → elbow → wrist → palm,
+  // with separate fingers. Small pose changes keep the pixel silhouette readable.
   function drawWaveArm(ctx,frame,dy){
-    const poses=[
-      {e:0,w:0,h:0},{e:-1,w:-1,h:-2},{e:0,w:-2,h:-1},{e:1,w:-1,h:1}
-    ];
-    const pose=poses[frame%poses.length],e=pose.e,w=pose.w,h=pose.h;
+    const lift=[0,-1,-2,-1,0,1][frame%6];
+    const tilt=[0,0,1,1,0,-1][frame%6];
     blocks(ctx,[
       [41,47,9,12,'ink'],[43,48,6,9,'shirt0'],[43,49,5,6,'shirt2'],
-      [47+e,47,5,8,'skin0'],[48+e,46,4,8,'skin1'],
-      [49+w,39,5,11,'skin0'],[50+w,37,4,10,'skin2'],
-      [49+h,31,9,9,'skin1'],[50+h,30,7,8,'skin2'],[48+h,32,3,4,'skin0'],
-      [49+h,25,3,8,'skin2'],[53+h,22,3,11,'skin3'],[57+h,24,3,9,'skin2'],
-      [60+h,28,2,6,'skin0'],[51+h,25,1,5,'skin3'],[55+h,22,1,7,'white'],
-      [52+h,35,4,2,'skin3'],[50+w,44,2,3,'skin3']
+      [47,47,5,8,'skin0'],[48,46,4,8,'skin1'],
+      [49+tilt,39+lift,4,10,'skin0'],[50+tilt,38+lift,3,9,'skin2'],
+      [49+tilt,31+lift,8,9,'skin0'],[50+tilt,30+lift,6,8,'skin2'],
+      [49+tilt,23+lift,2,9,'skin1'],[52+tilt,20+lift,2,12,'skin3'],
+      [55+tilt,22+lift,2,10,'skin2'],[58+tilt,26+lift,2,7,'skin1'],
+      [47+tilt,32+lift,3,5,'skin0'],[48+tilt,34+lift,3,3,'skin2'],
+      [50+tilt,32+lift,1,2,'skin3'],[53+tilt,30+lift,1,2,'skin3'],
+      [56+tilt,31+lift,1,2,'skin3'],[50+tilt,39+lift,2,2,'skin3']
+    ],dy);
+  }
+  function drawMakingBedArm(ctx,frame,dy){
+    const reach=frame%4<2?0:2;
+    blocks(ctx,[
+      [41,47,9,12,'ink'],[43,48,6,9,'shirt0'],[43,49,5,6,'shirt2'],
+      [46,53,5,7,'skin0'],[44,57,5,6,'skin1'],
+      [40-reach,60,7,4,'skin0'],[36-reach,61,7,3,'skin2'],
+      [34-reach,60,3,2,'skin3'],[39-reach,58,2,2,'skin3']
+    ],dy);
+  }
+  function drawEatingArm(ctx,frame,dy){
+    const chew=frame%4<2?0:1;
+    blocks(ctx,[
+      [41,47,9,12,'ink'],[43,48,6,9,'shirt0'],[43,49,5,6,'shirt2'],
+      [46,45,5,7,'skin0'],[47,41,5,7,'skin1'],
+      [45,37-chew,5,7,'skin0'],[44,35-chew,5,6,'skin2'],
+      [43,34-chew,4,5,'skin1'],[42,35-chew,3,3,'skin3'],
+      [47,37-chew,2,3,'skin3'],[45,41,2,2,'skin3']
+    ],dy);
+  }
+  function drawPerchArms(ctx,frame,dy){
+    const press=frame%4<2?0:1;
+    blocks(ctx,[
+      [14,48,7,11,'ink'],[15,49,5,8,'shirt0'],[16,50,4,5,'shirt2'],
+      [13,58,5,6,'skin0'],[12,62+press,5,4,'skin1'],[12,64+press,4,2,'skin2'],
+      [41,47,9,11,'ink'],[43,48,6,8,'shirt0'],[44,49,4,6,'shirt2'],
+      [47,57,5,6,'skin0'],[48,62+press,5,4,'skin1'],[49,65+press,4,2,'skin2']
+    ],dy);
+  }
+  function drawPerchLegs(ctx,frame,dy){
+    const swing=frame%6<3?0:1;
+    blocks(ctx,[
+      [20,61,25,7,'ink'],[21,62,10,7,'pant0'],[34,62,10,7,'pant0'],
+      [20,67,8,6,'pant1'],[35,67,8,6,'pant1'],
+      [17,72+swing,10,4,'pant0'],[37,71-swing,9,5,'pant0'],
+      [15,76+swing,13,3,'ink'],[36,75-swing,13,3,'ink'],
+      [17,75+swing,9,2,'shoe1'],[38,74-swing,9,2,'shoe1'],
+      [24,66,2,3,'pant2'],[37,66,2,3,'pant2']
     ],dy);
   }
   function drawEyes(ctx,expression,blink,gazeX=0,gazeY=0){
@@ -112,32 +153,46 @@
       [22,29,3,1,'hair0'],[42,29,3,1,'hair0']
     ]);
   }
-  function drawFaceDetails(ctx,expression){
+  function drawFaceDetails(ctx,expression,chewFrame=0){
     blocks(ctx,[[18,30,2,4,'skin1'],[45,30,2,4,'skin1'],[21,37,4,2,'blush'],[41,37,4,2,'blush'],[31,36,2,3,'skin0'],[32,37,2,2,'skin2']]);
     if(expression==='surprised')blocks(ctx,[[31,40,4,4,'skin0'],[32,40,2,2,'ink']]);
     else if(expression==='annoyed')blocks(ctx,[[29,39,6,2,'eye0'],[30,41,4,1,'eye0']]);
     else if(expression==='sleepy')blocks(ctx,[[30,40,5,1,'eye0'],[34,41,2,1,'skin0']]);
     else if(expression==='happy')blocks(ctx,[[29,39,2,2,'eye0'],[31,41,4,2,'eye0'],[35,39,2,2,'eye0']]);
-    else blocks(ctx,[[30,40,5,1,'eye0'],[34,41,2,1,'eye0']]);
+    else if(expression==='eating'){
+      if(chewFrame%2===0)blocks(ctx,[[30,40,5,3,'eye0'],[31,41,3,1,'skin1']]);
+      else blocks(ctx,[[30,40,5,1,'eye0'],[34,41,2,1,'eye0']]);
+    }else blocks(ctx,[[30,40,5,1,'eye0'],[34,41,2,1,'eye0']]);
   }
   function drawSprite(ctx,frame){
     ctx.clearRect(0,0,W,H);
     const dy=frame.bob;
     blocks(ctx,BACK_HAIR,dy);
-    if(frame.walking) drawWalkLegs(ctx,frame.step,dy);
+    if(frame.sitting)drawPerchLegs(ctx,frame.step,dy);
+    else if(frame.walking)drawWalkLegs(ctx,frame.step,dy);
     else blocks(ctx,LEGS,dy);
     blocks(ctx,TORSO,dy);
-    if(frame.sleeping) drawSleepArms(ctx,dy);
-    else if(frame.walking) drawWalkArms(ctx,frame.step,dy);
-    else { drawLeftArm(ctx,dy); drawWaveArm(ctx,frame.wave,dy); }
+    if(frame.sleeping)drawSleepArms(ctx,dy);
+    else if(frame.walking)drawWalkArms(ctx,frame.step,dy);
+    else if(frame.action==='making-bed')drawMakingBedArm(ctx,frame.wave,dy);
+    else if(frame.action==='eating')drawLeftArm(ctx,dy);
+    else if(frame.sitting)drawPerchArms(ctx,frame.step,dy);
+    else {drawLeftArm(ctx,dy);drawWaveArm(ctx,frame.wave,dy);}
     blocks(ctx,FACE,dy);
     blocks(ctx,FRINGE,dy);
     blocks(ctx,[
       [13,45,5,12,'hair0'],[14,54,4,7,'hair1'],[45,46,5,12,'hair0'],
-      [46,54,4,8,'hair1'],[17,58,3,5,'hair0'],[44,60,3,5,'hair0']
+      [46,54,4,8,'hair1'],[17,58,3,5,'hair0'],[44,60,3,5,'hair1']
     ],dy);
     drawEyes(ctx,frame.expression,frame.blink,frame.gazeX||0,frame.gazeY||0);
-    drawFaceDetails(ctx,frame.expression);
+    drawFaceDetails(ctx,frame.expression,frame.chewFrame||0);
+    if(frame.action==='eating'){
+      drawEatingArm(ctx,frame.chewFrame||0,dy);
+      blocks(ctx,[
+        [42,34,5,4,'white'],[41,35,2,3,'skin1'],
+        [43,37,4,1,'mint0'],[44,34,1,1,'skin3']
+      ],dy);
+    }
     blocks(ctx,[
       [43,22,3,1,'mint1'],[44,21,1,3,'mint1'],[46,22,2,1,'accent'],
       [17,18,2,1,'hair4'],[48,35,1,3,'hair3'],[13,44,1,4,'hair3'],
@@ -179,6 +234,10 @@
       this.x=12;this.y=12;this.last=0;this.lastSpeech=0;this.speechUntil=0;this.lastObstacleCheck=0;
       this.stateUntil=0;this.walkFrame=0;this.stops=0;this.sleepCount=0;this.hiddenPause=false;
       this.nextBlink=performance.now()+1800+Math.random()*2600;this.blinkUntil=0;this.gazeX=0;this.gazeY=0;this.nextGlance=performance.now()+2200+Math.random()*3800;this.activity='idle';
+      this.scrollTimer=0;this.lastScrollSpeechAt=0;this.lastSpecialAt=0;
+      this.airingPromise=null;this.airingPool=[];this.lastRecommendedId=0;this.recommendationToken=0;this.nextPose='';
+      this.bed=root.querySelector('.hekomi-bed');this.snack=root.querySelector('.hekomi-snack');
+      this.recommendLink=bubble&&bubble.querySelector('.hekomi-recommend-link');
       this.reduced=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
       this.canvas.width=W;this.canvas.height=H;this.ctx.imageSmoothingEnabled=false;
       this.canvas.style.imageRendering='pixelated';this.canvas.setAttribute('role','button');
@@ -186,7 +245,8 @@
       this.canvas.title='Say hi to Hekomi-chan';
       this.lines=this.dialogueForPage();
       this.root.addEventListener('click',event=>{
-        if(event.target===this.canvas||event.target.closest('#hekomiCompanion'))this.interact();
+        if(event.target.closest('a,button'))return;
+        if(event.target===this.canvas)this.interact();
       });
       this.canvas.addEventListener('keydown',event=>{
         if(event.key==='Enter'||event.key===' '){event.preventDefault();this.interact();}
@@ -194,10 +254,17 @@
       window.addEventListener('resize',()=>this.onResize(),{passive:true});
       window.addEventListener('scroll',()=>this.onScroll(),{passive:true});
       document.addEventListener('visibilitychange',()=>{if(!document.hidden){this.last=performance.now();this.paint(this.last,true);}});
-      this.placeInitially();
-      this.say(this.pick(['Hey! I live here now.','Oh, a visitor!','Psst… need a guide?']),4200);
-      this.paint(performance.now(),true);
-      if(!this.reduced){this.stateUntil=performance.now()+1600;requestAnimationFrame(time=>this.tick(time));}
+      const startsPerched=this.placeInitially();
+      const now=performance.now();
+      if(startsPerched){
+        this.state='perch';this.root.classList.add('is-perching');
+        this.say('This is the best seat in the house.',6500,true);
+        this.stateUntil=now+9000;
+      }else{
+        this.say(this.pick(['Hey! I live here now.','Oh, a visitor!','Psst… need a guide?']),6200,true);
+      }
+      this.paint(now,true);
+      if(!this.reduced){if(!startsPerched)this.stateUntil=now+1800;requestAnimationFrame(time=>this.tick(time));}
     }
 
     dialogueForPage(){
@@ -210,24 +277,43 @@
     }
     pick(items){return items[Math.floor(Math.random()*items.length)];}
     bounds(){
-      const w=this.root.offsetWidth||160,h=this.root.offsetHeight||180;
+      const w=this.root.offsetWidth||176,h=this.root.offsetHeight||194;
       return {minX:8,maxX:Math.max(8,innerWidth-w-8),minY:74,maxY:Math.max(74,innerHeight-h-10),w,h};
+    }
+    findPerchTarget(){
+      if(!location.pathname.toLowerCase().startsWith('/series/anime/'))return null;
+      const card=document.querySelector('.detail-cover:not(.detail-cover-missing)');
+      if(!card)return null;
+      const rect=card.getBoundingClientRect();
+      if(rect.width<70||rect.height<100||rect.bottom<30||rect.top>innerHeight-20)return null;
+      const b=this.bounds();
+      const x=rect.right-142;
+      const y=rect.bottom-170;
+      return {
+        x:Math.max(b.minX,Math.min(x,b.maxX)),
+        y:Math.max(b.minY,Math.min(y,b.maxY))
+      };
     }
     placeInitially(){
       const b=this.bounds();
-      this.x=Math.max(b.minX,b.maxX-(document.body.dataset.page==='home'?24:8));
-      this.y=document.body.dataset.page==='home'
-        ?Math.max(b.minY,Math.min(190,b.maxY))
-        :b.maxY;
-      if(this.blocked(this.x,this.y)){
-        const safe=this.findSpot();
-        this.x=safe.x;this.y=safe.y;
+      const perch=this.findPerchTarget();
+      if(perch){this.x=perch.x;this.y=perch.y;}
+      else{
+        this.x=Math.max(b.minX,b.maxX-(document.body.dataset.page==='home'?24:8));
+        this.y=document.body.dataset.page==='home'
+          ?Math.max(b.minY,Math.min(190,b.maxY))
+          :b.maxY;
+        if(this.blocked(this.x,this.y)){
+          const safe=this.findSpot();
+          this.x=safe.x;this.y=safe.y;
+        }
       }
       this.applyPosition();
       this.setInteractable();
+      return Boolean(perch);
     }
     blocked(x,y){
-      const area={left:x+21,right:x+140,top:y+20,bottom:y+166};
+      const area={left:x+18,right:x+170,top:y+18,bottom:y+190};
       const nodes=document.querySelectorAll('a,button,input,select,textarea,[role="button"],.topbar,.modal,.reader-modal,.chapter-pages,.back-top');
       for(const node of nodes){
         if(this.root.contains(node))continue;
@@ -257,62 +343,170 @@
       return {x:b.maxX,y:b.maxY};
     }
     moveToNext(){
-      const next=this.findSpot();
+      const perch=this.findPerchTarget();
+      const goPerch=Boolean(perch)&&Math.random()<.38;
+      const next=goPerch?perch:this.findSpot();
       const distance=Math.hypot(next.x-this.x,next.y-this.y);
-      if(distance<50){this.arrive();return;}
-      this.target=next;this.state='walk';this.root.classList.remove('is-sleeping');
-      this.face=next.x>=this.x?1:-1;this.canvas.style.transform=this.face<0?'scaleX(-1)':'none';
+      if(distance<50){if(goPerch){this.nextPose='perch';this.arrive();}else this.arrive();return;}
+      this.nextPose=goPerch?'perch':'';
+      this.target=next;this.state='walk';this.activity='idle';
+      this.root.classList.remove('is-sleeping','is-making-bed','is-waking-up','is-eating','is-perching');
+      this.canvas.style.transform=this.face<0?'scaleX(-1)':'none';
       this.canvas.style.pointerEvents='none';this.hideSpeech();
     }
     setInteractable(){
       this.canvas.style.pointerEvents=this.blocked(this.x,this.y)?'none':'auto';
     }
     arrive(){
-      this.target=null;this.state='idle';this.stops++;this.setInteractable();
-      this.root.classList.remove('is-sleeping');
+      this.target=null;this.stops++;this.setInteractable();
       const now=performance.now();
-      const shouldSleep=this.stops>=2&&Math.random()<.22;
-      if(shouldSleep){this.sleep(now);return;}
-      if(Math.random()<.72)this.say(this.pick(this.lines),3000+Math.random()*900);
-      this.stateUntil=now+2200+Math.random()*3500;
+      if(this.nextPose==='perch'){
+        this.nextPose='';this.state='perch';this.activity='content';
+        this.root.classList.add('is-perching');
+        this.say(this.pick(['I can see the whole series from here.','This cover is surprisingly comfy.','I’m guarding this anime for you.']),6200);
+        this.stateUntil=now+7600+Math.random()*3500;
+        return;
+      }
+      this.state='idle';this.root.classList.remove('is-perching','is-waking-up');
+      if(this.stops>=2&&now-this.lastSpecialAt>22000){
+        const chance=Math.random();
+        if(chance<.13){this.startBedtime(now);return;}
+        if(chance<.29){this.startEating(now);return;}
+        if(chance<.43){this.recommendAiring(now);return;}
+      }
+      if(Math.random()<.68)this.say(this.pick(this.lines),5600+Math.random()*900);
+      this.stateUntil=now+3400+Math.random()*3300;
+    }
+    startBedtime(now){
+      this.lastSpecialAt=now;this.state='make-bed';this.activity='nesting';
+      this.root.classList.remove('is-sleeping','is-eating','is-perching','is-waking-up');
+      this.root.classList.add('is-making-bed');
+      this.canvas.style.transform=this.face<0?'scaleX(-1)':'none';
+      this.say(this.pick(['Let me make the bed first.','Pillow straight… blanket tucked…','Bedtime routine!']),6200,true);
+      this.stateUntil=now+2600;
     }
     sleep(now){
-      this.state='sleep';this.sleepCount++;this.root.classList.add('is-sleeping');
-      this.setInteractable();this.canvas.style.transform='rotate(90deg)';
-      this.say(this.pick(['Just a tiny nap…','Wake me when there’s a new chapter.','Five more minutes…','Zzz…']),5200);
-      this.stateUntil=now+8500+Math.random()*8000;
+      this.state='sleep';this.sleepCount++;this.root.classList.remove('is-making-bed');
+      this.root.classList.add('is-sleeping');
+      this.canvas.style.transform='rotate(90deg)';
+      this.say(this.pick(['All tucked in. Good night…','Wake me when the next episode airs.','Five more minutes…','Zzz…']),9500,true);
+      this.stateUntil=now+8500+Math.random()*6500;
     }
     wake(now){
-      this.state='wake';this.root.classList.remove('is-sleeping');this.canvas.style.transform=this.face<0?'scaleX(-1)':'none';
-      this.say(this.pick(['Mmm… good morning.','I’m awake! I think.','That was a very important nap.']),3200);
-      this.stateUntil=now+1500;
+      this.state='wake';this.root.classList.remove('is-sleeping');this.root.classList.add('is-waking-up');
+      this.canvas.style.transform=this.face<0?'scaleX(-1)':'none';
+      this.say(this.pick(['Mmm… good morning.','I’m awake! I think.','That was a very important nap.']),6200,true);
+      this.stateUntil=now+1800;
     }
-    say(text,duration=3000){
-      if(!this.message)return;
-      this.message.textContent=text;this.speechUntil=performance.now()+duration;
+    startEating(now){
+      this.lastSpecialAt=now;this.state='eat';this.activity='snacking';
+      this.root.classList.remove('is-sleeping','is-making-bed','is-perching','is-waking-up');
+      this.root.classList.add('is-eating');
+      this.canvas.style.transform=this.face<0?'scaleX(-1)':'none';
+      this.say(this.pick(['Snack break!','Just a little bite.','Want one? I brought extra.']),5600,true);
+      this.stateUntil=now+4600+Math.random()*1300;
+    }
+    async loadAiringAnime(){
+      if(this.airingPool.length)return this.airingPool;
+      if(this.airingPromise)return this.airingPromise;
+      this.airingPromise=fetch('/api/catalog',{headers:{Accept:'application/json'},credentials:'same-origin'})
+        .then(response=>{if(!response.ok)throw new Error('Airing catalog unavailable');return response.json();})
+        .then(data=>{
+          const all=Array.isArray(data&&data.airing)?data.airing:[];
+          const now=Date.now();
+          const near=all.filter(item=>{
+            const at=Number(item&&item.nextAiringEpisode&&item.nextAiringEpisode.airingAt)*1000;
+            return Number(item&&item.id)>0&&item.title&&item.cover&&at>now-3600000&&at<now+14*86400000;
+          });
+          const usable=near.length?near:all.filter(item=>Number(item&&item.id)>0&&item.title&&item.cover);
+          this.airingPool=usable;
+          return usable;
+        })
+        .catch(()=>[])
+        .finally(()=>{this.airingPromise=null;});
+      return this.airingPromise;
+    }
+    async recommendAiring(now){
+      this.lastSpecialAt=now;this.state='recommend';this.activity='curious';
+      this.root.classList.remove('is-sleeping','is-making-bed','is-eating','is-perching','is-waking-up');
+      const token=++this.recommendationToken;
+      this.stateUntil=now+15000;
+      this.say('Let me check what is airing right now…',6200,true);
+      const list=await this.loadAiringAnime();
+      if(this.state!=='recommend'||token!==this.recommendationToken)return;
+      if(!list.length){
+        this.say('The airing list is shy today. Let’s explore the catalog instead.',6200,true);
+        this.stateUntil=performance.now()+6200;
+        return;
+      }
+      const choices=list.filter(item=>Number(item.id)!==this.lastRecommendedId);
+      const pick=choices.length?this.pick(choices):this.pick(list);
+      this.lastRecommendedId=Number(pick.id)||0;
+      const title=String(pick.titleEnglish||pick.title||pick.titleRomaji||'this airing anime');
+      const slug=title.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,90)||'series';
+      if(this.recommendLink){
+        this.recommendLink.href='/series/anime/'+Number(pick.id)+'-'+slug;
+        this.recommendLink.textContent='Meet '+title+' ↗';
+        this.recommendLink.hidden=false;
+      }
+      this.say('This one is airing right now. I think you might like it:',8200,true);
+      this.stateUntil=performance.now()+8200;
+    }
+    say(text,duration=5600,force=false){
+      if(!this.message||!this.bubble)return false;
+      const now=performance.now();
+      if(!force&&now<this.speechUntil)return false;
+      if(this.recommendLink)this.recommendLink.hidden=true;
+      this.message.textContent=text;
+      this.speechUntil=now+Math.max(5200,duration);
       this.bubble.classList.add('is-visible');
-      this.lastSpeech=performance.now();
+      this.lastSpeech=now;
+      return true;
     }
     hideSpeech(){
-      if(performance.now()>this.speechUntil)this.bubble.classList.remove('is-visible');
+      if(performance.now()>this.speechUntil&&this.bubble)this.bubble.classList.remove('is-visible');
     }
     interact(){
       const now=performance.now();
-      if(this.state==='sleep'){this.say('Huh?! I wasn’t sleeping!');this.wake(now);return;}
+      this.recommendationToken++;
+      if(this.scrollTimer){clearTimeout(this.scrollTimer);this.scrollTimer=0;}
+      if(this.state==='sleep'){this.say('Huh?! I wasn’t sleeping!',5000,true);this.wake(now);return;}
       const line=this.pick(['Hehe! You noticed me!','Need a little company?','I like it here.','Let’s explore!','I was just stretching.']);
-      this.state='greet';this.activity='noticed';this.gazeX=0;this.gazeY=-1;this.say(line,3800);this.stateUntil=now+2600;
+      this.state='greet';this.activity='noticed';this.gazeX=0;this.gazeY=-1;
+      this.root.classList.remove('is-making-bed','is-eating','is-perching','is-waking-up');
+      this.say(line,6200,true);this.stateUntil=now+3000;
       this.canvas.style.pointerEvents='auto';
       this.paint(now,true);
     }
     onResize(){
-      const b=this.bounds();this.x=Math.max(b.minX,Math.min(this.x,b.maxX));this.y=Math.max(b.minY,Math.min(this.y,b.maxY));
-      if(this.target){this.target.x=Math.max(b.minX,Math.min(this.target.x,b.maxX));this.target.y=Math.max(b.minY,Math.min(this.target.y,b.maxY));}
+      const perch=this.state==='perch'?this.findPerchTarget():null;
+      const b=this.bounds();
+      if(perch){this.x=perch.x;this.y=perch.y;}
+      else{
+        this.x=Math.max(b.minX,Math.min(this.x,b.maxX));this.y=Math.max(b.minY,Math.min(this.y,b.maxY));
+        if(this.target){this.target.x=Math.max(b.minX,Math.min(this.target.x,b.maxX));this.target.y=Math.max(b.minY,Math.min(this.target.y,b.maxY));}
+      }
       this.applyPosition();
     }
     onScroll(){
-      if(this.state==='walk'||this.state==='sleep')return;
-      if(Math.random()<.28)this.say(this.pick(['Oh! We’re going somewhere?','This page is bigger than my room.','I’ll keep up!']),2600);
-      if(this.state==='idle'){this.activity='curious';this.stateUntil=Math.min(this.stateUntil,performance.now()+900);}
+      const now=performance.now();
+      if(this.state==='perch'){
+        const perch=this.findPerchTarget();
+        if(perch){this.x=perch.x;this.y=perch.y;this.applyPosition();}
+        else{this.state='idle';this.root.classList.remove('is-perching');}
+      }
+      if(this.state==='walk'||this.state==='sleep'||this.state==='make-bed'||this.state==='eat')return;
+      this.lastScrollAt=now;
+      if(this.scrollTimer)clearTimeout(this.scrollTimer);
+      this.scrollTimer=setTimeout(()=>{
+        this.scrollTimer=0;
+        const settled=performance.now();
+        if(document.hidden||this.state==='walk'||this.state==='sleep'||this.state==='make-bed'||this.state==='eat')return;
+        if(settled-this.lastScrollSpeechAt<15000||settled<this.speechUntil)return;
+        this.lastScrollSpeechAt=settled;
+        if(this.state==='idle')this.activity='curious';
+        this.say(this.pick(['Oh, we found another corner.','Take your time. I can wait.','There is a lot to discover here.']),6600);
+      },950);
     }
     applyPosition(){
       const b=this.bounds(),x=Math.max(b.minX,Math.min(this.x,b.maxX)),y=Math.max(b.minY,Math.min(this.y,b.maxY));
@@ -342,8 +536,17 @@
           this.applyPosition();
         }
       }else if(time>=this.stateUntil){
-        if(this.state==='sleep')this.wake(time);
-        else if(this.state==='wake'||this.state==='greet'||this.state==='idle')this.moveToNext();
+        if(this.state==='make-bed')this.sleep(time);
+        else if(this.state==='sleep')this.wake(time);
+        else if(this.state==='eat'){
+          this.state='idle';this.root.classList.remove('is-eating');
+          this.say('Mmm. That hit the spot.',5600);
+          this.stateUntil=time+1700;
+        }else if(this.state==='perch'){
+          this.root.classList.remove('is-perching');this.state='idle';this.moveToNext();
+        }else if(this.state==='wake'){
+          this.root.classList.remove('is-waking-up');this.moveToNext();
+        }else if(this.state==='recommend'||this.state==='greet'||this.state==='idle')this.moveToNext();
       }
       this.hideSpeech();
       if(this.state!=='walk')this.canvas.style.pointerEvents='auto';
@@ -354,12 +557,18 @@
       if(!force&&this.state!=='walk'&&time-this.lastPaint<150)return;
       this.lastPaint=time;
       const walking=this.state==='walk',sleeping=this.state==='sleep';
+      const makingBed=this.state==='make-bed',eating=this.state==='eat',sitting=this.state==='perch';
       const frame=Math.floor(time/130);
       const blink=sleeping||time<this.blinkUntil;
-      const expression=sleeping?'sleepy':this.state==='greet'?'happy':this.state==='wake'?'surprised':this.activity==='curious'?'surprised':this.activity==='annoyed'?'annoyed':'normal';
+      const expression=sleeping?'sleepy':eating?'eating':this.state==='greet'?'happy':this.state==='wake'?'surprised':this.activity==='curious'?'surprised':this.activity==='annoyed'?'annoyed':'normal';
       const bob=sleeping?(Math.floor(time/700)%2):walking?frame%2:(Math.floor(time/520)%2);
       const sway=walking?0:Math.round(Math.sin(time/760)*0.5);
-      drawSprite(this.ctx,{expression,blink,walking,sleeping,step:frame%4,wave:frame%4,bob:bob+sway,gazeX:this.gazeX,gazeY:this.gazeY});
+      drawSprite(this.ctx,{
+        expression,blink,walking,sleeping,sitting,
+        action:makingBed?'making-bed':eating?'eating':'',
+        step:frame%6,wave:Math.floor(time/210)%6,chewFrame:Math.floor(time/240)%2,
+        bob:bob+sway,gazeX:this.gazeX,gazeY:this.gazeY
+      });
     }
   }
 
@@ -372,9 +581,19 @@
     const root=document.createElement('div');
     root.id='hekomiCompanion';root.className='hekomi-companion';
     root.setAttribute('aria-label','Hekomi-chan, your wandering pixel companion');
-    if(bubble){root.appendChild(bubble);bubble.classList.remove('is-visible');}
+    if(bubble){
+      const recommendation=document.createElement('a');
+      recommendation.className='hekomi-recommend-link';recommendation.hidden=true;
+      recommendation.setAttribute('aria-label','Open Hekomi-chan’s airing recommendation');
+      bubble.appendChild(recommendation);
+      root.appendChild(bubble);bubble.classList.remove('is-visible');
+    }
+    const bed=document.createElement('div');
+    bed.className='hekomi-bed';bed.setAttribute('aria-hidden','true');
+    bed.innerHTML='<span class="hekomi-bed-frame"></span><span class="hekomi-bed-mattress"></span><span class="hekomi-bed-pillow"></span><span class="hekomi-bed-blanket"></span>';
+    const snack=document.createElement('span');snack.className='hekomi-snack';snack.setAttribute('aria-hidden','true');
     const zzz=document.createElement('span');zzz.className='hekomi-zzz';zzz.textContent='Z z z';zzz.setAttribute('aria-hidden','true');
-    root.appendChild(zzz);root.appendChild(canvas);document.body.appendChild(root);
+    root.appendChild(bed);root.appendChild(snack);root.appendChild(zzz);root.appendChild(canvas);document.body.appendChild(root);
     if(visual)visual.remove();
     const companion=new HekomiWanderer(canvas,document.getElementById('hekomiChanMessage'),root,bubble);
     window.hekomiChan=companion;window.HekomiChan=HekomiWanderer;

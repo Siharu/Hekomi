@@ -1,0 +1,120 @@
+/* Hekomi-chan activity stage — shared by the app shell and series profiles. */
+#hekomiCompanion{
+  position:fixed;left:0;top:0;width:180px;height:196px;z-index:66;
+  pointer-events:none;will-change:transform;contain:layout style;isolation:isolate;
+  transition:filter .25s ease;
+  filter:drop-shadow(0 9px 13px color-mix(in srgb,var(--bg,#080916) 40%,transparent));
+}
+#hekomiCompanion canvas.home-mascot{
+  position:absolute;left:24px;top:6px;z-index:2;display:block;
+  width:128px;height:160px;max-width:none;object-fit:fill;
+  image-rendering:pixelated;image-rendering:crisp-edges;cursor:pointer;
+  pointer-events:auto;transform-origin:50% 50%;outline-offset:5px;
+  filter:drop-shadow(0 5px 7px #08091666);
+}
+#hekomiCompanion .home-mascot-bubble{
+  position:absolute;z-index:5;top:-38px;right:-18px;left:auto;display:grid;gap:5px;
+  width:max-content;max-width:206px;padding:9px 12px;
+  border:1px solid color-mix(in srgb,var(--violet,#c5b5ff) 33%,var(--line,#34304b));
+  border-radius:13px 13px 4px 13px;
+  background:color-mix(in srgb,var(--panel,#141326) 84%,transparent);
+  color:var(--text,#f1edf9);-webkit-backdrop-filter:blur(14px) saturate(140%);backdrop-filter:blur(14px) saturate(140%);
+  box-shadow:0 9px 24px #08091655;
+  opacity:0;translate:0 5px;transition:opacity .25s ease,translate .25s ease;
+  pointer-events:none;animation:none;
+}
+#hekomiCompanion .home-mascot-bubble.is-visible{opacity:1;translate:0 0}
+#hekomiCompanion .home-mascot-bubble span{font-size:7px;letter-spacing:.15em;color:var(--mint,#8be1cf);font-weight:800}
+#hekomiCompanion .home-mascot-bubble strong{font-size:11px;line-height:1.5;white-space:normal;color:var(--text,#f1edf9)}
+#hekomiCompanion .hekomi-recommend-link{
+  display:inline-flex;align-self:start;align-items:center;max-width:100%;
+  color:var(--mint,#8be1cf);font-size:10px;font-weight:800;line-height:1.4;
+  text-decoration:none;border-bottom:1px solid color-mix(in srgb,var(--mint,#8be1cf) 42%,transparent);
+  pointer-events:auto;
+}
+#hekomiCompanion .hekomi-recommend-link:hover{color:var(--accent,#c5b5ff);border-color:currentColor}
+#hekomiCompanion .hekomi-recommend-link:focus-visible{outline:2px solid var(--mint,#8be1cf);outline-offset:3px;border-radius:3px}
+#hekomiCompanion .hekomi-recommend-link[hidden]{display:none!important}
+#hekomiCompanion.face-left .home-mascot-bubble{left:-22px;right:auto;border-radius:13px 13px 13px 4px}
+#hekomiCompanion .hekomi-zzz{
+  position:absolute;right:2px;top:5px;z-index:4;font-family:Georgia,serif;
+  font-size:16px;font-weight:700;letter-spacing:2px;color:var(--violet,#c5b5ff);
+  opacity:0;transform:translateY(6px) rotate(-8deg);transition:opacity .25s ease,transform .25s ease;
+  pointer-events:none;text-shadow:0 2px 12px color-mix(in srgb,var(--violet,#c5b5ff) 50%,transparent);
+}
+#hekomiCompanion.is-sleeping .hekomi-zzz{opacity:1;transform:translateY(0) rotate(-8deg);animation:hekomiZzz 2.2s ease-in-out infinite}
+#hekomiCompanion.is-sleeping canvas.home-mascot{transform:rotate(90deg)!important}
+#hekomiCompanion .home-mascot:focus-visible{outline:2px solid var(--mint,#8be1cf);border-radius:4px}
+
+/* Her little bed slides into view; the sheet is tucked in small pixel steps. */
+#hekomiCompanion .hekomi-bed{
+  position:absolute;left:-8px;bottom:24px;z-index:1;width:196px;height:58px;
+  opacity:0;transform:translateY(13px) scale(.94);transform-origin:center bottom;
+  transition:opacity .38s ease,transform .48s cubic-bezier(.2,.75,.25,1);
+  pointer-events:none;image-rendering:pixelated;
+}
+#hekomiCompanion .hekomi-bed-frame{
+  position:absolute;left:2px;right:2px;bottom:0;height:17px;border-radius:5px 5px 3px 3px;
+  border:2px solid #28243a;background:linear-gradient(180deg,#68577e,#302a43);
+  box-shadow:0 4px 0 #171522,0 7px 13px #08091655;
+}
+#hekomiCompanion .hekomi-bed-mattress{
+  position:absolute;left:6px;right:7px;bottom:11px;height:27px;border-radius:7px 8px 4px 4px;
+  border:2px solid #4b435e;background:linear-gradient(180deg,#f4e7f1,#c9bfdc 70%,#a69ab9);
+  box-shadow:inset 0 3px #fff8;
+}
+#hekomiCompanion .hekomi-bed-pillow{
+  position:absolute;right:15px;top:8px;width:39px;height:22px;border-radius:7px;
+  border:2px solid #9c91b4;background:linear-gradient(135deg,#fff7f5,#cfc1e6);
+  box-shadow:inset 0 2px #fff;
+}
+#hekomiCompanion .hekomi-bed-blanket{
+  position:absolute;left:18px;bottom:12px;width:93px;height:23px;border-radius:5px 10px 4px 4px;
+  border:2px solid #463c65;background:linear-gradient(180deg,#a99bd1,#776b9f);
+  box-shadow:inset 0 3px #c9bde7,0 2px 0 #615477;
+  transform-origin:left center;
+}
+#hekomiCompanion.is-making-bed .hekomi-bed,
+#hekomiCompanion.is-sleeping .hekomi-bed,
+#hekomiCompanion.is-waking-up .hekomi-bed{opacity:1;transform:translateY(0) scale(1)}
+#hekomiCompanion.is-making-bed .hekomi-bed-blanket{animation:hekomiTuckBlanket 1.15s steps(4,end) infinite}
+#hekomiCompanion.is-sleeping .hekomi-bed-blanket{transform:scaleY(1.14) translateY(-2px)}
+#hekomiCompanion.is-waking-up .hekomi-bed{opacity:.72;transform:translateY(7px) scale(.98)}
+
+/* Tiny onigiri; the hand is animated in the canvas, this just gives her a prop. */
+#hekomiCompanion .hekomi-snack{
+  position:absolute;left:111px;top:68px;z-index:3;width:14px;height:13px;
+  opacity:0;transform:translateY(5px) rotate(-8deg) scale(.8);
+  background:#fff7ea;clip-path:polygon(50% 0,100% 84%,90% 100%,10% 100%,0 84%);
+  filter:drop-shadow(0 2px 0 #171522);pointer-events:none;
+}
+#hekomiCompanion .hekomi-snack:after{
+  content:"";position:absolute;left:4px;bottom:0;width:7px;height:4px;background:#3c5e52;
+}
+#hekomiCompanion.is-eating .hekomi-snack{opacity:1;transform:translateY(0) rotate(0) scale(1);animation:hekomiSnackBob .45s steps(2,end) infinite}
+
+/* A little bounce while she balances on the lower edge of an anime poster. */
+#hekomiCompanion.is-perching canvas.home-mascot{animation:hekomiPerch .8s steps(2,end) infinite}
+#hekomiCompanion.is-making-bed canvas.home-mascot{animation:hekomiBedReach .58s steps(2,end) infinite}
+@keyframes hekomiZzz{0%,100%{translate:0 3px;opacity:.55}50%{translate:0 -7px;opacity:1}}
+@keyframes hekomiTuckBlanket{0%,100%{transform:scaleY(.88) translateY(2px)}50%{transform:scaleY(1.12) translateY(-2px)}}
+@keyframes hekomiSnackBob{0%,100%{translate:0 0}50%{translate:0 -2px}}
+@keyframes hekomiPerch{0%,100%{translate:0 0}50%{translate:0 2px}}
+@keyframes hekomiBedReach{0%,100%{translate:0 0}50%{translate:0 1px}}
+
+@media(max-width:760px){
+  #hekomiCompanion{width:156px;height:182px}
+  #hekomiCompanion canvas.home-mascot{left:20px;top:10px;width:112px;height:140px}
+  #hekomiCompanion .home-mascot-bubble{max-width:174px;top:-35px;right:-15px;padding:8px 10px}
+  #hekomiCompanion.face-left .home-mascot-bubble{left:-18px;right:auto}
+  #hekomiCompanion .home-mascot-bubble span{font-size:6px}
+  #hekomiCompanion .home-mascot-bubble strong{font-size:10px}
+  #hekomiCompanion .hekomi-bed{left:-12px;bottom:20px;width:176px;height:52px}
+  #hekomiCompanion .hekomi-bed-mattress{height:24px}
+  #hekomiCompanion .hekomi-bed-blanket{width:82px;height:20px}
+  #hekomiCompanion .hekomi-snack{left:98px;top:62px}
+}
+@media(prefers-reduced-motion:reduce){
+  #hekomiCompanion,#hekomiCompanion *{transition:none!important;animation:none!important}
+  #hekomiCompanion canvas.home-mascot{transform:none!important}
+}
