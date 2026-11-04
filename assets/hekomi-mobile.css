@@ -155,3 +155,109 @@
   .head-actions button { padding-inline:7px; font-size:10px; }
   .panel { padding:12px; }
 }
+
+
+/* Clean, app-like mobile landing page: put the useful actions before the extras. */
+@media (max-width:760px) {
+  body[data-page="home"] #landing {
+    display:flex!important; flex-direction:column!important; gap:0!important;
+  }
+  body[data-page="home"] #landing > .home-hero { order:1; }
+  body[data-page="home"] #landing > #homeModeHeading { order:2; }
+  body[data-page="home"] #landing > .choice-grid { order:3; }
+  body[data-page="home"] #landing > #hkCalendar { order:4; }
+  body[data-page="home"] #landing > .catalog-discovery { order:5; }
+  body[data-page="home"] #landing > .anime-showcase { display:none!important; }
+  body[data-page="home"] #landing > .landing-footer,
+  body[data-page="home"] #landing > .statusline { order:6; }
+
+  body[data-page="home"] .home-hero {
+    display:block!important; margin:12px 0 22px!important; padding:21px 18px 19px!important;
+    min-height:0!important; border-radius:20px!important;
+    background:linear-gradient(145deg,color-mix(in srgb,var(--panel) 94%,var(--mint)),var(--panel) 68%)!important;
+    box-shadow:0 12px 34px #0002!important;
+  }
+  body[data-page="home"] .home-hero .hero-kicker,
+  body[data-page="home"] .home-hero .eyebrow { display:none!important; }
+  body[data-page="home"] .home-hero h1 {
+    max-width:12ch!important; margin:0 0 10px!important;
+    font-size:clamp(35px,9vw,43px)!important; line-height:1.04!important;
+    letter-spacing:-.055em!important;
+  }
+  body[data-page="home"] .home-hero h1 br { display:none!important; }
+  body[data-page="home"] .home-hero h1 em { color:var(--mint)!important; }
+  body[data-page="home"] .home-hero p {
+    max-width:34ch!important; margin:0!important; font-size:13px!important;
+    line-height:1.55!important; color:var(--muted)!important;
+  }
+  body[data-page="home"] .home-hero-actions {
+    display:flex!important; margin-top:17px!important; gap:0!important;
+  }
+  body[data-page="home"] .home-hero-actions .btn-primary {
+    display:inline-flex!important; width:auto!important; min-width:0!important;
+    flex:0 0 auto!important; min-height:43px!important; padding:0 17px!important;
+    border-radius:12px!important; font-size:12px!important;
+  }
+  body[data-page="home"] .home-hero-actions #homeChooseMode { display:none!important; }
+  body[data-page="home"] .home-visual { display:none!important; }
+
+  body[data-page="home"] #homeModeHeading {
+    display:flex!important; align-items:end!important; justify-content:space-between!important;
+    gap:8px!important; margin:0 0 11px!important; padding:0 2px!important;
+  }
+  body[data-page="home"] #homeModeHeading .eyebrow { margin:0 0 4px!important; font-size:8px!important; }
+  body[data-page="home"] #homeModeHeading h2 {
+    margin:0!important; font-size:19px!important; line-height:1.15!important; letter-spacing:-.035em!important;
+  }
+  body[data-page="home"] #homeModeHeading p {
+    max-width:105px!important; margin:0 0 1px!important; font-size:9px!important;
+    line-height:1.35!important; text-align:right!important;
+  }
+  body[data-page="home"] .choice-grid {
+    display:grid!important; grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    gap:9px!important; margin:0 0 25px!important;
+  }
+  body[data-page="home"] .choice-grid .choice {
+    min-width:0!important; min-height:0!important; padding:13px 12px!important;
+    border-radius:15px!important; box-shadow:none!important;
+  }
+  body[data-page="home"] .choice .choice-top { margin-bottom:10px!important; }
+  body[data-page="home"] .choice .choice-icon { width:34px!important; height:34px!important; }
+  body[data-page="home"] .choice .choice-icon svg { width:18px!important; height:18px!important; }
+  body[data-page="home"] .choice .arrow { font-size:15px!important; }
+  body[data-page="home"] .choice h2 { margin:0 0 5px!important; font-size:14px!important; line-height:1.2!important; }
+  body[data-page="home"] .choice p {
+    display:-webkit-box!important; -webkit-box-orient:vertical!important; -webkit-line-clamp:2!important;
+    overflow:hidden!important; margin:0!important; font-size:10px!important; line-height:1.4!important;
+  }
+  body[data-page="home"] .choice .choice-foot { margin-top:10px!important; font-size:8px!important; line-height:1.3!important; }
+  body[data-page="home"] .landing-footer,
+  body[data-page="home"] .statusline { display:none!important; }
+
+  body[data-page="home"] #hkCalendar {
+    margin:0 0 24px!important; padding:15px!important; border-radius:17px!important;
+  }
+  body[data-page="home"] #hkCalendar .hk-calendar-heading { gap:10px!important; align-items:center!important; }
+  body[data-page="home"] #hkCalendar .hk-calendar-heading h2 { margin:3px 0!important; font-size:20px!important; }
+  body[data-page="home"] #hkCalendar .hk-calendar-heading p { max-width:28ch!important; font-size:10px!important; line-height:1.4!important; }
+  body[data-page="home"] #hkCalendar .hk-calendar-toolbar { gap:4px!important; }
+  body[data-page="home"] #hkCalendar .hk-calendar-toolbar button { min-width:32px!important; min-height:34px!important; padding:5px!important; }
+  body[data-page="home"] #hkCalendar .hk-calendar-layout { display:grid!important; grid-template-columns:minmax(0,1fr)!important; gap:12px!important; }
+  body[data-page="home"] #hkCalendar .hk-calendar-month { min-width:0!important; padding:10px!important; }
+  body[data-page="home"] #hkCalendar .hk-calendar-month-label h3 { font-size:13px!important; }
+  body[data-page="home"] #hkCalendar .hk-calendar-weekdays,
+  body[data-page="home"] #hkCalendar .hk-calendar-grid { gap:3px!important; }
+  body[data-page="home"] #hkCalendar .hk-calendar-grid button { min-width:0!important; min-height:32px!important; padding:3px!important; }
+  body[data-page="home"] #hkCalendar .hk-calendar-day { min-width:0!important; }
+  body[data-page="home"] #hkCalendar .hk-calendar-events { max-height:180px!important; overflow:auto!important; }
+  body[data-page="home"] #hkCalendar .hk-calendar-foot { gap:5px!important; flex-wrap:wrap!important; font-size:9px!important; }
+  body[data-page="home"] .catalog-discovery { margin-top:0!important; }
+}
+@media (max-width:390px) {
+  body[data-page="home"] .home-hero { padding:19px 15px 17px!important; }
+  body[data-page="home"] .home-hero h1 { font-size:35px!important; }
+  body[data-page="home"] #homeModeHeading p { display:none!important; }
+  body[data-page="home"] .choice-grid { gap:7px!important; }
+  body[data-page="home"] .choice-grid .choice { padding:11px 10px!important; }
+  body[data-page="home"] .choice .choice-foot { font-size:7px!important; }
+}
