@@ -392,3 +392,55 @@
   body[data-page="home"] .home-hero::after { animation:none!important; }
   .primary-nav { transition:none!important; }
 }
+
+
+/* Poster-first MAL-style anime lists: compact, visual and touch-friendly. */
+.anime-list-grid{grid-template-columns:repeat(5,minmax(0,1fr));gap:12px}
+.anime-list-card{min-width:0;overflow:visible;position:relative}
+.anime-list-card .anime-list-cover-link{display:block;min-width:0}
+.anime-list-card .catalog-cover{position:relative;aspect-ratio:2/2.85;min-height:0;overflow:hidden;border-radius:9px 9px 0 0;background:#17151e}
+.anime-list-card .catalog-cover>img{width:100%;height:100%;object-fit:cover;display:block}
+.anime-list-card .anime-list-card-footer{display:flex;align-items:center;gap:3px;min-width:0;padding:7px 7px 2px;background:var(--panel2)}
+.anime-list-card .anime-list-title-link{display:-webkit-box;flex:1;min-width:0;overflow:hidden;color:var(--text);font-size:13px;font-weight:650;line-height:1.28;text-decoration:none;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.anime-list-card .anime-list-card-meta{display:flex;flex-direction:column;gap:2px;padding:2px 7px 8px;color:var(--muted);font-size:10px;line-height:1.3;background:var(--panel2)}
+.anime-poster-status{position:absolute;top:6px;right:6px;display:flex;flex-direction:column;align-items:center;gap:2px;min-width:35px;padding:4px 5px;border:1px solid #ffffff30;border-radius:5px;background:#11131bdc;color:#fff;backdrop-filter:blur(8px);font-size:10px;line-height:1.1;font-variant-numeric:tabular-nums}
+.anime-poster-status strong{font-size:12px}
+.anime-poster-score{position:absolute;top:6px;left:6px;padding:4px 6px;border-radius:5px;background:#11131bdc;color:#fff;font-size:10px;font-weight:750}
+.anime-poster-progress{position:absolute;left:0;right:0;bottom:0;height:4px;background:#0008}
+.anime-poster-progress span{display:block;height:100%;background:linear-gradient(90deg,var(--violet),var(--mint))}
+.anime-list-cover-placeholder{height:100%;display:grid;place-items:center;color:var(--violet);font-size:34px;font-weight:800}
+.anime-card-menu{position:relative;flex:0 0 auto}
+.anime-card-menu>summary{display:grid;place-items:center;width:30px;height:34px;border-radius:8px;color:var(--text);font-size:23px;line-height:1;list-style:none;cursor:pointer;touch-action:manipulation}
+.anime-card-menu>summary::-webkit-details-marker{display:none}
+.anime-card-menu[open]>summary{background:var(--panel)}
+.anime-card-menu-popover{position:absolute;z-index:30;right:0;bottom:36px;display:grid;min-width:150px;gap:2px;padding:6px;border:1px solid var(--line);border-radius:12px;background:var(--panel);box-shadow:0 12px 35px #0009}
+.anime-card-menu-popover .mini-btn{display:flex;align-items:center;justify-content:flex-start;width:100%;min-height:39px;padding:8px 10px;border:0;background:transparent;text-align:left;white-space:nowrap}
+.local-anime-filters{display:flex;gap:7px;overflow-x:auto;padding:2px 0 12px;scrollbar-width:none}
+.local-anime-filters::-webkit-scrollbar{display:none}
+.local-anime-filters button{flex:0 0 auto;min-height:36px;padding:7px 11px;border:1px solid var(--line);border-radius:999px;background:var(--panel2);color:var(--muted);font-size:11px}
+.local-anime-filters button.active{border-color:var(--violet);background:color-mix(in srgb,var(--violet) 17%,var(--panel));color:var(--text)}
+.local-anime-filters button span{margin-left:3px;font-variant-numeric:tabular-nums}
+@media(max-width:760px){
+ body[data-page="anime"] .anime-account-panel{padding:11px 13px;gap:8px}
+ body[data-page="anime"] .anime-account-copy .eyebrow,body[data-page="anime"] .anime-account-copy h2{display:none}
+ body[data-page="anime"] .anime-account-actions{display:flex;flex-wrap:wrap;gap:7px}
+ body[data-page="anime"] .anime-account-actions button{min-height:36px;padding:7px 10px;font-size:11px}
+ body[data-page="anime"] #weebStatsPanel{display:none}
+ body[data-page="anime"] #malMyListTab>.toolbar{display:flex;flex-direction:column;gap:9px;margin:10px 0 12px}
+ body[data-page="anime"] #malStatusFilters{display:flex;gap:7px;overflow-x:auto;padding:2px 0 8px;scrollbar-width:none}
+ body[data-page="anime"] #malStatusFilters::-webkit-scrollbar{display:none}
+ body[data-page="anime"] #malStatusFilters .filter{flex:0 0 auto;min-height:36px;padding:7px 11px;border-radius:999px;font-size:11px}
+ body[data-page="anime"] #malRemoteList .anime-list-grid,body[data-page="anime"] #localSummaryList .anime-list-grid,body[data-page="anime"] #fullLocalList .anime-list-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+ body[data-page="anime"] .anime-list-card .catalog-cover{aspect-ratio:2/2.85;border-radius:7px 7px 0 0}
+ body[data-page="anime"] .anime-list-card .anime-list-card-footer{padding:6px 5px 1px;gap:1px}
+ body[data-page="anime"] .anime-list-card .anime-list-title-link{font-size:11px;line-height:1.22}
+ body[data-page="anime"] .anime-list-card .anime-list-card-meta{padding:2px 5px 7px;font-size:9px}
+ body[data-page="anime"] .anime-poster-status{top:5px;right:5px;min-width:31px;padding:4px;font-size:9px}
+ body[data-page="anime"] .anime-poster-score{top:5px;left:5px;font-size:9px}
+ body[data-page="anime"] .anime-card-menu>summary{width:27px;height:30px;font-size:21px}
+ body[data-page="anime"] .anime-card-menu-popover{min-width:132px}
+ body[data-page="anime"] .anime-card-menu-popover .mini-btn{min-height:42px;font-size:12px}
+}
+@media(max-width:360px){
+ body[data-page="anime"] #malRemoteList .anime-list-grid,body[data-page="anime"] #localSummaryList .anime-list-grid,body[data-page="anime"] #fullLocalList .anime-list-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+}
