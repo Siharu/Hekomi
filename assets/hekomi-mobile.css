@@ -264,6 +264,7 @@
 
 
 /* Cinematic mobile home banner + collapsible bottom navigation. */
+.mobile-nav-toggle { display:none; }
 @keyframes hekomi-banner-drift {
   0%,100% { background-position: 0% 50%, 100% 0%, 50% 100%; }
   50% { background-position: 5% 46%, 92% 8%, 55% 94%; }
