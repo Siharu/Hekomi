@@ -261,3 +261,133 @@
   body[data-page="home"] .choice-grid .choice { padding:11px 10px!important; }
   body[data-page="home"] .choice .choice-foot { font-size:7px!important; }
 }
+
+
+/* Cinematic mobile home banner + collapsible bottom navigation. */
+@keyframes hekomi-banner-drift {
+  0%,100% { background-position: 0% 50%, 100% 0%, 50% 100%; }
+  50% { background-position: 5% 46%, 92% 8%, 55% 94%; }
+}
+@keyframes hekomi-banner-glow {
+  0%,100% { opacity:.52; transform:translate3d(0,0,0) scale(1); }
+  50% { opacity:.9; transform:translate3d(-7px,-4px,0) scale(1.04); }
+}
+@media (max-width:760px) {
+  /* Short, wide, wallpaper-like banner instead of a text-heavy hero. */
+  body[data-page="home"] .home-hero {
+    position:relative!important; display:flex!important; align-items:flex-end!important;
+    min-height:0!important; height:clamp(150px,42vw,184px)!important;
+    margin:10px 0 20px!important; padding:0!important; overflow:hidden!important;
+    border:1px solid color-mix(in srgb,var(--violet) 34%,var(--line))!important;
+    border-radius:17px!important;
+    background:
+      radial-gradient(ellipse at 76% 34%,rgba(244,205,232,.55) 0 1.5%,transparent 2% 100%),
+      radial-gradient(ellipse at 76% 35%,rgba(215,177,230,.24) 0 15%,transparent 42%),
+      linear-gradient(112deg,#151326 0%,#38233e 42%,#6b405d 72%,#20243c 100%)!important;
+    box-shadow:0 10px 28px #0004!important;
+    isolation:isolate;
+  }
+  body[data-page="home"] .home-hero::before {
+    content:""; position:absolute; z-index:-1; inset:0;
+    background:
+      radial-gradient(ellipse at 74% 40%,rgba(255,223,237,.7) 0 1px,transparent 2px),
+      radial-gradient(ellipse at 85% 24%,rgba(255,255,255,.8) 0 1px,transparent 2px),
+      radial-gradient(ellipse at 58% 19%,rgba(255,255,255,.65) 0 1px,transparent 2px),
+      radial-gradient(ellipse at 95% 62%,rgba(255,255,255,.6) 0 1px,transparent 2px),
+      radial-gradient(ellipse at 72% 34%,rgba(244,206,231,.5),transparent 33%),
+      linear-gradient(155deg,transparent 56%,rgba(13,14,29,.5) 57%),
+      linear-gradient(24deg,transparent 48%,rgba(22,19,39,.7) 49%);
+    background-size:100% 100%;
+    animation:hekomi-banner-glow 9s ease-in-out infinite;
+    pointer-events:none;
+  }
+  body[data-page="home"] .home-hero::after {
+    content:""; position:absolute; z-index:-1; inset:0;
+    background:
+      linear-gradient(145deg,transparent 55%,rgba(9,11,24,.72) 56%),
+      linear-gradient(25deg,transparent 53%,rgba(19,17,34,.78) 54%),
+      linear-gradient(165deg,transparent 63%,rgba(10,12,25,.88) 64%),
+      radial-gradient(ellipse at 78% 100%,rgba(226,173,218,.16),transparent 36%);
+    background-size:100% 100%;
+    animation:hekomi-banner-drift 18s ease-in-out infinite;
+    pointer-events:none;
+  }
+  body[data-page="home"] .home-hero .hero-copy {
+    position:relative!important; z-index:2; display:flex!important;
+    width:100%; min-height:0!important; padding:0 14px 12px!important;
+    flex-direction:row!important; align-items:flex-end!important;
+    justify-content:space-between!important; gap:8px!important;
+  }
+  body[data-page="home"] .home-hero .hero-kicker {
+    display:block!important; position:absolute; left:14px; top:13px;
+    max-width:70%; color:#f2d6eb!important; font-size:8px!important;
+    line-height:1.2; letter-spacing:.17em!important; opacity:.9;
+  }
+  body[data-page="home"] .home-hero .hero-signal,
+  body[data-page="home"] .home-hero .hero-edition,
+  body[data-page="home"] .home-hero .eyebrow,
+  body[data-page="home"] .home-hero h1,
+  body[data-page="home"] .home-hero p { display:none!important; }
+  body[data-page="home"] .home-hero-actions {
+    display:flex!important; width:100%; justify-content:flex-end!important;
+    margin:0!important; gap:0!important;
+  }
+  body[data-page="home"] .home-hero-actions .btn-primary {
+    min-height:35px!important; padding:0 13px!important;
+    border:1px solid rgba(255,255,255,.24)!important;
+    border-radius:999px!important; background:rgba(20,17,34,.72)!important;
+    color:#fff!important; font-size:10px!important; backdrop-filter:blur(10px);
+  }
+  body[data-page="home"] .home-hero-actions #homeChooseMode,
+  body[data-page="home"] .home-visual { display:none!important; }
+
+  /* Make the Discover heading and filters less dominant on a phone. */
+  body[data-page="discover"] .catalog-heading { gap:13px!important; margin:12px 0 15px!important; }
+  body[data-page="discover"] .catalog-heading h2 {
+    max-width:15ch!important; font-size:clamp(29px,8vw,37px)!important;
+    line-height:1.03!important; letter-spacing:-.055em!important;
+  }
+  body[data-page="discover"] .catalog-heading p { margin-top:9px!important; font-size:12px!important; line-height:1.5!important; }
+  body[data-page="discover"] .catalog-heading .eyebrow { font-size:8px!important; letter-spacing:.16em!important; }
+  body[data-page="discover"] .catalog-search { display:grid!important; grid-template-columns:minmax(0,1fr) auto!important; gap:8px!important; }
+  body[data-page="discover"] .catalog-search input { min-width:0!important; width:100%!important; padding-inline:13px!important; font-size:13px!important; }
+  body[data-page="discover"] .catalog-search button { min-width:78px!important; padding-inline:13px!important; }
+  body[data-page="discover"] .advanced-search { margin:12px 0 22px!important; border-radius:15px!important; }
+  body[data-page="discover"] .advanced-toggle { min-height:82px!important; padding:12px!important; gap:9px!important; }
+  body[data-page="discover"] .advanced-toggle-title { gap:10px!important; }
+  body[data-page="discover"] .advanced-toggle-title strong { font-size:13px!important; }
+  body[data-page="discover"] .advanced-toggle-title small { max-width:25ch!important; font-size:10px!important; line-height:1.4!important; }
+  body[data-page="discover"] .advanced-toggle-side { gap:6px!important; }
+  body[data-page="discover"] .filter-count { font-size:9px!important; }
+  body[data-page="discover"] .catalog-discovery h2 { font-size:clamp(25px,7vw,32px)!important; }
+
+  /* A discreet grab-handle doubles as the collapse/expand control. */
+  .primary-nav { transition:width .24s ease, left .24s ease, right .24s ease, padding .24s ease, border-radius .24s ease!important; }
+  .mobile-nav-toggle {
+    display:flex!important; position:absolute!important; top:-12px!important; left:50%!important;
+    transform:translateX(-50%)!important; z-index:3; align-items:center!important;
+    justify-content:center!important; width:46px!important; min-width:46px!important;
+    height:19px!important; min-height:19px!important; padding:0!important;
+    border:1px solid color-mix(in srgb,var(--violet) 38%,var(--line))!important;
+    border-bottom:0!important; border-radius:12px 12px 0 0!important;
+    background:color-mix(in srgb,var(--panel) 97%,#080916)!important;
+    color:var(--muted)!important; font-size:14px!important; line-height:1!important;
+    cursor:pointer;
+  }
+  .mobile-nav-toggle span { transform:translateY(1px); }
+  body.mobile-nav-collapsed .primary-nav {
+    left:calc(50% - 31px)!important; right:auto!important; width:62px!important;
+    padding:4px!important; border-radius:18px!important;
+  }
+  body.mobile-nav-collapsed .primary-nav > a { display:none!important; }
+  body.mobile-nav-collapsed .primary-nav .mobile-nav-toggle {
+    position:static!important; transform:none!important; width:100%!important;
+    height:31px!important; min-height:31px!important; border:0!important;
+    border-radius:13px!important; background:transparent!important; font-size:18px!important;
+  }
+}
+@media (prefers-reduced-motion:reduce) {
+  body[data-page="home"] .home-hero::before,
+  body[data-page="home"] .home-hero::after { animation:none!important; }
+  .primary-nav { transition:none!important; }
+}
