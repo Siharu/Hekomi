@@ -1,0 +1,157 @@
+/* Hekomi mobile-native layout. Desktop styles remain untouched. */
+@media (max-width: 760px) {
+  html, body { max-width:100%; overflow-x:clip!important; }
+  .app { width:100%; min-width:0; padding:0 14px calc(116px + env(safe-area-inset-bottom))!important; }
+
+  /* Avoid creating a containing block that traps fixed-position navigation. */
+  .topbar {
+    position:sticky; top:0; z-index:60; display:flex; flex-wrap:nowrap;
+    align-items:center; gap:8px; min-height:62px; height:auto; padding:8px 0 9px;
+    background:color-mix(in srgb,var(--bg) 94%,transparent);
+    -webkit-backdrop-filter:none!important; backdrop-filter:none!important;
+    animation:none!important; transform:none!important;
+  }
+  .topbar::after { animation:none!important; transform:scaleX(.38); opacity:.32; }
+  .brand { min-width:0; gap:8px; font-size:18px; }
+  .brand small { font-size:7px; letter-spacing:.06em; }
+  .brandmark { width:36px!important; height:36px!important; flex-basis:36px!important; }
+  .top-actions { flex:0 0 auto; gap:5px; }
+  .top-actions .chip { display:none!important; }
+  .top-actions .iconbtn { width:40px; min-width:40px; height:40px; min-height:40px; }
+  .top-actions #headerHome { display:none!important; }
+
+  /* Persistent five-destination thumb bar. */
+  .primary-nav {
+    position:fixed!important; z-index:1000!important;
+    left:8px!important; right:8px!important;
+    bottom:calc(8px + max(0px,100vh - 100dvh) + env(safe-area-inset-bottom))!important;
+    order:initial!important; flex:initial!important; width:auto!important;
+    margin:0!important; padding:6px!important; display:grid!important;
+    grid-template-columns:repeat(5,minmax(0,1fr))!important;
+    align-items:stretch; gap:3px!important; overflow:visible!important;
+    border:1px solid color-mix(in srgb,var(--violet) 24%,var(--line))!important;
+    border-radius:18px!important; background:color-mix(in srgb,var(--panel) 96%,#080916)!important;
+    -webkit-backdrop-filter:blur(18px) saturate(135%); backdrop-filter:blur(18px) saturate(135%);
+    box-shadow:0 10px 30px #0008;
+  }
+  .primary-nav a {
+    min-width:0; min-height:56px!important; padding:6px 2px!important;
+    display:flex!important; flex-direction:column; align-items:center; justify-content:center;
+    gap:4px; border:1px solid transparent; border-radius:12px;
+    font-size:10px!important; line-height:1.05; letter-spacing:0!important;
+    white-space:nowrap; text-align:center;
+  }
+  .primary-nav a svg { display:block!important; width:19px; height:19px; flex:0 0 19px; }
+  .primary-nav a span { max-width:100%; overflow:hidden; text-overflow:ellipsis; }
+  .app-scroll-progress { left:0; right:0; width:auto; }
+  .back-top { right:12px; bottom:calc(136px + max(0px,100vh - 100dvh) + env(safe-area-inset-bottom)); }
+
+  .view { min-width:0; padding-top:17px!important; }
+  .workspace-head { gap:9px; margin:5px 0 15px!important; padding-bottom:13px; }
+  .workspace-head h1 { font-size:clamp(27px,7vw,31px)!important; line-height:1.1; letter-spacing:-.045em; }
+  .workspace-head p { max-width:42ch; margin-top:6px; font-size:12px; line-height:1.48; }
+  .head-actions { width:100%; gap:8px; flex-wrap:nowrap; }
+  .head-actions button { flex:1 1 0; min-width:0; min-height:43px; padding:9px 10px; font-size:11px; }
+
+  .subnav {
+    display:flex; gap:7px!important; max-width:100%; overflow-x:auto; overflow-y:hidden;
+    overscroll-behavior-x:contain; scrollbar-width:none; padding:2px 0 5px; margin-bottom:16px!important;
+  }
+  .subnav::-webkit-scrollbar, .filterrow::-webkit-scrollbar { display:none; }
+  .subnav button { flex:0 0 auto; min-height:42px; padding:9px 11px; font-size:11px; }
+  .panel { min-width:0; padding:14px; border-radius:15px; }
+  .panel-head { gap:8px; }
+  .toolbar { min-width:0; gap:9px; }
+  .searchbox { width:100%; max-width:none; min-height:44px; }
+  .filterrow {
+    max-width:100%; flex-wrap:nowrap!important; overflow-x:auto; overflow-y:hidden;
+    overscroll-behavior-x:contain; scrollbar-width:none; padding:1px 1px 5px;
+  }
+  .filterrow .filter { flex:0 0 auto; min-height:38px; }
+  .grid, .catalog-grid, .manga-explore-grid, .anime-list-grid {
+    min-width:0; grid-template-columns:repeat(2,minmax(0,1fr))!important; gap:10px!important;
+  }
+  .card, .catalog-card { min-width:0; border-radius:13px; }
+  .card-body, .catalog-card-body { min-width:0; padding:9px; gap:6px; }
+  .card-title, .catalog-card h3 { overflow-wrap:anywhere; }
+  .btn, .btn-secondary, .btn-primary, .btn-mint, .iconbtn, .input, select.input { min-height:44px; }
+
+  body[data-page="home"] .home-hero {
+    grid-template-columns:minmax(0,1fr); gap:18px; margin:20px auto 24px;
+    padding:16px; border-radius:18px;
+  }
+  body[data-page="home"] .home-hero .hero-kicker { font-size:8px; line-height:1.5; }
+  body[data-page="home"] .home-hero .hero-kicker .hero-edition { margin:0; padding:0; border:0; }
+  body[data-page="home"] .home-hero .eyebrow { margin-top:15px; }
+  body[data-page="home"] .home-hero h1 { font-size:clamp(40px,10vw,54px); margin:10px 0 12px; }
+  body[data-page="home"] .home-hero p { font-size:13px; line-height:1.62; }
+  body[data-page="home"] .home-hero-actions { gap:7px; margin-top:16px; }
+  body[data-page="home"] .home-hero-actions>* { flex:1; min-width:0; padding-inline:9px; font-size:11px; }
+  .home-visual { min-height:250px; border-radius:16px; }
+  .home-mascot-stage { height:238px; }
+  .home-mascot { width:190px; height:238px; max-width:76%; }
+
+  body[data-page="anime"] #malView .anime-account-panel {
+    grid-template-columns:minmax(0,1fr); gap:10px; padding:13px;
+  }
+  body[data-page="anime"] #malView .anime-account-actions {
+    display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:7px;
+  }
+  body[data-page="anime"] #malView .anime-account-actions #animeMalSignInBtn { grid-column:1/-1; }
+  body[data-page="anime"] #malView .anime-account-actions button { min-width:0; min-height:42px; padding:8px; font-size:11px; }
+
+  body[data-page="manga"] #mangaView .manga-explore-heading { align-items:stretch; flex-direction:column; gap:10px; }
+  body[data-page="manga"] #mangaView .manga-explore-controls { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:8px; }
+  body[data-page="manga"] #mangaView .manga-explore-controls select { min-width:0; }
+  body[data-page="manga"] #mangaView .mangadex-search-row { grid-template-columns:minmax(0,1fr); }
+  body[data-page="manga"] #mangaView .mangadex-search-row button { width:100%; }
+
+  .profile-table-wrap {
+    max-width:100%; overflow-x:auto; overscroll-behavior-inline:contain;
+    -webkit-overflow-scrolling:touch; scrollbar-width:thin;
+  }
+  .profile-airing-table { min-width:560px; }
+
+  .chapter-reader-modal {
+    height:calc(100dvh - 16px)!important; max-height:calc(100dvh - 16px)!important;
+    margin:8px auto!important; border-radius:14px!important;
+  }
+
+  /* Keep the pixel companion and chat launcher in the strip above the nav. */
+  #hekomiCompanion { width:116px!important; height:136px!important; z-index:66; }
+  #hekomiCompanion canvas.home-mascot {
+    left:13px!important; top:7px!important; width:88px!important; height:110px!important;
+  }
+  #hekomiCompanion .home-mascot-bubble {
+    left:0!important; right:auto!important; top:-28px!important;
+    max-width:min(160px,calc(100vw - 28px))!important; padding:7px 9px!important;
+  }
+  #hekomiCompanion.face-left .home-mascot-bubble { left:0!important; right:auto!important; }
+  #hekomiCompanion .home-mascot-bubble strong { font-size:10px; }
+  #hekomiCompanion .hekomi-bed { left:-5px; bottom:10px; width:128px; height:38px; }
+  #hekomiCompanion .hekomi-bed-mattress { height:19px; }
+  #hekomiCompanion .hekomi-bed-blanket { width:66px; height:15px; }
+  .hk-core-launch {
+    right:12px!important;
+    bottom:calc(80px + max(0px,100vh - 100dvh) + env(safe-area-inset-bottom))!important;
+    z-index:1001!important; max-width:164px; min-height:40px; padding:8px 12px; font-size:11px!important;
+  }
+  .hk-core-panel {
+    right:8px!important;
+    bottom:calc(128px + max(0px,100vh - 100dvh) + env(safe-area-inset-bottom))!important;
+    width:min(348px,calc(100vw - 16px))!important;
+    height:min(440px,calc(100dvh - 156px))!important; max-height:calc(100dvh - 156px)!important;
+  }
+}
+@media (max-width: 390px) {
+  .app { padding-left:12px!important; padding-right:12px!important; }
+  .brand { gap:7px; font-size:17px; }
+  .brand small { font-size:6.5px; letter-spacing:.04em; }
+  .top-actions { gap:4px; }
+  .top-actions .iconbtn { width:38px; min-width:38px; height:38px; min-height:38px; }
+  .primary-nav { left:7px!important; right:7px!important; padding:5px!important; }
+  .primary-nav a { min-height:54px!important; font-size:9px!important; }
+  .workspace-head h1 { font-size:27px!important; }
+  .head-actions button { padding-inline:7px; font-size:10px; }
+  .panel { padding:12px; }
+}

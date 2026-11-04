@@ -278,7 +278,10 @@
     pick(items){return items[Math.floor(Math.random()*items.length)];}
     bounds(){
       const w=this.root.offsetWidth||176,h=this.root.offsetHeight||194;
-      return {minX:8,maxX:Math.max(8,innerWidth-w-8),minY:74,maxY:Math.max(74,innerHeight-h-10),w,h};
+      const mobile=window.matchMedia('(max-width:760px)').matches;
+      const visibleHeight=mobile?(window.visualViewport?.height||innerHeight):innerHeight;
+      const bottomReserve=mobile?92:10;
+      return {minX:8,maxX:Math.max(8,innerWidth-w-8),minY:74,maxY:Math.max(74,visibleHeight-h-bottomReserve),w,h};
     }
     findPerchTarget(){
       if(!location.pathname.toLowerCase().startsWith('/series/anime/'))return null;
@@ -298,7 +301,11 @@
       const b=this.bounds();
       const perch=this.findPerchTarget();
       if(perch){this.x=perch.x;this.y=perch.y;}
-      else{
+      else if(window.matchMedia('(max-width:760px)').matches){
+        this.x=b.minX;
+        this.y=b.maxY;
+        if(this.blocked(this.x,this.y)){const safe=this.findSpot();this.x=safe.x;this.y=safe.y;}
+      }else{
         this.x=Math.max(b.minX,b.maxX-(document.body.dataset.page==='home'?24:8));
         this.y=document.body.dataset.page==='home'
           ?Math.max(b.minY,Math.min(190,b.maxY))
@@ -313,7 +320,8 @@
       return Boolean(perch);
     }
     blocked(x,y){
-      const area={left:x+18,right:x+170,top:y+18,bottom:y+190};
+      const b=this.bounds();
+      const area={left:x+6,right:x+b.w-6,top:y+6,bottom:y+b.h-6};
       const nodes=document.querySelectorAll('a,button,input,select,textarea,[role="button"],.topbar,.modal,.reader-modal,.chapter-pages,.back-top');
       for(const node of nodes){
         if(this.root.contains(node))continue;
