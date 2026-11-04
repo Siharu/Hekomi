@@ -1,4 +1,4 @@
-import { HekomiMemory, replyAsHekomi } from '../lib/hekomi-core.mjs';
+import { HekomiMemory, replyAsHekomi } from './hekomi-core.mjs';
 
 (() => {
   if (window.__hekomiCoreMounted) return;

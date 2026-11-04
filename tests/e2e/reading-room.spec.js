@@ -2,10 +2,17 @@ import { test, expect } from '@playwright/test';
 
 test('Reading Room code remains intact when server modules are appended', async ({ page }) => {
   const uncaughtErrors = [];
+  const moduleResponsePromise = page.waitForResponse(response =>
+    new URL(response.url()).pathname === '/assets/hekomi-core.mjs'
+  );
   page.on('pageerror', error => uncaughtErrors.push(error.message));
 
   await page.goto('/manga');
   await expect(page.locator('#mangaGrid')).toBeAttached();
+  const moduleResponse = await moduleResponsePromise;
+  expect(moduleResponse.status()).toBe(200);
+  expect(moduleResponse.headers()['content-type']).toMatch(/javascript/i);
+  await expect.poll(() => page.evaluate(() => window.__hekomiCoreMounted === true)).toBe(true);
 
   const scriptLayout = await page.evaluate(() => {
     const scripts = Array.from(document.scripts);
