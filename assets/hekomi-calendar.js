@@ -4,6 +4,21 @@
   const root=document.getElementById('hkCalendar');
   if(!root)return;
   const el=id=>document.getElementById(id);
+  // One safe, random landscape anime wallpaper per page load. Keep the calendar readable.
+  (function loadCalendarWallpaper(){
+    const endpoint='https://imgapi.lie.moe/random?sort=pc&type=json&thumbnail=large';
+    const apply=url=>{
+      if(!url||!/^https:\/\//i.test(url))return;
+      const image=new Image();
+      image.onload=()=>root.style.setProperty('--hk-calendar-wallpaper','url("'+url.replace(/["\\\\]/g,'')+'")');
+      image.referrerPolicy='no-referrer';
+      image.src=url;
+    };
+    fetch(endpoint+'&v='+Date.now(),{mode:'cors',cache:'no-store'})
+      .then(response=>{if(!response.ok)throw new Error('Wallpaper API unavailable');return response.json();})
+      .then(data=>apply(Array.isArray(data.pic)?data.pic[0]:data.pic))
+      .catch(()=>apply('https://imgapi.lie.moe/random?sort=pc&thumbnail=large&v='+Date.now()));
+  })();
   const grid=el('hkCalGrid'),monthLabel=el('hkCalMonthLabel'),selectedLabel=el('hkCalSelectedDate'),eventsNode=el('hkCalEvents');
   const state={year:0,month:0,selected:'',programs:[],loading:false,error:'',request:0};
   const todayParts=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Tokyo',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());
