@@ -164,6 +164,17 @@
   el('hkCalPrev').addEventListener('click',()=>setMonth(state.year,state.month-1,1));
   el('hkCalNext').addEventListener('click',()=>setMonth(state.year,state.month+1,1));
   el('hkCalToday').addEventListener('click',()=>setMonth(Number(today.slice(0,4)),Number(today.slice(5,7)),Number(today.slice(8,10))));
+  const collapseButton=el('hkCalCollapse');
+  if(collapseButton){
+    const setCollapsed=collapsed=>{
+      root.dataset.collapsed=String(collapsed);
+      collapseButton.setAttribute('aria-expanded',String(!collapsed));
+      collapseButton.setAttribute('aria-label',collapsed?'Expand anime calendar':'Collapse anime calendar');
+      collapseButton.textContent=collapsed?'Expand':'Collapse';
+    };
+    setCollapsed(root.dataset.collapsed==='true');
+    collapseButton.addEventListener('click',()=>setCollapsed(root.dataset.collapsed!=='true'));
+  }
   window.addEventListener('storage',event=>{if(event.key==='folio_local_anime_v1')renderEvents();});
   window.addEventListener('hekomi:anime-list-updated',()=>renderEvents());
   window.addEventListener('focus',()=>{void refreshRemoteWatchlist();renderEvents();});
