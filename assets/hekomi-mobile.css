@@ -444,3 +444,44 @@
 @media(max-width:360px){
  body[data-page="anime"] #malRemoteList .anime-list-grid,body[data-page="anime"] #localSummaryList .anime-list-grid,body[data-page="anime"] #fullLocalList .anime-list-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
 }
+
+
+/* Manga library mirrors the poster-first anime shelf. */
+.manga-status-filters{display:flex;gap:7px;overflow-x:auto;padding:2px 0 12px;scrollbar-width:none}
+.manga-status-filters::-webkit-scrollbar{display:none}
+.manga-status-filters button{flex:0 0 auto;min-height:36px;padding:7px 11px;border:1px solid var(--line);border-radius:999px;background:var(--panel2);color:var(--muted);font-size:11px}
+.manga-status-filters button.active{border-color:var(--mint);background:color-mix(in srgb,var(--mint) 14%,var(--panel));color:var(--text)}
+.manga-status-filters button span{margin-left:3px;font-variant-numeric:tabular-nums}
+.manga-list-card{min-width:0;overflow:visible;position:relative}
+.manga-list-cover-button{display:block;width:100%;padding:0;border:0;background:transparent;text-align:inherit;cursor:pointer}
+.manga-list-cover{position:relative;aspect-ratio:2/2.85;overflow:hidden;border-radius:9px 9px 0 0;background:#17151e}
+.manga-list-cover>img{display:block;width:100%;height:100%;object-fit:cover}
+.manga-list-cover-placeholder{display:grid;width:100%;height:100%;place-items:center;color:var(--mint);font-size:34px;font-weight:800}
+.manga-poster-type,.manga-poster-status{position:absolute;top:6px;padding:4px 6px;border:1px solid #ffffff30;border-radius:5px;background:#11131bdc;color:#fff;font-size:10px;backdrop-filter:blur(8px)}
+.manga-poster-type{left:6px}.manga-poster-status{right:6px;min-width:27px;text-align:center}
+.manga-poster-progress{position:absolute;right:0;bottom:0;left:0;height:4px;background:#0008}
+.manga-poster-progress span{display:block;height:100%;background:linear-gradient(90deg,var(--mint),var(--violet))}
+.manga-list-card-footer{display:flex;align-items:center;gap:3px;min-width:0;padding:7px 7px 2px;background:var(--panel2)}
+.manga-list-title{display:-webkit-box;flex:1;min-width:0;overflow:hidden;padding:0;border:0;background:transparent;color:var(--text);font-size:13px;font-weight:650;line-height:1.28;text-align:left;-webkit-line-clamp:2;-webkit-box-orient:vertical;cursor:pointer}
+.manga-list-card-meta{display:flex;flex-direction:column;gap:2px;overflow:hidden;padding:2px 7px 8px;background:var(--panel2);color:var(--muted);font-size:10px;line-height:1.3}
+.manga-list-card-meta span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.manga-card-menu{position:relative;flex:0 0 auto}
+.manga-card-menu>summary{display:grid;width:30px;height:34px;place-items:center;border-radius:8px;color:var(--text);font-size:23px;line-height:1;list-style:none;cursor:pointer;touch-action:manipulation}
+.manga-card-menu>summary::-webkit-details-marker{display:none}
+.manga-card-menu[open]>summary{background:var(--panel)}
+.manga-card-menu-popover{position:absolute;z-index:30;right:0;bottom:36px;display:grid;min-width:160px;gap:2px;padding:6px;border:1px solid var(--line);border-radius:12px;background:var(--panel);box-shadow:0 12px 35px #0009}
+.manga-card-menu-popover>button{display:flex;align-items:center;min-height:39px;padding:8px 10px;border:0;border-radius:7px;background:transparent;color:var(--text);font-size:12px;text-align:left;white-space:nowrap}
+.manga-status-select-label{display:grid;gap:5px;padding:7px 8px;border-top:1px solid var(--line);color:var(--muted);font-size:10px}
+.manga-status-select-label select{width:100%;min-height:34px;padding:5px 7px;border:1px solid var(--line);border-radius:7px;background:var(--panel2);color:var(--text);font:inherit}
+@media(max-width:760px){
+ body[data-page="manga"] #mangaGrid{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+ body[data-page="manga"] .manga-list-cover{aspect-ratio:2/2.85;border-radius:7px 7px 0 0}
+ body[data-page="manga"] .manga-list-card-footer{gap:1px;padding:6px 5px 1px}
+ body[data-page="manga"] .manga-list-title{font-size:11px;line-height:1.22}
+ body[data-page="manga"] .manga-list-card-meta{padding:2px 5px 7px;font-size:9px}
+ body[data-page="manga"] .manga-poster-type,body[data-page="manga"] .manga-poster-status{top:5px;padding:4px;font-size:9px}
+ body[data-page="manga"] .manga-card-menu>summary{width:27px;height:30px;font-size:21px}
+ body[data-page="manga"] .manga-card-menu-popover{min-width:145px}
+ body[data-page="manga"] .manga-card-menu-popover>button{min-height:42px}
+}
+@media(max-width:360px){body[data-page="manga"] #mangaGrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}}
