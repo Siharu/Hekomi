@@ -485,3 +485,24 @@
  body[data-page="manga"] .manga-card-menu-popover>button{min-height:42px}
 }
 @media(max-width:360px){body[data-page="manga"] #mangaGrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}}
+
+
+/* Smaller mobile companion: keep Hekomi-chan present without covering the page. */
+@media(max-width:760px){
+  #hekomiCompanion{width:88px!important;height:104px!important}
+  #hekomiCompanion canvas.home-mascot{left:10px!important;top:6px!important;width:66px!important;height:82px!important}
+  #hekomiCompanion .home-mascot-bubble{top:-22px!important;max-width:min(132px,calc(100vw - 24px))!important;padding:6px 8px!important}
+  #hekomiCompanion .home-mascot-bubble strong{font-size:9px!important}
+  #hekomiCompanion .hekomi-bed{left:-3px!important;bottom:7px!important;width:96px!important;height:29px!important}
+  #hekomiCompanion .hekomi-bed-mattress{height:15px!important}
+  #hekomiCompanion .hekomi-bed-blanket{width:50px!important;height:12px!important}
+}
+@media(max-width:390px){
+  #hekomiCompanion{width:76px!important;height:90px!important}
+  #hekomiCompanion canvas.home-mascot{left:8px!important;top:5px!important;width:57px!important;height:71px!important}
+  #hekomiCompanion .home-mascot-bubble{top:-19px!important;max-width:min(120px,calc(100vw - 20px))!important;padding:5px 7px!important}
+  #hekomiCompanion .home-mascot-bubble strong{font-size:8px!important}
+  #hekomiCompanion .hekomi-bed{width:84px!important;height:25px!important}
+  #hekomiCompanion .hekomi-bed-mattress{height:13px!important}
+  #hekomiCompanion .hekomi-bed-blanket{width:44px!important;height:10px!important}
+}
