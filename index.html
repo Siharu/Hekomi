@@ -1826,7 +1826,27 @@ body[data-page="home"] .home-hero{margin:15px auto 24px}
 body[data-page="home"] .home-hero .hero-copy{grid-template-columns:minmax(0,1fr);gap:8px}
 body[data-page="home"] .home-hero h1,body[data-page="home"] .home-hero p,body[data-page="home"] .home-hero .home-hero-actions{grid-column:1;grid-row:auto}
 }
-</style></head>
+</style><style id="hekomi-hero-edge-blend">
+/* Let the spotlight outline dissolve into the page rather than stop abruptly. */
+body[data-page="home"] #animeShowcase{
+  border-color:transparent;
+  box-shadow:0 22px 70px #0004;
+}
+body[data-page="home"] #animeShowcase::before{
+  border:1px solid color-mix(in srgb,var(--violet,#b9a6ff) 34%,transparent);
+  border-radius:inherit;
+  box-shadow:inset 0 0 34px color-mix(in srgb,var(--violet,#b9a6ff) 8%,transparent);
+  mask-image:linear-gradient(90deg,transparent 0%,#000 7%,#000 93%,transparent 100%);
+  opacity:.42;
+}
+@media(max-width:760px){
+  body[data-page="home"] #animeShowcase::before{
+    mask-image:linear-gradient(90deg,transparent 0%,#000 4%,#000 96%,transparent 100%);
+    opacity:.34;
+  }
+}
+</style>
+</head>
 <body data-page="__HEKOMI_PAGE__">
 <div class="app-scroll-progress" aria-hidden="true"><span id="appScrollProgressBar"></span></div>
 <button class="back-top" id="backToTop" type="button" aria-label="Back to top" title="Back to top"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 14 6-6 6 6"/><path d="M12 8v12"/></svg></button>
