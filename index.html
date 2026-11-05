@@ -1569,10 +1569,10 @@ body[data-page="home"] .home-hero .hero-copy{max-width:780px}
   .primary-nav a,.subnav button{transition:none!important}html{scroll-behavior:auto}
 }
 </style>
-<link rel="stylesheet" href="/assets/hekomi-calendar.css">
+<link rel="stylesheet" href="/assets/hekomi-calendar.css?v=20261105-home-collapse">
 <link rel="stylesheet" href="/assets/hekomi-chan.css?v=20261102-activities">
 <script defer src="/assets/hekomi-chan.js?v=20261102-activities-2"></script>
-<script defer src="/assets/hekomi-calendar.js"></script>
+<script defer src="/assets/hekomi-calendar.js?v=20261105-home-collapse"></script>
 <style>body[data-page="discover"] #catalogTitle{margin:9px 0 8px;font-size:clamp(32px,4vw,46px);line-height:1.06;letter-spacing:-.065em;text-wrap:balance}@media(max-width:760px){body[data-page="discover"] #catalogTitle{font-size:34px}}</style>
 
 <style id="hekomi-header-classic-theme">
@@ -1777,7 +1777,58 @@ html[data-theme="classic"] .hk-core-foot button,html[data-theme="classic"] .hk-c
 }
 </style>
 <link rel="stylesheet" href="/assets/hekomi-mobile.css?v=20261104-cinematic">
-</head>
+
+<style id="hekomi-home-spotlight-calendar-refresh">
+body[data-page="home"] #landing{position:relative;isolation:isolate;padding-top:18px}
+body[data-page="home"] .home-backdrop-banner{position:absolute;z-index:-1;top:-12px;left:50%;width:100vw;height:535px;transform:translateX(-50%);pointer-events:none;opacity:.62;background-image:linear-gradient(90deg,var(--bg,#080916) 0%,color-mix(in srgb,var(--bg,#080916) 70%,transparent) 42%,transparent 76%),linear-gradient(0deg,var(--bg,#080916),transparent 50%),url('/assets/hekomi-chan-home-banner.gif');background-size:cover,cover,auto 100%;background-position:center,center,right center;background-repeat:no-repeat;mask-image:linear-gradient(to bottom,#000 0%,#000 65%,transparent 100%)}
+body[data-page="home"] #animeShowcase{max-width:1120px;margin:0 auto 14px;min-height:clamp(275px,28vw,330px);border-radius:24px}
+body[data-page="home"] #animeShowcase .showcase-copy{max-width:64%;padding:30px 0 42px 34px}
+body[data-page="home"] #hkCalendar{max-width:1120px;margin:0 auto 18px;padding:13px 16px;border-radius:17px;background:color-mix(in srgb,var(--panel,#13151b) 82%,transparent);backdrop-filter:blur(16px) saturate(125%)}
+body[data-page="home"] #hkCalendar .hk-calendar-heading{align-items:center;margin:0;gap:14px}
+body[data-page="home"] #hkCalendar .hk-calendar-heading h2{font-size:22px;margin:3px 0 0}
+body[data-page="home"] #hkCalendar .hk-calendar-heading p{font-size:11px;margin-top:3px}
+body[data-page="home"] #hkCalendar .hk-calendar-toolbar{gap:5px}
+body[data-page="home"] #hkCalendar .hk-calendar-toolbar button{min-height:32px;border-radius:9px;font-size:11px}
+body[data-page="home"] #hkCalendar .hk-calendar-toolbar .hk-cal-arrow{width:32px;font-size:18px}
+body[data-page="home"] #hkCalendar #hkCalCollapse{padding:0 12px;min-width:78px;color:var(--mint,#8be1cf);font-weight:750}
+body[data-page="home"] #hkCalendar[data-collapsed="true"] .hk-calendar-content{display:none}
+body[data-page="home"] #hkCalendar[data-collapsed="true"] #hkCalToday{display:none}
+body[data-page="home"] #hkCalendar .hk-calendar-content{margin-top:14px}
+body[data-page="home"] #hkCalendar .hk-calendar-layout{grid-template-columns:minmax(0,1.45fr) minmax(230px,.85fr);gap:10px}
+body[data-page="home"] #hkCalendar .hk-calendar-month{padding:11px}
+body[data-page="home"] #hkCalendar .hk-calendar-day{padding:12px}
+body[data-page="home"] #hkCalendar .hk-calendar-day-cell{min-height:52px}
+body[data-page="home"] #hkCalendar .hk-calendar-events{max-height:250px}
+body[data-page="home"] .home-hero{display:block;max-width:1120px;margin:20px auto 30px;padding:0;text-align:left}
+body[data-page="home"] .home-hero .hero-copy{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:5px 22px;max-width:none;margin:0}
+body[data-page="home"] .home-hero .hero-kicker{grid-column:1/-1;font-size:9px;margin:0}
+body[data-page="home"] .home-hero .eyebrow{display:none}
+body[data-page="home"] .home-hero h1{grid-column:1;margin:0;font-size:clamp(22px,3vw,30px);line-height:1.1}
+body[data-page="home"] .home-hero p{grid-column:1;margin:0;font-size:12px;line-height:1.5;max-width:560px}
+body[data-page="home"] .home-hero .home-hero-actions{grid-column:2;grid-row:2/4;margin:0;gap:7px}
+body[data-page="home"] .home-hero .home-visual{display:none!important}
+@media(max-width:760px){
+body[data-page="home"] .home-backdrop-banner{height:430px;opacity:.46}
+body[data-page="home"] #animeShowcase{min-height:290px;margin-bottom:10px;border-radius:19px}
+body[data-page="home"] #animeShowcase .showcase-copy{max-width:100%;padding:24px 19px 55px}
+body[data-page="home"] #animeShowcase .showcase-copy h2{max-width:310px;font-size:clamp(27px,8vw,38px)}
+body[data-page="home"] #animeShowcase .showcase-copy p{max-width:270px;font-size:12px}
+body[data-page="home"] #animeShowcase .showcase-art{inset:0 0 0 24%;opacity:.26}
+body[data-page="home"] #hkCalendar{padding:11px 12px;margin-bottom:15px}
+body[data-page="home"] #hkCalendar .hk-calendar-heading{flex-direction:row;align-items:center;gap:8px}
+body[data-page="home"] #hkCalendar .hk-calendar-heading h2{font-size:19px}
+body[data-page="home"] #hkCalendar .hk-calendar-heading p{display:none}
+body[data-page="home"] #hkCalendar .hk-calendar-toolbar{width:auto;gap:4px}
+body[data-page="home"] #hkCalendar #hkCalCollapse{min-width:72px;padding:0 8px}
+body[data-page="home"] #hkCalendar:not([data-collapsed="true"]) .hk-calendar-heading{align-items:flex-start;flex-wrap:wrap}
+body[data-page="home"] #hkCalendar:not([data-collapsed="true"]) .hk-calendar-toolbar{width:100%}
+body[data-page="home"] #hkCalendar:not([data-collapsed="true"]) #hkCalToday{display:inline-flex;flex:1}
+body[data-page="home"] #hkCalendar .hk-calendar-layout{grid-template-columns:minmax(0,1fr)}
+body[data-page="home"] .home-hero{margin:15px auto 24px}
+body[data-page="home"] .home-hero .hero-copy{grid-template-columns:minmax(0,1fr);gap:8px}
+body[data-page="home"] .home-hero h1,body[data-page="home"] .home-hero p,body[data-page="home"] .home-hero .home-hero-actions{grid-column:1;grid-row:auto}
+}
+</style></head>
 <body data-page="__HEKOMI_PAGE__">
 <div class="app-scroll-progress" aria-hidden="true"><span id="appScrollProgressBar"></span></div>
 <button class="back-top" id="backToTop" type="button" aria-label="Back to top" title="Back to top"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 14 6-6 6 6"/><path d="M12 8v12"/></svg></button>
@@ -1795,11 +1846,24 @@ html[data-theme="classic"] .hk-core-foot button,html[data-theme="classic"] .hk-c
   </header>
   <main>
     <section id="landing">
-      <section class="hk-calendar" id="hkCalendar" aria-labelledby="hkCalendarTitle">
-        <div class="hk-calendar-heading">
-          <div><span class="eyebrow">HEKOMI / BROADCAST ARCHIVE</span><h2 id="hkCalendarTitle">Anime Calendar</h2><p>Every broadcast has a date. Explore past episodes and see what's scheduled next.</p></div>
-          <div class="hk-calendar-toolbar" aria-label="Calendar navigation"><button type="button" class="hk-cal-today" id="hkCalToday">Today</button><button type="button" class="hk-cal-arrow" id="hkCalPrev" aria-label="Previous month">‹</button><button type="button" class="hk-cal-arrow" id="hkCalNext" aria-label="Next month">›</button></div>
+<div class="home-backdrop-banner" aria-hidden="true"></div>
+<section class="anime-showcase" id="animeShowcase" data-slide="0" aria-label="Featured anime-inspired carousel">
+        <div class="showcase-orbit orbit-one"></div><div class="showcase-orbit orbit-two"></div>
+        <div class="showcase-copy" aria-live="polite"><span class="showcase-kicker"><i></i> <span id="showcaseKicker">HEKOMI ANIME TRANSMISSION</span></span><h2 id="showcaseTitle">Find your <em>next obsession.</em></h2><p id="showcaseDescription">New worlds. Strange signals. One more chapter before sleep.</p><div class="showcase-tags" id="showcaseTags"><span>ANIME</span><span>MANGA</span><span>AFTER HOURS</span></div><div class="showcase-actions"><a id="showcaseDetailsLink" class="showcase-primary hidden" href="/" tabindex="-1">View series details ↗</a><button id="showcaseAddButton" class="showcase-add hidden" type="button">＋ Add to my shelf</button></div></div>
+        <div class="showcase-art" aria-hidden="true">
+          <div class="poster poster-back"><span class="poster-label">月の残響</span><div class="poster-moon"></div><div class="poster-person person-back"><i></i><b></b></div><span class="poster-caption">ECHOES OF THE MOON</span></div>
+          <div class="poster poster-mid"><span class="poster-label">VOL. 07</span><div class="poster-sun"></div><div class="poster-person person-mid"><i></i><b></b></div><span class="poster-caption">AFTER THE RAIN</span></div>
+          <div class="poster poster-front"><span class="poster-label">NEW SIGNAL</span><div class="poster-star">✦</div><div class="poster-person person-front"><i></i><b></b></div><span class="poster-caption">NO SIGNAL, NO SLEEP.</span></div>
+          <div class="floating-sticker sticker-top" id="showcaseStickerTop">今夜も読もう <span>✦</span></div><div class="floating-sticker sticker-bottom" id="showcaseStickerBottom">ONE MORE CHAPTER ↗</div>
         </div>
+        <div class="showcase-scan"></div><div class="showcase-index" id="showcaseIndex">HEKOMI / 001 — YOUR PRIVATE ANIME SPACE</div><div class="showcase-controls" aria-label="Featured banners"><button class="showcase-arrow" id="showcasePrev" aria-label="Previous banner">‹</button><div class="showcase-dots" id="showcaseDots"><button class="showcase-dot active" data-showcase-slide="0" aria-label="Banner 1"></button><button class="showcase-dot" data-showcase-slide="1" aria-label="Banner 2"></button><button class="showcase-dot" data-showcase-slide="2" aria-label="Banner 3"></button></div><button class="showcase-arrow" id="showcaseNext" aria-label="Next banner">›</button></div>
+      </section>
+<section class="hk-calendar" id="hkCalendar" data-collapsed="true" aria-labelledby="hkCalendarTitle">
+        <div class="hk-calendar-heading">
+          <div><span class="eyebrow">HEKOMI / BROADCAST ARCHIVE</span><h2 id="hkCalendarTitle">Anime Calendar</h2><p>Broadcast dates and episode details · JST</p></div>
+          <div class="hk-calendar-toolbar" aria-label="Calendar navigation"><button type="button" class="hk-cal-today" id="hkCalToday">Today</button><button type="button" class="hk-cal-arrow" id="hkCalPrev" aria-label="Previous month">‹</button><button type="button" class="hk-cal-arrow" id="hkCalNext" aria-label="Next month">›</button><button type="button" id="hkCalCollapse" aria-expanded="false" aria-controls="hkCalendarContent">Expand</button></div>
+        </div>
+        <div class="hk-calendar-content" id="hkCalendarContent">
         <div class="hk-calendar-layout">
           <div class="hk-calendar-month">
             <div class="hk-calendar-month-label"><h3 id="hkCalMonthLabel">Loading calendar…</h3><span>JAPAN BROADCAST · JST</span></div>
@@ -1813,14 +1877,14 @@ html[data-theme="classic"] .hk-core-foot button,html[data-theme="classic"] .hk-c
           </aside>
         </div>
         <div class="hk-calendar-foot"><span>Historical and upcoming Japanese TV broadcast listings.</span><span>Data: <a href="https://cal.syoboi.jp/" target="_blank" rel="noopener noreferrer">Syoboi Calendar ↗</a></span></div>
+        </div>
       </section>
-
-      <section class="hero home-hero" aria-labelledby="homeHeroTitle">
+<section class="hero home-hero" aria-labelledby="homeHeroTitle">
         <div class="hero-copy">
           <div class="hero-kicker"><span class="hero-signal"></span> HEKOMI / YOUR PERSONAL ANIME &amp; MANGA SPACE <span class="hero-edition">DISCOVER · TRACK · READ</span></div>
           <div class="eyebrow">YOUR STORIES. YOUR PACE.</div>
-          <h1 id="homeHeroTitle">Less scrolling.<br><em>More feeling.</em></h1>
-          <p>Discover anime and manga by genre, find your next series, track your MyAnimeList watchlist, and keep your manga reading library together in one calm little corner.</p>
+          <h1 id="homeHeroTitle">Your next story <em>starts here.</em></h1>
+          <p>A calm little home for the anime you follow and the manga you keep.</p>
           <div class="home-hero-actions">
             <a class="btn-primary" href="/discover">Explore the catalog <span aria-hidden="true">↗</span></a>
             <button class="btn-secondary" type="button" id="homeChooseMode">Choose your space <span aria-hidden="true">↓</span></button>
@@ -1838,17 +1902,10 @@ html[data-theme="classic"] .hk-core-foot button,html[data-theme="classic"] .hk-c
           <span class="home-mascot-star star-b" aria-hidden="true">✧</span>
         </div>
       </section>
-      <section class="anime-showcase" id="animeShowcase" data-slide="0" aria-label="Featured anime-inspired carousel">
-        <div class="showcase-orbit orbit-one"></div><div class="showcase-orbit orbit-two"></div>
-        <div class="showcase-copy" aria-live="polite"><span class="showcase-kicker"><i></i> <span id="showcaseKicker">HEKOMI ANIME TRANSMISSION</span></span><h2 id="showcaseTitle">Find your <em>next obsession.</em></h2><p id="showcaseDescription">New worlds. Strange signals. One more chapter before sleep.</p><div class="showcase-tags" id="showcaseTags"><span>ANIME</span><span>MANGA</span><span>AFTER HOURS</span></div><div class="showcase-actions"><a id="showcaseDetailsLink" class="showcase-primary hidden" href="/" tabindex="-1">View series details ↗</a><button id="showcaseAddButton" class="showcase-add hidden" type="button">＋ Add to my shelf</button></div></div>
-        <div class="showcase-art" aria-hidden="true">
-          <div class="poster poster-back"><span class="poster-label">月の残響</span><div class="poster-moon"></div><div class="poster-person person-back"><i></i><b></b></div><span class="poster-caption">ECHOES OF THE MOON</span></div>
-          <div class="poster poster-mid"><span class="poster-label">VOL. 07</span><div class="poster-sun"></div><div class="poster-person person-mid"><i></i><b></b></div><span class="poster-caption">AFTER THE RAIN</span></div>
-          <div class="poster poster-front"><span class="poster-label">NEW SIGNAL</span><div class="poster-star">✦</div><div class="poster-person person-front"><i></i><b></b></div><span class="poster-caption">NO SIGNAL, NO SLEEP.</span></div>
-          <div class="floating-sticker sticker-top" id="showcaseStickerTop">今夜も読もう <span>✦</span></div><div class="floating-sticker sticker-bottom" id="showcaseStickerBottom">ONE MORE CHAPTER ↗</div>
-        </div>
-        <div class="showcase-scan"></div><div class="showcase-index" id="showcaseIndex">HEKOMI / 001 — YOUR PRIVATE ANIME SPACE</div><div class="showcase-controls" aria-label="Featured banners"><button class="showcase-arrow" id="showcasePrev" aria-label="Previous banner">‹</button><div class="showcase-dots" id="showcaseDots"><button class="showcase-dot active" data-showcase-slide="0" aria-label="Banner 1"></button><button class="showcase-dot" data-showcase-slide="1" aria-label="Banner 2"></button><button class="showcase-dot" data-showcase-slide="2" aria-label="Banner 3"></button></div><button class="showcase-arrow" id="showcaseNext" aria-label="Next banner">›</button></div>
-      </section>
+      
+
+      
+      
       <div class="home-section-heading" id="homeModeHeading"><div><span class="eyebrow">YOUR SPACES</span><h2>Choose what you're here for.</h2></div><p>One place to track anime and discover manga.</p></div>
   <div class="choice-grid">
         <article class="choice mal" data-card-number="01" data-enter="mal" tabindex="0" role="button" aria-label="Open MAL Client"><div class="choice-top"><div class="choice-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4.5h10.2A2.8 2.8 0 0 1 18 7.3v12.2H7.4A2.4 2.4 0 0 1 5 17.1V4.5Z"/><path d="M7.5 8h7M7.5 11.5h7M7.5 15h4.5M18 8.5h2v11h-2"/></svg></div><div class="arrow">↗</div></div><h2>MAL Client</h2><p>Your anime list, on your terms. Search shows, update watched episodes, score titles, and sync changes with your MyAnimeList account.</p><div class="choice-foot"><span class="dot"></span> Anime tracking & account sync</div></article>
