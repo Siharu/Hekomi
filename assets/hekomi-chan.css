@@ -118,3 +118,25 @@
   #hekomiCompanion,#hekomiCompanion *{transition:none!important;animation:none!important}
   #hekomiCompanion canvas.home-mascot{transform:none!important}
 }
+
+
+/* Bedtime staging: align her sideways sprite with the mattress, not above it. */
+#hekomiCompanion .hekomi-bed{position:absolute;z-index:1;left:4px;bottom:10px;width:148px;height:40px;opacity:0;transform:translateY(8px) scale(.96);transition:opacity .8s ease,transform 1s ease;pointer-events:none}
+#hekomiCompanion .hekomi-bed-frame{position:absolute;inset:9px 0 0;border:3px solid #6e587e;border-radius:7px 7px 3px 3px;background:linear-gradient(180deg,#493b5b,#292438);box-shadow:0 5px 9px #0005}
+#hekomiCompanion .hekomi-bed-mattress{position:absolute;left:5px;right:5px;bottom:8px;height:20px;border-radius:7px 7px 3px 3px;background:linear-gradient(180deg,#e6d9f1,#a99bc2)}
+#hekomiCompanion .hekomi-bed-pillow{position:absolute;right:10px;top:3px;width:34px;height:14px;border-radius:7px;background:#f3e9f5;box-shadow:inset 0 -3px #c8b6d9}
+#hekomiCompanion .hekomi-bed-blanket{position:absolute;left:27px;bottom:10px;width:75px;height:17px;border-radius:7px 7px 2px 2px;background:linear-gradient(180deg,#a9f0db,#6bafa4);box-shadow:inset 0 -3px #4c8e83}
+#hekomiCompanion.is-making-bed .hekomi-bed,#hekomiCompanion.is-sleeping .hekomi-bed{opacity:1;transform:translateY(0) scale(1)}
+#hekomiCompanion.is-sleeping canvas.home-mascot{left:17px!important;top:-2px!important;width:80px!important;height:100px!important;transform:rotate(90deg)!important;transform-origin:50% 50%;z-index:2}
+#hekomiCompanion.is-sleeping .hekomi-bed-blanket{z-index:3;left:25px;bottom:9px;width:77px;height:19px;opacity:.92}
+#hekomiCompanion.is-sleeping .hekomi-bed-pillow{z-index:3;right:14px;top:5px}
+#hekomiCompanion.is-making-bed canvas.home-mascot{z-index:2}
+@media(max-width:760px){
+ #hekomiCompanion .hekomi-bed{left:-3px;bottom:7px;width:96px;height:29px}
+ #hekomiCompanion .hekomi-bed-frame{inset:7px 0 0;border-width:2px}
+ #hekomiCompanion .hekomi-bed-mattress{left:3px;right:3px;bottom:6px;height:15px}
+ #hekomiCompanion .hekomi-bed-pillow{right:7px;top:2px;width:24px;height:10px}
+ #hekomiCompanion .hekomi-bed-blanket{left:18px;bottom:7px;width:50px;height:12px}
+ #hekomiCompanion.is-sleeping canvas.home-mascot{left:10px!important;top:-1px!important;width:60px!important;height:76px!important}
+ #hekomiCompanion.is-sleeping .hekomi-bed-blanket{left:17px;bottom:6px;width:51px;height:14px}
+}

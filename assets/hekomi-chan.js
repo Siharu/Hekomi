@@ -264,7 +264,7 @@
         this.say(this.pick(['Hey! I live here now.','Oh, a visitor!','Psst… need a guide?']),6200,true);
       }
       this.paint(now,true);
-      if(!this.reduced){if(!startsPerched)this.stateUntil=now+1800;requestAnimationFrame(time=>this.tick(time));}
+      if(!this.reduced){if(!startsPerched)this.stateUntil=now+3600;requestAnimationFrame(time=>this.tick(time));}
     }
 
     dialogueForPage(){
@@ -391,14 +391,14 @@
       this.root.classList.add('is-making-bed');
       this.canvas.style.transform=this.face<0?'scaleX(-1)':'none';
       this.say(this.pick(['Let me make the bed first.','Pillow straight… blanket tucked…','Bedtime routine!']),6200,true);
-      this.stateUntil=now+2600;
+      this.stateUntil=now+5600;
     }
     sleep(now){
       this.state='sleep';this.sleepCount++;this.root.classList.remove('is-making-bed');
       this.root.classList.add('is-sleeping');
-      this.canvas.style.transform='rotate(90deg)';
+      this.canvas.style.transform='rotate(90deg) translateY(0)';
       this.say(this.pick(['All tucked in. Good night…','Wake me when the next episode airs.','Five more minutes…','Zzz…']),9500,true);
-      this.stateUntil=now+8500+Math.random()*6500;
+      this.stateUntil=now+22000+Math.random()*10000;
     }
     wake(now){
       this.state='wake';this.root.classList.remove('is-sleeping');this.root.classList.add('is-waking-up');
@@ -566,15 +566,15 @@
       this.lastPaint=time;
       const walking=this.state==='walk',sleeping=this.state==='sleep';
       const makingBed=this.state==='make-bed',eating=this.state==='eat',sitting=this.state==='perch';
-      const frame=Math.floor(time/130);
+      const frame=Math.floor(time/260);
       const blink=sleeping||time<this.blinkUntil;
       const expression=sleeping?'sleepy':eating?'eating':this.state==='greet'?'happy':this.state==='wake'?'surprised':this.activity==='curious'?'surprised':this.activity==='annoyed'?'annoyed':'normal';
-      const bob=sleeping?(Math.floor(time/700)%2):walking?frame%2:(Math.floor(time/520)%2);
-      const sway=walking?0:Math.round(Math.sin(time/760)*0.5);
+      const bob=sleeping?(Math.floor(time/1500)%2):walking?frame%2:(Math.floor(time/1050)%2);
+      const sway=walking?0:Math.round(Math.sin(time/1450)*0.5);
       drawSprite(this.ctx,{
         expression,blink,walking,sleeping,sitting,
         action:makingBed?'making-bed':eating?'eating':'',
-        step:frame%6,wave:Math.floor(time/210)%6,chewFrame:Math.floor(time/240)%2,
+        step:frame%6,wave:Math.floor(time/420)%6,chewFrame:Math.floor(time/480)%2,
         bob:bob+sway,gazeX:this.gazeX,gazeY:this.gazeY
       });
     }
