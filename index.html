@@ -3109,10 +3109,10 @@ function showProfileTab(tab){activeProfileTab=tab;$$('#profileTabs button').forE
     const filters='<nav class="local-anime-filters" aria-label="Filter local anime">'+[['all','All'],['watching','Watching'],['completed','Finished'],['on_hold','On hold'],['dropped','Dropped'],['plan_to_watch','Plan to watch']].map(([key,label])=>'<button type="button" data-local-status="'+key+'" class="'+(activeLocalAnimeStatus===key?'active':'')+'">'+label+' <span>'+counts[key]+'</span></button>').join('')+'</nav>';
     const grid=items.length?'<div class="catalog-grid anime-list-grid">'+items.map(localAnimeMarkup).join('')+'</div>':'<div class="empty"><strong>'+(localAnime.length?'No local titles in this section':'Your local anime list is empty')+'</strong>'+(localAnime.length?'Try another status or search term.':'Add titles manually or save results from MAL search.')+'</div>';
     const html=filters+grid;$('#localSummaryList').innerHTML=html;$('#fullLocalList').innerHTML=html;
-    $('[data-local-status]').forEach(button=>button.onclick=()=>{activeLocalAnimeStatus=button.dataset.localStatus;renderLocalAnime();});
-    $('[data-local-details]').forEach(button=>button.onclick=()=>openLocalAnimeDetails(button.dataset.localDetails));
-    $('[data-local-edit]').forEach(button=>button.onclick=()=>editLocalAnime(button.dataset.localEdit));
-    $('[data-local-delete]').forEach(button=>button.onclick=()=>{
+    $$('[data-local-status]').forEach(button=>button.onclick=()=>{activeLocalAnimeStatus=button.dataset.localStatus;renderLocalAnime();});
+    $$('[data-local-details]').forEach(button=>button.onclick=()=>openLocalAnimeDetails(button.dataset.localDetails));
+    $$('[data-local-edit]').forEach(button=>button.onclick=()=>editLocalAnime(button.dataset.localEdit));
+    $$('[data-local-delete]').forEach(button=>button.onclick=()=>{
       const previous=localAnime.slice();localAnime=localAnime.filter(item=>String(item.id)!==button.dataset.localDelete);
       if(!write(key.anime,localAnime)){localAnime=previous;notify('Could not save this change. Check your browser storage settings.');renderLocalAnime();return;}
       renderLocalAnime();notify('Removed from your local list.');
