@@ -1,65 +1,146 @@
+<div align="center">
+
+<img src="https://raw.githubusercontent.com/Siharu/Hekomi/main/assets/hekomi-dual-mark.svg" alt="Hekomi" width="112" />
+
 # Hekomi
 
-**Your personal anime and manga companion.** At launch, choose one of two independent workspaces:
+### A little corner for anime, manga, and the hours that disappear into them.
 
-- **MAL Client** — search anime, view your list, update status/score/episodes, and sync with your own MyAnimeList account.
-- **Manga Crawler** — discover permitted public manga websites, extract covers and metadata, inspect chapters, and read detected chapter images inside Hekomi.
+**Find something good. Keep your place. Come back whenever.**
 
-## Run locally
+[Open Hekomi](https://hekomi.vercel.app) · [Report a bug](https://github.com/Siharu/Hekomi/issues) · [See what's being built](https://github.com/Siharu/Hekomi)
 
-Requires Node.js 20 or newer.
+![Node](https://img.shields.io/badge/Node.js-20%2B-7cba82?style=flat-square&logo=node.js&logoColor=white)
+![License](https://img.shields.io/badge/license-see%20LICENSE-9b8acb?style=flat-square)
+![Status](https://img.shields.io/badge/status-a%20work%20in%20progress-d9a6d2?style=flat-square)
 
-```sh
+</div>
+
+---
+
+Hekomi started with a simple idea: keeping up with the things you watch and read shouldn't feel like managing a spreadsheet.
+
+It's an anime and manga space with a MAL-connected anime list, a manga library, discovery tools, a chapter reading room, and a few little details that make it feel like *Hekomi*.
+
+It's still growing. Some corners are more polished than others, and that's part of the journey. This is a personal project, built in the open, one improvement at a time.
+
+## ✦ Take a look around
+
+| | What's inside |
+|:--|:--|
+| **Anime** | Find anime, explore the catalog, and keep your watching list close. |
+| **MAL Client** | Connect your own MyAnimeList account. Update status, score, and watched episodes without juggling tabs. |
+| **Manga** | Search MangaDex and supported manga sources, save series to your library, and keep track of what you're reading. |
+| **Reading room** | Open supported chapters in Hekomi when the source provides readable pages. If it doesn't, Hekomi points you back to the source instead of pretending it worked. |
+| **Discover** | Browse covers, genres, summaries, scores, trending picks, and title pages. |
+| **Anime calendar** | Keep an eye on the broadcast schedule and what's airing. |
+| **Hekomi-chan** | A tiny pixel companion who hangs around the site. She's still learning a few tricks. |
+| **Themes** | Midnight, Late Night, Dawn, and a device-aware option. Pick the mood. |
+
+The library is meant to stay comfortable on a phone, too: poster-first lists, compact actions, and less interface getting in the way of the actual covers.
+
+## ✦ The vibe
+
+Hekomi has its own little visual language: deep night colours, soft mint and violet accents, a little editorial typography, and a pixel companion who occasionally has things to say.
+
+The goal isn't to cram every feature onto one screen. It's to make the next thing you want to do easy to find, then give it room to breathe.
+
+## ✦ Try it
+
+**The easiest way:** [hekomi.vercel.app](https://hekomi.vercel.app)
+
+Want to run your own copy? You'll need [Node.js 20 or newer](https://nodejs.org/).
+
+```bash
+git clone https://github.com/Siharu/Hekomi.git
+cd Hekomi
 npm install
 npm start
 ```
 
-Open http://localhost:4173. Manga crawling works locally. MAL OAuth requires environment variables: `MAL_CLIENT_ID`, `MAL_CLIENT_SECRET`, and `FOLIO_SESSION_SECRET` (legacy environment-variable name retained for compatibility). For local development, use an API app registration whose redirect URL is `http://localhost:4173/api/mal/auth/callback`.
+Then visit **http://localhost:4173**.
 
-## Deploy to Render
+### Connecting MyAnimeList
 
-1. In Render choose **New + → Blueprint** and connect `Siharu/Hekomi`.
-2. Review the Web Service Blueprint; do **not** choose Static Site, because the manga crawler requires a Node.js backend.
-3. Enter the MAL application's **Client ID** and **Client Secret** into the Render environment prompts. Render generates `FOLIO_SESSION_SECRET` for encrypted sessions.
-4. After Render gives the service its HTTPS URL, update the app's **App Redirect URL** in [MAL API Configuration](https://myanimelist.net/apiconfig) to the exact URL `https://YOUR-SERVICE.onrender.com/api/mal/auth/callback`. Keep it exact, including the path.
-5. Open Hekomi, choose **MAL Client**, and tap **Sign in with MyAnimeList**.
+MAL sign-in uses OAuth. Create an app in [MyAnimeList API Configuration](https://myanimelist.net/apiconfig), then add these environment variables to your server:
 
-The Hekomi maintainer registers the MAL app once. Every user authorizes their own account; users do not create API registrations or paste tokens. Hekomi exchanges OAuth codes on the server, stores access/refresh tokens in an encrypted HttpOnly cookie, and refreshes tokens as needed. The Client Secret and session encryption key are server-only and must never be committed to GitHub or placed in HTML.
+- `MAL_CLIENT_ID`
+- `MAL_CLIENT_SECRET`
+- `FOLIO_SESSION_SECRET`
 
-## Appearance themes
+For local development, set the app's redirect URL to:
 
-Hekomi includes **Midnight**, **Late Night**, and **Dawn** themes, plus **Device Settings**, which follows the operating system’s light/dark preference. Your selection is saved locally on this device.
+```text
+http://localhost:4173/api/mal/auth/callback
+```
 
-## Crawler boundaries
+For a deployed copy, use your own domain with `/api/mal/auth/callback` and enter that exact URL in your MAL app settings.
 
-Website support varies by source. The generic website inspector checks robots.txt and extracts common metadata and image attributes from accessible public HTML. Dedicated manga feeds and the in-app chapter reader do not gate public provider requests on a robots.txt check; they still validate public URLs, throttle requests, limit redirects and response sizes, and can fail when a provider is unavailable. Hekomi does not bypass paywalls, DRM, sign-in restrictions, or anti-bot challenges.
+**A small but important secret-keeping rule:** the MAL client secret and session secret belong on the server. Don't put them in browser code, commit them, or share them in screenshots. Each person signs in with their own MAL account; nobody should need to hand over their password or paste an access token into Hekomi.
 
-## Dedicated manga-source adapters
+## ✦ A note about manga sources
 
-Hekomi includes an optional, manually triggered adapter search powered by the MIT-licensed `mangascrape@1.5.0` package. The current UI exposes the Bato network (through `fto.to`), MangaBuddy, and Mangakakalot for structured title search and series/chapter metadata. Search results and detail records can be saved to the device-local manga library. Provider chapter links open on their original host; this adapter flow does not mirror image files into Hekomi.
+Manga sources are a mixed bag. Some work beautifully; some change their pages, go offline, or simply don't provide the chapter images Hekomi needs.
 
-Dedicated adapter requests to each provider are rate-limited and validate public URLs. The package client follows only a small number of redirects within known manga-provider domains; unknown redirect hosts are rejected. Manga feeds and chapter reads are not blocked just because a robots.txt file is unavailable or disallows a path. A provider may still fail if it is offline, changes its page format, or requires JavaScript, sign-in, a paywall, or an anti-bot challenge. Review source terms and only access material you are authorized to read.
+Hekomi currently has:
 
-Hekomi also includes a direct MangaDex API source for discovery, title search, chapter metadata, and readable chapter pages when MangaDex supplies page files. MangaDex chapters hosted elsewhere or marked unavailable are shown with their original source link rather than a fake in-app reader button. Chapter lists and the reader display translation-group credit when available; the image proxy is limited to MangaDex upload and at-home image hosts, with URL validation, redirect checks, response-size limits, and caching. Follow MangaDex's current API and acceptable-use rules, credit MangaDex and translation groups, and do not add advertising or paid access to MangaDex-powered content. Dedicated adapters supplement the generic robots-aware page inspector rather than replacing it.
+- **MangaDex** for title discovery, search, chapter metadata, and supported chapter pages.
+- **Optional source adapters** powered by the MIT-licensed `mangascrape@1.5.0` package, currently exposing Bato (`fto.to`), MangaBuddy, and Mangakakalot for structured search and series/chapter details.
+- **A general page inspector** for looking at accessible public pages and their metadata.
 
-## Public catalog and SEO
+A source link is still a source link. When a chapter can't be read inside Hekomi, the app should say so and let you open the original page.
 
-Hekomi's home page loads trending anime and manga cover art, scores, genres and summaries from AniList. Search results open public server-rendered title pages under `/series/anime/` and `/series/manga/`, with descriptive page titles, meta descriptions, social preview metadata, canonical URLs and JSON-LD structured data. `/robots.txt` and `/sitemap.xml` are generated by the Node server. Set `HEKOMI_PUBLIC_URL` if the public canonical domain needs to differ from the host URL.
+Please use sources you're allowed to access and respect the people who make and translate the work. Hekomi does not bypass paywalls, DRM, sign-in requirements, or anti-bot challenges. Provider availability and page formats can change without warning.
 
-Catalog requests are cached in the server for a short period to limit external API calls. Cover artwork remains owned by its respective rights holders; catalog metadata is attributed to AniList. Search visibility is not guaranteed and depends on crawling, indexing and search-engine policies.
+MangaDex-powered features should follow [MangaDex's current API rules](https://api.mangadex.org/docs/) and acceptable-use policies. Credit MangaDex and translation groups where applicable.
 
-## Catalog presentation
+## ✦ Your data, your device
 
-The home catalog uses a live title spotlight with banner artwork, ratings and metadata, horizontal shelves with keyboard/touch-friendly controls, loading skeletons, and a separate currently-airing row. Spotlight actions can add a title to a device-local anime list or manga shelf. Hekomi keeps its own branding and layout; the ideas are adapted for this project rather than reusing AnymeX assets or source code.
+- Your local anime and manga lists are stored in your browser on that device.
+- MAL account access is handled through server-side OAuth and an encrypted, HttpOnly session cookie.
+- Searching the web or opening a provider page makes requests to those services. Hekomi can't make those requests invisible to the provider or your network.
+- Don't feed private URLs, passwords, or account-only pages into the page inspector.
 
-## Personal library and privacy
+Local storage is not a cloud backup. If you clear your browser data or switch devices, locally saved entries may not follow you.
 
-- The generic crawler is a page inspector, not a hosted content mirror: it reads accessible HTML and detects links/images; it does not download chapters into a server-side archive.
-- Search terms sent through the built-in web search are processed by the search provider. Choosing a result may contact that website, and images are loaded from their original hosts. Private browsing in Hekomi does not make those network requests invisible to those providers or your network.
-- Keep your library personal and use sources whose terms permit your intended use. Hekomi's generic website inspector checks robots.txt and all server-side fetch paths block private-network URLs; dedicated manga reading does not treat robots.txt as a playback gate. robots.txt is not a copyright licence and generic extraction cannot determine every site's legal terms.
-- Do not submit private URLs, credentials, or account-only pages to the crawler. Hekomi intentionally does not bypass sign-in restrictions, paywalls, DRM, or anti-bot challenges.
-- For a stronger private archive workflow, prefer files you own or are authorized to access and store them on a device or server you control. A future source-adapter system should be opt-in, rate-limited, transparent about each source, and easy to disable.
+## ✦ Under the hood
 
-## Source identity
+A few notes for the curious:
 
-The crawler identifies its requests as `Hekomi/1.0 (personal manga discovery; respects robots.txt)`. This makes its purpose clearer to source operators than a generic crawler name. It remains polite, public-page inspection only; source-specific terms and access restrictions still apply.
+- **Node.js** server with native ES modules.
+- **AniList** provides public catalog data and metadata.
+- **MyAnimeList OAuth** connects a user's own MAL account.
+- **MangaDex API** powers its supported manga discovery and reading features.
+- **mangascrape** provides optional source adapters.
+- **React 19** is included as part of the ongoing front-end work; the existing app structure is still being evolved rather than replaced wholesale.
+- **Playwright** and Node's test runner are used for browser and unit tests.
+
+Useful commands:
+
+```bash
+npm start          # Run Hekomi locally
+npm run test:unit  # Run unit tests
+npm run test:e2e   # Run browser tests
+```
+
+## ✦ A little housekeeping
+
+Hekomi's catalog pages use AniList metadata and artwork supplied by their respective rights holders. The server also generates its sitemap and robots file. Set `HEKOMI_PUBLIC_URL` if you're hosting your own copy at a different canonical domain.
+
+The generic page inspector checks `robots.txt` where applicable. Dedicated source adapters and chapter-reading routes have their own URL validation, redirect limits, throttling, response-size limits, and caching. These safeguards are not a licence to reuse a site's content; always check the source's terms.
+
+## ✦ Help make the corner nicer
+
+Found something broken? Have an idea that would make the app feel better? [Open an issue](https://github.com/Siharu/Hekomi/issues).
+
+If you're contributing code, please keep changes focused and avoid breaking the existing app structure or unrelated features. Run the relevant tests before opening a pull request, and explain what you changed and how you checked it.
+
+And if you're just looking around: welcome. Grab a series, find a chapter, and make yourself at home.
+
+<div align="center">
+
+**Less scrolling. More feeling.**
+
+*— Hekomi*
+
+</div>
