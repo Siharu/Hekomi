@@ -134,3 +134,8 @@
 .hk-cal-event-watch-tag{display:inline-flex;margin-top:4px;color:var(--mint,#8be1cf);font-family:"IBM Plex Mono",monospace;font-size:7px;font-weight:700;letter-spacing:.08em}
 .hk-cal-event[data-watching="true"]{border-color:rgba(139,225,207,.19);background:linear-gradient(100deg,rgba(139,225,207,.045),rgba(255,255,255,.015))}
 @media(max-width:370px){.hk-cal-event-content{gap:7px}.hk-cal-event-cover{flex-basis:39px;width:39px;height:56px}}
+
+
+/* Collapsible calendar home treatment. */
+body[data-page="home"] #hkCalendar[data-collapsed="true"] .hk-calendar-content{display:none!important}
+body[data-page="home"] #hkCalendar[data-collapsed="true"] .hk-calendar-heading{margin-bottom:0}
