@@ -506,3 +506,17 @@
   #hekomiCompanion .hekomi-bed-mattress{height:13px!important}
   #hekomiCompanion .hekomi-bed-blanket{width:44px!important;height:10px!important}
 }
+
+
+/* Mobile home: keep the shared anime + manga spotlight visible. */
+@media (max-width:760px) {
+  body[data-page="home"] #landing > .anime-showcase {
+    display:block!important;
+    order:1!important;
+    width:100%!important;
+    max-width:100%!important;
+    margin:0 0 14px!important;
+  }
+  body[data-page="home"] #landing > #hkCalendar { order:2!important; }
+  body[data-page="home"] #landing > .catalog-discovery { order:3!important; }
+}
