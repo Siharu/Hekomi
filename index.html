@@ -1570,9 +1570,11 @@ body[data-page="home"] .home-hero .hero-copy{max-width:780px}
 }
 </style>
 <link rel="stylesheet" href="/assets/hekomi-calendar.css?v=20261105-random-calendar-wallpaper">
+<link rel="stylesheet" href="/assets/hekomi-meme.css?v=20261106-meme-corner">
 <link rel="stylesheet" href="/assets/hekomi-chan.css?v=20261102-activities">
 <script defer src="/assets/hekomi-chan.js?v=20261102-activities-2"></script>
 <script defer src="/assets/hekomi-calendar.js?v=20261105-random-calendar-wallpaper"></script>
+<script defer src="/assets/hekomi-meme.js?v=20261106-meme-corner"></script>
 <style>body[data-page="discover"] #catalogTitle{margin:9px 0 8px;font-size:clamp(32px,4vw,46px);line-height:1.06;letter-spacing:-.065em;text-wrap:balance}@media(max-width:760px){body[data-page="discover"] #catalogTitle{font-size:34px}}</style>
 
 <style id="hekomi-header-classic-theme">
@@ -1902,6 +1904,21 @@ body[data-page="home"] #animeShowcase::before{
       
       
         
+      <section class="hk-meme-corner" id="hkMemeCorner" aria-labelledby="hkMemeTitle" aria-busy="true">
+        <div class="hk-meme-heading">
+          <div><span class="eyebrow">HEKOMI / COMMUNITY FINDS</span><h2 id="hkMemeTitle">Meme Corner</h2><p>A little anime chaos for your timeline.</p></div>
+          <button class="hk-meme-next" type="button" id="hkMemeNext"><span aria-hidden="true">↻</span><span id="hkMemeButtonLabel">Find a meme</span></button>
+        </div>
+        <article class="hk-meme-card" id="hkMemeCard" aria-live="polite" aria-busy="true">
+          <div class="hk-meme-media" id="hkMemeMedia"><div class="hk-meme-placeholder"><span class="hk-meme-placeholder-mark">✦</span><span>Finding a little anime chaos…</span></div></div>
+          <div class="hk-meme-copy">
+            <div class="hk-meme-meta"><span id="hkMemeSubreddit">ANIME MEMES</span><span class="hk-meme-score"><span aria-hidden="true">↑</span><span id="hkMemeScore">—</span></span></div>
+            <h3 id="hkMemeCaption">Loading a random meme…</h3>
+            <a class="hk-meme-source" id="hkMemeSource" href="https://www.reddit.com/r/Animemes/" target="_blank" rel="noopener noreferrer" hidden>Open original post ↗</a>
+          </div>
+        </article>
+        <div class="hk-meme-foot"><span>Community posts · refresh whenever you want</span><span class="hk-meme-status" id="hkMemeStatus" role="status">Waiting for the meme feed…</span></div>
+      </section>
       <div class="landing-footer">Your library stays yours. Pick up wherever you left off.</div>
       <div class="statusline"><span class="led"></span><span id="healthLabel">Checking local services…</span><span>·</span><span>Library data stays in this browser</span></div>
 
