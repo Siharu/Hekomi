@@ -1848,6 +1848,204 @@ body[data-page="home"] #animeShowcase::before{
   }
 }
 </style>
+
+<style id="hekomi-mobile-home-density">
+/* Compact home layout for phones: preserve the content, reduce the visual weight. */
+@media (max-width:760px) {
+  body[data-page="home"] .app {
+    padding-left:12px!important;
+    padding-right:12px!important;
+    padding-bottom:calc(94px + env(safe-area-inset-bottom))!important;
+  }
+  body[data-page="home"] .topbar {
+    min-height:55px!important;
+    padding:6px 0!important;
+    gap:6px!important;
+  }
+  body[data-page="home"] .brand { gap:7px!important; font-size:16px!important; }
+  body[data-page="home"] .brandmark {
+    width:32px!important;height:32px!important;flex-basis:32px!important;
+  }
+  body[data-page="home"] .brand small { font-size:6.5px!important; }
+  body[data-page="home"] .top-actions { gap:4px!important; }
+  body[data-page="home"] .top-actions .iconbtn {
+    width:36px!important;min-width:36px!important;height:36px!important;min-height:36px!important;
+  }
+  body[data-page="home"] #landing { padding-top:7px!important; }
+
+  /* The anime spotlight was retaining its 290px desktop-style minimum on phones. */
+  body[data-page="home"] #animeShowcase {
+    min-height:0!important;
+    height:clamp(174px,48vw,190px)!important;
+    margin:0 0 11px!important;
+    border-radius:15px!important;
+  }
+  body[data-page="home"] #animeShowcase .showcase-copy {
+    width:100%!important;
+    max-width:68%!important;
+    padding:17px 0 37px 14px!important;
+  }
+  body[data-page="home"] #animeShowcase .showcase-kicker {
+    gap:6px!important;font-size:7px!important;letter-spacing:.13em!important;
+  }
+  body[data-page="home"] #animeShowcase .showcase-kicker i {
+    width:5px!important;height:5px!important;flex:0 0 5px!important;
+  }
+  body[data-page="home"] #animeShowcase .showcase-copy h2 {
+    max-width:13ch!important;
+    margin:9px 0 7px!important;
+    font-size:clamp(21px,6.2vw,27px)!important;
+    line-height:1.03!important;
+  }
+  body[data-page="home"] #animeShowcase .showcase-copy p {
+    max-width:28ch!important;font-size:10px!important;line-height:1.35!important;
+  }
+  body[data-page="home"] #animeShowcase .showcase-tags {
+    gap:4px!important;margin-top:9px!important;
+  }
+  body[data-page="home"] #animeShowcase .showcase-tags span {
+    padding:3px 5px!important;font-size:7px!important;letter-spacing:.08em!important;
+    border-radius:4px!important;
+  }
+  body[data-page="home"] #animeShowcase .showcase-art {
+    inset:0 0 0 35%!important;opacity:.23!important;
+  }
+  body[data-page="home"] #animeShowcase .showcase-index {
+    left:12px!important;bottom:8px!important;max-width:54%!important;font-size:6px!important;
+  }
+  body[data-page="home"] #animeShowcase .showcase-controls {
+    right:8px!important;bottom:6px!important;gap:4px!important;
+  }
+  body[data-page="home"] #animeShowcase .showcase-arrow {
+    width:24px!important;height:24px!important;
+  }
+  body[data-page="home"] #animeShowcase .showcase-dot { width:5px!important;height:5px!important; }
+  body[data-page="home"] #animeShowcase .showcase-dot.active { width:12px!important; }
+
+  /* A small, tidy calendar header; the full calendar stays readable when expanded. */
+  body[data-page="home"] #hkCalendar[data-collapsed="true"] {
+    padding:10px 11px!important;margin-bottom:13px!important;border-radius:14px!important;
+  }
+  body[data-page="home"] #hkCalendar[data-collapsed="true"] .hk-calendar-heading {
+    align-items:center!important;gap:7px!important;margin-bottom:0!important;
+  }
+  body[data-page="home"] #hkCalendar[data-collapsed="true"] .hk-calendar-heading .eyebrow {
+    font-size:6.5px!important;letter-spacing:.12em!important;
+  }
+  body[data-page="home"] #hkCalendar[data-collapsed="true"] .hk-calendar-heading h2 {
+    margin:3px 0 0!important;font-size:17px!important;line-height:1.1!important;
+  }
+  body[data-page="home"] #hkCalendar[data-collapsed="true"] .hk-calendar-toolbar {
+    width:auto!important;gap:3px!important;
+  }
+  body[data-page="home"] #hkCalendar[data-collapsed="true"] .hk-calendar-toolbar button {
+    min-width:31px!important;min-height:35px!important;height:35px!important;
+    padding:0 7px!important;border-radius:9px!important;font-size:11px!important;
+  }
+  body[data-page="home"] #hkCalendar[data-collapsed="true"] #hkCalToday { min-width:47px!important; }
+  body[data-page="home"] #hkCalendar[data-collapsed="true"] #hkCalCollapse { min-width:57px!important; }
+
+  /* Meme Corner becomes a compact preview rather than a second large hero. */
+  body[data-page="home"] #hkMemeCorner {
+    padding:10px!important;margin-bottom:14px!important;border-radius:14px!important;
+  }
+  body[data-page="home"] #hkMemeCorner .hk-meme-heading {
+    gap:7px!important;margin-bottom:8px!important;
+  }
+  body[data-page="home"] #hkMemeCorner .hk-meme-heading .eyebrow {
+    font-size:6.5px!important;letter-spacing:.12em!important;
+  }
+  body[data-page="home"] #hkMemeCorner .hk-meme-heading h2 {
+    margin:3px 0 0!important;font-size:17px!important;line-height:1.1!important;
+  }
+  body[data-page="home"] #hkMemeCorner .hk-meme-heading p { display:none!important; }
+  body[data-page="home"] #hkMemeCorner .hk-meme-next {
+    min-height:35px!important;padding:0 9px!important;font-size:10px!important;
+  }
+  body[data-page="home"] #hkMemeCorner .hk-meme-card { border-radius:11px!important; }
+  body[data-page="home"] #hkMemeCorner .hk-meme-media {
+    min-height:clamp(128px,42vw,164px)!important;
+    max-height:164px!important;
+  }
+  body[data-page="home"] #hkMemeCorner .hk-meme-image { max-height:164px!important; }
+  body[data-page="home"] #hkMemeCorner .hk-meme-copy {
+    gap:7px!important;padding:10px 11px!important;
+  }
+  body[data-page="home"] #hkMemeCorner .hk-meme-copy h3 {
+    font-size:14px!important;line-height:1.25!important;
+  }
+  body[data-page="home"] #hkMemeCorner .hk-meme-foot {
+    gap:4px!important;margin-top:7px!important;font-size:9px!important;
+  }
+
+  /* Keep discovery immediately usable without a huge heading block. */
+  body[data-page="home"] #discoverCatalog { margin-top:5px!important;padding-top:8px!important; }
+  body[data-page="home"] #discoverCatalog .catalog-heading {
+    grid-template-columns:minmax(0,1fr)!important;gap:9px!important;
+    padding-top:0!important;padding-bottom:12px!important;
+  }
+  body[data-page="home"] #discoverCatalog .catalog-heading .eyebrow {
+    font-size:7px!important;letter-spacing:.14em!important;
+  }
+  body[data-page="home"] #discoverCatalog .catalog-heading h2 {
+    margin:5px 0 0!important;font-size:clamp(22px,6.5vw,26px)!important;
+    line-height:1.08!important;letter-spacing:-.045em!important;
+  }
+  body[data-page="home"] #discoverCatalog .catalog-heading p { display:none!important; }
+  body[data-page="home"] #discoverCatalog .catalog-search {
+    display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;gap:7px!important;
+  }
+  body[data-page="home"] #discoverCatalog .catalog-search input,
+  body[data-page="home"] #discoverCatalog .catalog-search button {
+    min-height:41px!important;height:41px!important;font-size:11px!important;
+  }
+  body[data-page="home"] #discoverCatalog .catalog-search input { padding:0 10px!important; }
+  body[data-page="home"] #discoverCatalog .catalog-search button { padding:0 12px!important; }
+  body[data-page="home"] #discoverCatalog .advanced-search { margin:8px 0 17px!important; }
+  body[data-page="home"] #discoverCatalog .advanced-toggle {
+    min-height:48px!important;padding:9px 10px!important;
+  }
+  body[data-page="home"] #discoverCatalog .advanced-toggle-title strong { font-size:11px!important; }
+  body[data-page="home"] #discoverCatalog .advanced-toggle-title small { font-size:9px!important; }
+  body[data-page="home"] #discoverCatalog .catalog-shelf { margin-top:17px!important; }
+  body[data-page="home"] #discoverCatalog .catalog-shelf-head h3 { font-size:17px!important; }
+  body[data-page="home"] #discoverCatalog .catalog-row { gap:8px!important; }
+  
+  /* Slightly shorter thumb navigation, while keeping the hit areas usable. */
+  body[data-page="home"] .primary-nav {
+    padding:5px!important;gap:2px!important;border-radius:15px!important;
+  }
+  body[data-page="home"] .primary-nav a {
+    min-height:48px!important;padding:4px 2px!important;gap:3px!important;
+    font-size:9px!important;border-radius:10px!important;
+  }
+  body[data-page="home"] .primary-nav a svg {
+    width:17px!important;height:17px!important;flex-basis:17px!important;
+  }
+}
+@media (max-width:380px) {
+  body[data-page="home"] #animeShowcase {
+    height:168px!important;border-radius:13px!important;
+  }
+  body[data-page="home"] #animeShowcase .showcase-copy {
+    max-width:70%!important;padding-left:12px!important;padding-top:15px!important;
+  }
+  body[data-page="home"] #animeShowcase .showcase-copy h2 { font-size:21px!important; }
+  body[data-page="home"] #animeShowcase .showcase-copy p { font-size:9px!important; }
+  body[data-page="home"] #animeShowcase .showcase-tags { margin-top:7px!important; }
+  body[data-page="home"] #hkCalendar[data-collapsed="true"] .hk-calendar-toolbar button {
+    min-width:28px!important;padding:0 5px!important;
+  }
+  body[data-page="home"] #hkCalendar[data-collapsed="true"] #hkCalToday { min-width:42px!important; }
+  body[data-page="home"] #hkCalendar[data-collapsed="true"] #hkCalCollapse { min-width:51px!important; }
+  body[data-page="home"] #hkMemeCorner .hk-meme-media {
+    min-height:128px!important;max-height:145px!important;
+  }
+  body[data-page="home"] #hkMemeCorner .hk-meme-image { max-height:145px!important; }
+  body[data-page="home"] #discoverCatalog .catalog-heading h2 { font-size:22px!important; }
+}
+</style>
+
 </head>
 <body data-page="__HEKOMI_PAGE__">
 <div class="app-scroll-progress" aria-hidden="true"><span id="appScrollProgressBar"></span></div>
