@@ -2161,7 +2161,7 @@ body[data-page="home"] #animeShowcase::before{
       '<div class="catalog-cover-badges"><span class="catalog-badge">'+esc(typeLabel)+'</span><span class="catalog-badge score">★ '+score+'</span></div></div></a>'+
       '<div class="catalog-card-body"><h4 itemprop="name"><a href="'+detail+'"'+transitionAttrs+'>'+esc(title)+'</a></h4><div class="catalog-card-meta">'+esc(meta)+(kind==='ANIME'&&m.episodes?' · '+Number(m.episodes)+' eps':'')+(kind==='MANGA'&&m.volumes?' · '+Number(m.volumes)+' vols':'')+'</div>'+
       '<div class="catalog-genres">'+genres+'</div><p class="catalog-synopsis" itemprop="description">'+esc(desc||'Open the details page for available series information.')+'</p>'+
-      '<div class="catalog-card-actions"><a class="mini-btn catalog-detail-link" href="'+detail+'"'+transitionAttrs+'>Details ↗</a><button type="button" class="mini-btn" data-catalog-add="1" data-catalog-kind="'+kind+'" data-id="'+Number(m.id)+'" data-mal-id="'+(Number(m.idMal)||0)+'" data-title="'+esc(title)+'" data-cover="'+esc(cover)+'" data-description="'+esc(desc)+'" data-format="'+esc(m.format||'')+'" data-origin="'+esc(m.countryOfOrigin||'')+'" data-detail="'+detail+'">'+(kind==='ANIME'?'＋ Hekomi':'＋ Manga shelf')+'</button>'+(kind==='ANIME'&&Number(m.idMal)>0?'<button type="button" class="mini-btn catalog-mal-add" data-catalog-mal-add="1" data-mal-id="'+Number(m.idMal)+'" data-title="'+esc(title)+'">＋ MAL</button>':'')+'</div></div></article>';
+      '<div class="catalog-card-actions"><a class="mini-btn catalog-detail-link" href="'+detail+'"'+transitionAttrs+'>Details ↗</a><button type="button" class="mini-btn" data-catalog-add="1" data-catalog-kind="'+kind+'" data-id="'+Number(m.id)+'" data-mal-id="'+(Number(m.idMal)||0)+'" data-title="'+esc(title)+'" data-cover="'+esc(cover)+'" data-description="'+esc(desc)+'" data-format="'+esc(m.format||'')+'" data-origin="'+esc(m.countryOfOrigin||'')+'" data-detail="'+detail+'">'+(kind==='ANIME'?(localAnime.some(a=>(Number(m.idMal)>0&&Number(a.malId)===Number(m.idMal))||Number(a.anilistId)===Number(m.id))?'Update Hekomi':'＋ Hekomi'):'＋ Manga shelf')+'</button>'+(kind==='ANIME'&&Number(m.idMal)>0?'<button type="button" class="mini-btn catalog-mal-add" data-catalog-mal-add="1" data-mal-id="'+Number(m.idMal)+'" data-title="'+esc(title)+'">'+(malRemote.some(a=>Number(a.node&&a.node.id)===Number(m.idMal))?'Update MAL':'＋ MAL')+'</button>':'')+'</div></div></article>';
   }
   function renderCatalogGrid(container,items,kind){const target=typeof container==='string'?$(container):container;if(!target)return;target.innerHTML=items&&items.length?items.map(m=>catalogCardMarkup(m,kind)).join(''):'<div class="catalog-loading">No matching titles were found. Try another search.</div>';}
 
@@ -2351,7 +2351,7 @@ body[data-page="home"] #animeShowcase::before{
     const malButton=event.target.closest('[data-catalog-mal-add]');
     if(malButton){
       const id=Number(malButton.dataset.malId),title=malButton.dataset.title||'Anime';
-      if(id>0)void quickAddRemote(id,title);
+      if(id>0){const existing=malRemote.find(item=>Number(item.node&&item.node.id)===id);if(existing)editRemote(id);else void quickAddRemote(id,title);}
       return;
     }
     const button=event.target.closest('[data-catalog-add]');if(!button)return;
@@ -2360,7 +2360,8 @@ body[data-page="home"] #animeShowcase::before{
     if(kind==='ANIME'){
       const entry={id:'anilist-'+id,title,picture:cover,cover,description,metadataProvider:'AniList',status:'plan_to_watch',score:0,episodes:0,anilistId:id,malId:malId||null};
       if(media)applyAniListAnimeMetadata(entry,media);
-      addLocalAnime(entry);
+      const existing=localAnime.find(item=>(malId&&Number(item.malId)===malId)||Number(item.anilistId)===id);
+      if(existing)editLocalAnime(existing.id);else addLocalAnime(entry);
     }else{
       const type=button.dataset.origin==='KR'?'Manhwa':button.dataset.origin==='CN'?'Manhua':button.dataset.format==='ONE_SHOT'?'One-shot':'Manga';
       addMangaEntry({title,url:window.location.origin+button.dataset.detail,cover,description,type,source:'https://anilist.co/manga/'+id+'/',chapters:[]});
@@ -2897,9 +2898,10 @@ function showProfileTab(tab){activeProfileTab=tab;$$('#profileTabs button').forE
     });
     $$('[data-status-count]').forEach(node=>{node.textContent=String(statusCounts[node.dataset.statusCount]??0);});
     const term=($('#malListSearch').value||'').toLowerCase();
+    const recentRemote=malRemote.slice().filter(item=>item.list_status&&item.list_status.updated_at).sort((a,b)=>Date.parse(b.list_status.updated_at)-Date.parse(a.list_status.updated_at)).slice(0,6);
     let items=malRemote.filter(item=>String(item.node&&item.node.title||'').toLowerCase().includes(term));
     if(activeMalStatus!=='all')items=items.filter(item=>(item.list_status&&item.list_status.status||'')===activeMalStatus);
-    $('#malRemoteList').innerHTML=items.length?'<div class="catalog-grid anime-list-grid">'+items.map(item=>{
+    $('#malRemoteList').innerHTML=(recentRemote.length?'<section class="recently-updated"><div class="panel-head"><div><h3>Recently updated</h3><p class="muted small">Your latest MAL list changes.</p></div><span class="pill-label">'+recentRemote.length+' recent</span></div><div class="catalog-grid anime-list-grid">'+recentRemote.map(item=>{const n=item.node||{},s=item.list_status||{},id=Number(n.id)||0;return animeListCardMarkup({title:n.title||'Untitled anime',cover:animeCover(n),status:s.status||'plan_to_watch',score:s.score,watched:s.num_episodes_watched,total:n.num_episodes,malId:id,actions:'<button type="button" class="mini-btn" data-remote-details="'+id+'">Details</button><button type="button" class="mini-btn" data-remote-edit="'+id+'">Edit</button><a class="mini-btn" href="https://myanimelist.net/anime/'+id+'" target="_blank" rel="noopener noreferrer">MAL ↗</a>'});}).join('')+'</div></section>':'')+(items.length?'<div class="catalog-grid anime-list-grid">'+items.map(item=>{
       const n=item.node||{},s=item.list_status||{},id=Number(n.id)||0;
       const release=humanizeAnimeValue(n.status||'');
       const date=[metadataDate(n.start_date),metadataDate(n.end_date)].filter(Boolean).join(' → ');
@@ -2970,7 +2972,7 @@ function showProfileTab(tab){activeProfileTab=tab;$$('#profileTabs button').forE
       });
     }catch(error){$('#malSearchStatus').textContent=error.message;}
   }
-  async function quickAddRemote(id,title){if(!malConnected){notify('Sign in with MyAnimeList first.');showMalTab('about');return;}try{await api('/api/mal/update',{method:'POST',body:{id,status:'plan_to_watch',num_watched_episodes:0,score:0}});notify(`${title} added to your MAL list.`);await loadRemoteList();}catch(e){notify(e.message);}}
+  async function quickAddRemote(id,title){if(!malConnected){notify('Sign in with MyAnimeList first.');showMalTab('about');return;}const existing=malRemote.find(item=>Number(item.node&&item.node.id)===Number(id));if(existing){editRemote(Number(id));return;}try{await api('/api/mal/update',{method:'POST',body:{id,status:'plan_to_watch',num_watched_episodes:0,score:0}});notify(`${title} added to your MAL list.`);await loadRemoteList();}catch(e){notify(e.message);}}
   async function handleMalRedirect(){const params=new URLSearchParams(location.search);const result=params.get('mal');if(!result){await refreshMalAuthStatus();return;}history.replaceState(null,'',location.pathname+location.hash);setMode('mal');showMalTab('mylist');await refreshMalAuthStatus();if(result==='connected'&&malConnected){notify('Signed in'+(malUsername?' as '+malUsername:'')+' with MyAnimeList.');await loadRemoteList();}else{notify('MyAnimeList sign-in did not complete. Check the app redirect URL and server configuration.');showMalTab('about');}}handleMalRedirect();
   const localAnimeHydrationRequests=new Map();
   async function hydrateLocalAnimeEntry(id,options={}){
@@ -3038,13 +3040,14 @@ function showProfileTab(tab){activeProfileTab=tab;$$('#profileTabs button').forE
     if(existing){
       const previous={...existing};
       const keep={id:existing.id,title:existing.title||title,status:existing.status||'plan_to_watch',score:Number(existing.score||0),episodes:Number(existing.episodes||0)};
-      Object.assign(existing,a,keep);
+      Object.assign(existing,a,keep,{updatedAt:new Date().toISOString()});
+      localAnime.splice(localAnime.indexOf(existing),1);localAnime.unshift(existing);
       if(!write(key.anime,localAnime)){Object.assign(existing,previous);notify('Could not save this entry. Check your browser storage settings.');renderLocalAnime();return;}
       renderLocalAnime();notify('Anime already saved — refreshed its details.');
       void hydrateLocalAnimeEntry(existing.id);
       return;
     }
-    const entry={...a,title,id:a.id||'local-'+Date.now(),status:a.status||'plan_to_watch',score:Number(a.score||0),episodes:Number(a.episodes||0)};
+    const entry={...a,title,id:a.id||'local-'+Date.now(),status:a.status||'plan_to_watch',score:Number(a.score||0),episodes:Number(a.episodes||0),updatedAt:new Date().toISOString()};
     localAnime.unshift(entry);
     if(!write(key.anime,localAnime)){localAnime.shift();renderLocalAnime();notify('Could not save this anime. Your browser may be blocking site storage.');return;}
     renderLocalAnime();notify('Added to your local anime list.');
@@ -3086,8 +3089,10 @@ function showProfileTab(tab){activeProfileTab=tab;$$('#profileTabs button').forE
         title,
         status:$('#editLocalAnimeStatus').value,
         episodes,
-        score
+        score,
+        updatedAt:new Date().toISOString()
       });
+      localAnime.splice(localAnime.indexOf(entry),1);localAnime.unshift(entry);
       if(!write(key.anime,localAnime)){
         Object.assign(entry,previous);
         notify('Could not save this change. Check your browser storage settings.');
@@ -3178,7 +3183,9 @@ function showProfileTab(tab){activeProfileTab=tab;$$('#profileTabs button').forE
     const items=localAnime.filter(item=>(activeLocalAnimeStatus==='all'||String(item.status||'plan_to_watch')===activeLocalAnimeStatus)&&(!term||String(item.title||'').toLowerCase().includes(term)));
     const filters='<nav class="local-anime-filters" aria-label="Filter local anime">'+[['all','All'],['watching','Watching'],['completed','Finished'],['on_hold','On hold'],['dropped','Dropped'],['plan_to_watch','Plan to watch']].map(([key,label])=>'<button type="button" data-local-status="'+key+'" class="'+(activeLocalAnimeStatus===key?'active':'')+'">'+label+' <span>'+counts[key]+'</span></button>').join('')+'</nav>';
     const grid=items.length?'<div class="catalog-grid anime-list-grid">'+items.map(localAnimeMarkup).join('')+'</div>':'<div class="empty"><strong>'+(localAnime.length?'No local titles in this section':'Your local anime list is empty')+'</strong>'+(localAnime.length?'Try another status or search term.':'Add titles manually or save results from MAL search.')+'</div>';
-    const html=filters+grid;$('#localSummaryList').innerHTML=html;$('#fullLocalList').innerHTML=html;
+    const recent=localAnime.slice().sort((a,b)=>Date.parse(b.updatedAt||b.lastUpdatedAt||'')-Date.parse(a.updatedAt||a.lastUpdatedAt||'')).filter(a=>Number.isFinite(Date.parse(a.updatedAt||a.lastUpdatedAt||''))).slice(0,6);
+    const recentHtml='<section class="recently-updated"><div class="panel-head"><div><h3>Recently updated</h3><p class="muted small">The anime you added or changed most recently.</p></div><span class="pill-label">'+recent.length+' recent</span></div>'+(recent.length?'<div class="catalog-grid anime-list-grid">'+recent.map(a=>localAnimeMarkup(a)).join('')+'</div>':'<p class="muted small">Your latest additions and progress updates will appear here.</p>')+'</section>';
+    const html=filters+recentHtml+grid;$('#localSummaryList').innerHTML=html;$('#fullLocalList').innerHTML=html;
     $$('[data-local-status]').forEach(button=>button.onclick=()=>{activeLocalAnimeStatus=button.dataset.localStatus;renderLocalAnime();});
     $$('[data-local-details]').forEach(button=>button.onclick=()=>openLocalAnimeDetails(button.dataset.localDetails));
     $$('[data-local-edit]').forEach(button=>button.onclick=()=>editLocalAnime(button.dataset.localEdit));
