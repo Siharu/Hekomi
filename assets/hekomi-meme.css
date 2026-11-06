@@ -1,0 +1,56 @@
+/* Hekomi Meme Corner — one calm, image-first community meme at a time. */
+.hk-meme-corner{
+  position:relative;isolation:isolate;margin:0 0 24px;padding:clamp(15px,2.2vw,22px);
+  overflow:hidden;border:1px solid var(--line,#282c36);border-radius:18px;
+  background:radial-gradient(ellipse at 0% 0%,rgba(185,166,255,.09),transparent 48%),
+    linear-gradient(130deg,color-mix(in srgb,var(--panel,#13151b) 94%,#242039),var(--panel,#13151b));
+  box-shadow:0 14px 36px rgba(0,0,0,.12)
+}
+.hk-meme-heading{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:14px}
+.hk-meme-heading h2{margin:4px 0 3px;font-family:"Space Grotesk",Inter,ui-sans-serif,sans-serif;font-size:clamp(21px,2.7vw,27px);font-weight:650;letter-spacing:-.045em;line-height:1.12}
+.hk-meme-heading p{margin:0;color:var(--muted,#969dad);font-size:12px}
+.hk-meme-next{display:inline-flex;align-items:center;justify-content:center;gap:8px;flex:0 0 auto;min-height:38px;padding:0 13px;border:1px solid color-mix(in srgb,var(--violet,#b9a6ff) 34%,var(--line,#282c36));border-radius:11px;background:color-mix(in srgb,var(--violet,#b9a6ff) 10%,var(--panel,#13151b));color:var(--text,#f2f4f8);font-size:12px;font-weight:700;cursor:pointer;transition:transform .18s ease,border-color .18s ease,background .18s ease}
+.hk-meme-next>span:first-child{font-size:18px;line-height:1;color:var(--violet,#b9a6ff)}
+.hk-meme-next:hover:not(:disabled){transform:translateY(-1px);border-color:var(--violet,#b9a6ff);background:color-mix(in srgb,var(--violet,#b9a6ff) 16%,var(--panel,#13151b))}
+.hk-meme-next:active:not(:disabled){transform:scale(.97)}
+.hk-meme-next:disabled{opacity:.58;cursor:wait}
+.hk-meme-card{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(205px,.72fr);min-height:225px;overflow:hidden;border:1px solid color-mix(in srgb,var(--line,#282c36) 82%,white 8%);border-radius:15px;background:rgba(5,7,15,.28)}
+.hk-meme-media{position:relative;display:grid;place-items:center;min-width:0;min-height:225px;aspect-ratio:16/9;overflow:hidden;background:rgba(0,0,0,.23)}
+.hk-meme-image{display:block;width:100%;height:100%;max-height:390px;object-fit:contain;background:rgba(0,0,0,.2)}
+.hk-meme-placeholder{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:9px;min-height:225px;padding:24px;text-align:center;color:var(--muted,#969dad);font-size:12px}
+.hk-meme-placeholder-mark{display:grid;place-items:center;width:38px;height:38px;border:1px solid rgba(185,166,255,.24);border-radius:13px;color:var(--violet,#b9a6ff);font-size:19px;background:rgba(185,166,255,.07)}
+.hk-meme-copy{display:flex;flex-direction:column;justify-content:center;align-items:flex-start;gap:13px;min-width:0;padding:clamp(17px,2.4vw,27px);border-left:1px solid rgba(255,255,255,.07)}
+.hk-meme-meta{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;color:var(--mint,#8be1cf);font-family:"IBM Plex Mono",monospace;font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase}
+.hk-meme-score{display:inline-flex;align-items:center;gap:5px;color:var(--muted,#969dad);letter-spacing:0}
+.hk-meme-score span:first-child{color:var(--mint,#8be1cf);font-size:12px}
+.hk-meme-copy h3{margin:0;color:var(--text,#f2f4f8);font-family:"Space Grotesk",Inter,ui-sans-serif,sans-serif;font-size:clamp(17px,2vw,23px);font-weight:650;letter-spacing:-.035em;line-height:1.28;overflow-wrap:anywhere}
+.hk-meme-source{display:inline-flex;align-items:center;gap:6px;margin-top:2px;color:var(--violet,#b9a6ff);font-size:11px;font-weight:700;text-decoration:none}
+.hk-meme-source:hover{text-decoration:underline}
+.hk-meme-foot{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px;color:var(--muted,#969dad);font-size:10px}
+.hk-meme-status{font-family:"IBM Plex Mono",monospace;font-size:9px;text-align:right}
+.hk-meme-corner[aria-busy="true"] .hk-meme-placeholder-mark{animation:hk-meme-spark 1.6s ease-in-out infinite}
+@keyframes hk-meme-spark{0%,100%{transform:rotate(0) scale(1);opacity:.65}50%{transform:rotate(18deg) scale(1.08);opacity:1}}
+@media(max-width:760px){
+  .hk-meme-corner{padding:13px;border-radius:16px;margin-bottom:19px}
+  .hk-meme-heading{align-items:center;gap:9px;margin-bottom:11px}
+  .hk-meme-heading h2{font-size:20px}
+  .hk-meme-heading p{font-size:10px}
+  .hk-meme-next{min-height:36px;padding:0 10px;font-size:10px}
+  .hk-meme-card{grid-template-columns:minmax(0,1fr);min-height:0}
+  .hk-meme-media{min-height:175px;max-height:310px}
+  .hk-meme-image{max-height:310px}
+  .hk-meme-placeholder{min-height:175px}
+  .hk-meme-copy{gap:9px;padding:14px 15px;border-left:0;border-top:1px solid rgba(255,255,255,.07)}
+  .hk-meme-copy h3{font-size:17px}
+  .hk-meme-foot{align-items:flex-start;flex-direction:column;gap:4px}
+  .hk-meme-status{text-align:left}
+}
+@media(max-width:390px){
+  .hk-meme-heading p{max-width:170px}
+  .hk-meme-next{gap:5px;padding:0 8px}
+  .hk-meme-media{min-height:155px}
+}
+@media(prefers-reduced-motion:reduce){
+  .hk-meme-corner[aria-busy="true"] .hk-meme-placeholder-mark{animation:none}
+  .hk-meme-next{transition:none}
+}
