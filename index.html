@@ -2898,7 +2898,7 @@ function showProfileTab(tab){activeProfileTab=tab;$$('#profileTabs button').forE
     });
     $$('[data-status-count]').forEach(node=>{node.textContent=String(statusCounts[node.dataset.statusCount]??0);});
     const term=($('#malListSearch').value||'').toLowerCase();
-    const recentRemote=malRemote.slice().filter(item=>item.list_status&&item.list_status.updated_at).sort((a,b)=>Date.parse(b.list_status.updated_at)-Date.parse(a.list_status.updated_at)).slice(0,6);
+    const recentRemote=(!term&&activeMalStatus==='all')?malRemote.slice().filter(item=>item.list_status&&item.list_status.updated_at).sort((a,b)=>Date.parse(b.list_status.updated_at)-Date.parse(a.list_status.updated_at)).slice(0,6):[];
     let items=malRemote.filter(item=>String(item.node&&item.node.title||'').toLowerCase().includes(term));
     if(activeMalStatus!=='all')items=items.filter(item=>(item.list_status&&item.list_status.status||'')===activeMalStatus);
     $('#malRemoteList').innerHTML=(recentRemote.length?'<section class="recently-updated"><div class="panel-head"><div><h3>Recently updated</h3><p class="muted small">Your latest MAL list changes.</p></div><span class="pill-label">'+recentRemote.length+' recent</span></div><div class="catalog-grid anime-list-grid">'+recentRemote.map(item=>{const n=item.node||{},s=item.list_status||{},id=Number(n.id)||0;return animeListCardMarkup({title:n.title||'Untitled anime',cover:animeCover(n),status:s.status||'plan_to_watch',score:s.score,watched:s.num_episodes_watched,total:n.num_episodes,malId:id,actions:'<button type="button" class="mini-btn" data-remote-details="'+id+'">Details</button><button type="button" class="mini-btn" data-remote-edit="'+id+'">Edit</button><a class="mini-btn" href="https://myanimelist.net/anime/'+id+'" target="_blank" rel="noopener noreferrer">MAL ↗</a>'});}).join('')+'</div></section>':'')+(items.length?'<div class="catalog-grid anime-list-grid">'+items.map(item=>{
@@ -2918,7 +2918,7 @@ function showProfileTab(tab){activeProfileTab=tab;$$('#profileTabs button').forE
         malId:id,
         actions:'<button type="button" class="mini-btn" data-remote-details="'+id+'">Details</button><button type="button" class="mini-btn" data-remote-edit="'+id+'">Edit</button><a class="mini-btn" href="https://myanimelist.net/anime/'+id+'" target="_blank" rel="noopener noreferrer">MAL ↗</a>'
       });
-    }).join('')+'</div>':'<div class="empty"><strong>No entries to show</strong>Sync your list or change the filter.</div>';
+    }).join('')+'</div>':'<div class="empty"><strong>No entries to show</strong>Sync your list or change the filter.</div>');
     $$('[data-remote-details]').forEach(button=>button.onclick=()=>{
       const item=malRemote.find(value=>Number(value.node&&value.node.id)===Number(button.dataset.remoteDetails));
       if(item)animeInfoMarkup({...malAnimeRecord(item.node),status:item.list_status.status||'not_in_list',episodes:Number(item.list_status.num_episodes_watched)||0,score:Number(item.list_status.score)||0},'remote');
@@ -3041,7 +3041,7 @@ function showProfileTab(tab){activeProfileTab=tab;$$('#profileTabs button').forE
       const previous={...existing};
       const keep={id:existing.id,title:existing.title||title,status:existing.status||'plan_to_watch',score:Number(existing.score||0),episodes:Number(existing.episodes||0)};
       Object.assign(existing,a,keep,{updatedAt:new Date().toISOString()});
-      localAnime.splice(localAnime.indexOf(existing),1);localAnime.unshift(existing);
+      
       if(!write(key.anime,localAnime)){Object.assign(existing,previous);notify('Could not save this entry. Check your browser storage settings.');renderLocalAnime();return;}
       renderLocalAnime();notify('Anime already saved — refreshed its details.');
       void hydrateLocalAnimeEntry(existing.id);
@@ -3092,7 +3092,7 @@ function showProfileTab(tab){activeProfileTab=tab;$$('#profileTabs button').forE
         score,
         updatedAt:new Date().toISOString()
       });
-      localAnime.splice(localAnime.indexOf(entry),1);localAnime.unshift(entry);
+      
       if(!write(key.anime,localAnime)){
         Object.assign(entry,previous);
         notify('Could not save this change. Check your browser storage settings.');
