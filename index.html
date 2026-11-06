@@ -2161,7 +2161,7 @@ body[data-page="home"] #animeShowcase::before{
       '<div class="catalog-cover-badges"><span class="catalog-badge">'+esc(typeLabel)+'</span><span class="catalog-badge score">★ '+score+'</span></div></div></a>'+
       '<div class="catalog-card-body"><h4 itemprop="name"><a href="'+detail+'"'+transitionAttrs+'>'+esc(title)+'</a></h4><div class="catalog-card-meta">'+esc(meta)+(kind==='ANIME'&&m.episodes?' · '+Number(m.episodes)+' eps':'')+(kind==='MANGA'&&m.volumes?' · '+Number(m.volumes)+' vols':'')+'</div>'+
       '<div class="catalog-genres">'+genres+'</div><p class="catalog-synopsis" itemprop="description">'+esc(desc||'Open the details page for available series information.')+'</p>'+
-      '<div class="catalog-card-actions"><a class="mini-btn catalog-detail-link" href="'+detail+'"'+transitionAttrs+'>Details ↗</a><button type="button" class="mini-btn" data-catalog-add="1" data-catalog-kind="'+kind+'" data-id="'+Number(m.id)+'" data-title="'+esc(title)+'" data-cover="'+esc(cover)+'" data-description="'+esc(desc)+'" data-format="'+esc(m.format||'')+'" data-origin="'+esc(m.countryOfOrigin||'')+'" data-detail="'+detail+'">'+(kind==='ANIME'?'＋ Local list':'＋ Manga shelf')+'</button></div></div></article>';
+      '<div class="catalog-card-actions"><a class="mini-btn catalog-detail-link" href="'+detail+'"'+transitionAttrs+'>Details ↗</a><button type="button" class="mini-btn" data-catalog-add="1" data-catalog-kind="'+kind+'" data-id="'+Number(m.id)+'" data-mal-id="'+(Number(m.idMal)||0)+'" data-title="'+esc(title)+'" data-cover="'+esc(cover)+'" data-description="'+esc(desc)+'" data-format="'+esc(m.format||'')+'" data-origin="'+esc(m.countryOfOrigin||'')+'" data-detail="'+detail+'">'+(kind==='ANIME'?'＋ Hekomi':'＋ Manga shelf')+'</button>'+(kind==='ANIME'&&Number(m.idMal)>0?'<button type="button" class="mini-btn catalog-mal-add" data-catalog-mal-add="1" data-mal-id="'+Number(m.idMal)+'" data-title="'+esc(title)+'">＋ MAL</button>':'')+'</div></div></article>';
   }
   function renderCatalogGrid(container,items,kind){const target=typeof container==='string'?$(container):container;if(!target)return;target.innerHTML=items&&items.length?items.map(m=>catalogCardMarkup(m,kind)).join(''):'<div class="catalog-loading">No matching titles were found. Try another search.</div>';}
 
@@ -2348,11 +2348,17 @@ body[data-page="home"] #animeShowcase::before{
   $('#loadSeasonButton').addEventListener('click',async()=>{const season=seasonPicker.value,year=Number(seasonYearPicker.value),button=$('#loadSeasonButton');button.disabled=true;button.textContent='Loading…';$('#seasonalCatalogGrid').innerHTML=catalogLoadingMarkup(6);try{const data=await api('/api/catalog/season?season='+encodeURIComponent(season)+'&year='+encodeURIComponent(year));renderCatalogGrid('#seasonalCatalogGrid',data.anime||[],'ANIME');$('#seasonalCatalogSubtitle').textContent=season+' '+year+' · '+(data.total||data.anime?.length||0)+' titles';}catch(e){$('#seasonalCatalogGrid').innerHTML='<div class="catalog-loading">Could not load that season: '+esc(e.message||'Please try again.')+'</div>';}finally{button.disabled=false;button.textContent='Explore season';}});
   $('#discoverCatalog').addEventListener('click',event=>{const button=event.target.closest('[data-rail-scroll]');if(!button)return;const target=document.getElementById(button.dataset.railScroll);if(!target)return;const reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;target.scrollBy({left:Number(button.dataset.direction||1)*target.clientWidth*.82,behavior:reduce?'auto':'smooth'});});
   $('#discoverCatalog').addEventListener('click',event=>{
+    const malButton=event.target.closest('[data-catalog-mal-add]');
+    if(malButton){
+      const id=Number(malButton.dataset.malId),title=malButton.dataset.title||'Anime';
+      if(id>0)void quickAddRemote(id,title);
+      return;
+    }
     const button=event.target.closest('[data-catalog-add]');if(!button)return;
-    const id=Number(button.dataset.id),title=button.dataset.title||'Untitled',cover=button.dataset.cover||'',description=button.dataset.description||'',kind=button.dataset.catalogKind;
+    const id=Number(button.dataset.id),malId=Number(button.dataset.malId)||0,title=button.dataset.title||'Untitled',cover=button.dataset.cover||'',description=button.dataset.description||'',kind=button.dataset.catalogKind;
     const media=lastCatalogSearchItems.find(item=>Number(item.id)===id&&item._catalogKind===kind)||null;
     if(kind==='ANIME'){
-      const entry={id:'anilist-'+id,title,picture:cover,cover,description,metadataProvider:'AniList',status:'plan_to_watch',score:0,episodes:0,anilistId:id};
+      const entry={id:'anilist-'+id,title,picture:cover,cover,description,metadataProvider:'AniList',status:'plan_to_watch',score:0,episodes:0,anilistId:id,malId:malId||null};
       if(media)applyAniListAnimeMetadata(entry,media);
       addLocalAnime(entry);
     }else{
@@ -2858,7 +2864,7 @@ function showProfileTab(tab){activeProfileTab=tab;$$('#profileTabs button').forE
     const coverHtml=cover?'<img class="anime-info-cover" src="'+esc(cover)+'" alt="Cover artwork for '+esc(entry.title)+'" loading="lazy" decoding="async" referrerpolicy="no-referrer">':'<div class="anime-info-cover anime-info-cover-empty" aria-hidden="true">H</div>';
     openModal('<div class="modal-top"><div><h2>'+esc(entry.title||'Anime details')+'</h2><p class="muted small">Full series information · '+esc(entry.metadataProvider||'Hekomi local entry')+'</p></div><button class="close" data-close>×</button></div>'+
       '<div id="animeInfoBody"><div class="anime-info-hero">'+coverHtml+'<div><div class="anime-info-genres">'+genresHtml+'</div><p class="anime-info-synopsis">'+(synopsis?esc(synopsis).replace(/\n/g,'<br><br>'):'No synopsis is saved for this entry yet.')+'</p>'+(alternatives.length?'<p class="muted small"><strong>Alternative titles:</strong> '+esc(alternatives.join(' · '))+'</p>':'')+'</div></div>'+
-      '<dl class="anime-info-grid">'+rows+'</dl>'+(entry.nextAiringEpisode&&entry.nextAiringEpisode.airingAt?'<p class="notice">Next episode: '+esc(String(entry.nextAiringEpisode.episode||'?'))+' · '+esc(new Date(Number(entry.nextAiringEpisode.airingAt)*1000).toLocaleString())+'</p>':'')+
+      '<dl class="anime-info-grid">'+rows+'</dl>'+(entry.nextAiringEpisode&&entry.nextAiringEpisode.airingAt?'<p class="notice"><strong>Next broadcast:</strong> Episode '+esc(String(entry.nextAiringEpisode.episode||'?'))+' · '+esc(new Date(Number(entry.nextAiringEpisode.airingAt)*1000).toLocaleString())+'<span class="small muted" style="display:block;margin-top:4px">This is the series’ upcoming broadcast number, not your watch progress.</span></p>':'')+
       '<div class="detail-actions">'+(sourceUrl?'<a class="btn-secondary" href="'+esc(sourceUrl)+'" target="_blank" rel="noreferrer">Open source ↗</a>':'')+'</div></div>');
   }
   async function openLocalAnimeDetails(id){
