@@ -311,7 +311,6 @@
 
   function drawWalkLegsVertical(ctx,step,dy,direction){
     const lead=[0,1,3,1][step%4],trail=[3,1,0,1][step%4];
-    const leftY=65+lead,rightY=65+trail;
     blocks(ctx,[
       [20,61,25,6,'ink'],
       [21,65-lead,9,10+lead,'pant0'],
@@ -373,7 +372,7 @@
 
     // Hair behind the body, feet first, then the outfit so sleeves and shoes
     // can be drawn on top. This avoids the old "floating hand under the shirt" look.
-    drawBackHair(ctx,frame.hair||'long',dy);
+    if(!rear)drawBackHair(ctx,frame.hair||'long',dy);
     if(frame.sitting)drawPerchLegs(ctx,step,dy);
     else if(walking&&side)drawWalkLegs(ctx,step,dy);
     else if(walking)drawWalkLegsVertical(ctx,step,dy,direction);
