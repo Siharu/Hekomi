@@ -209,7 +209,7 @@
     const startDate=days[0].date,endDate=days[6].date;
     const label=fmtShortDate.format(startDate)+' — '+fmtFullDate.format(endDate);
     if(!days.some(day=>day.key===state.activeDay))state.activeDay=days[0].key;
-    weekLabel.textContent=label.toUpperCase();
+    weekLabel.textContent='WEEK OF '+fmtShortDate.format(startDate).toUpperCase();
     weekRange.textContent=label;
     const visibleCount=state.programs.filter(item=>{
       if(!isRenderableProgram(item))return false;
