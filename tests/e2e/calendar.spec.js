@@ -51,11 +51,36 @@ async function mockCalendar(page) {
 }
 async function openCalendar(page) {
   const responsePromise = page.waitForResponse(response => new URL(response.url()).pathname === '/api/calendar');
-  await page.goto('/');
+  await page.goto('/calendar');
   const response = await responsePromise;
   expect(response.status()).toBe(200);
   await expect(page.locator('#hkCalWeekTotal')).not.toContainText('UPDATING');
 }
+
+
+test('weekly schedule has its own Calendar page and does not load on Home', async ({ page }) => {
+  let calendarRequests = 0;
+  await page.route(url => url.pathname === '/api/calendar', route => {
+    calendarRequests += 1;
+    return route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(scheduleFixture())
+    });
+  });
+
+  await page.goto('/');
+  await expect(page.locator('#calendarView')).toBeHidden();
+  await expect(page.locator('#hkCalendar')).toBeHidden();
+  expect(calendarRequests).toBe(0);
+
+  await page.locator('.primary-nav [data-route-link="calendar"]').click();
+  await expect(page).toHaveURL(/\/calendar$/);
+  await expect(page.locator('#calendarView')).toBeVisible();
+  await expect(page.locator('#hkCalendar')).toBeVisible();
+  await expect.poll(() => calendarRequests).toBe(1);
+  await expect(page.locator('#hkCalWeekTotal')).not.toContainText('UPDATING');
+});
 
 test('local AniList-backed watching entry adds its cover to the matching broadcast only', async ({ page }) => {
   await page.addInitScript(({ cover }) => {
@@ -113,7 +138,7 @@ test('signed-in MAL watching entry supplies a poster when no local copy exists',
     })
   );
 
-  await page.goto('/');
+  await page.goto('/calendar');
   await page.waitForResponse(response => response.url().includes('/api/calendar'));
   const frieren = page.locator('.hk-week-event').filter({ hasText: watchedTitle });
   await expect(frieren).toHaveAttribute('data-watching', 'true');
@@ -134,7 +159,7 @@ test('calendar cards remain within the mobile viewport', async ({ page }) => {
     route.fulfill({ status: 401, contentType: 'application/json', body: '{}' })
   );
 
-  await page.goto('/');
+  await page.goto('/calendar');
   await page.waitForResponse(response => response.url().includes('/api/calendar'));
   await expect(page.locator('.hk-week-event-cover')).toBeVisible();
   const dimensions = await page.evaluate(() => ({
