@@ -2,17 +2,17 @@ import { test, expect } from '@playwright/test';
 
 const animeFixture = [
   {
-    id: 'anilist-101', anilistId: 101, malId: 201,
-    title: 'Older Broadcast', status: 'plan_to_watch',
-    startDate: { year: 2002, month: 1, day: 1 }, endDate: { year: 2002, month: 6, day: 30 },
-    addedAt: '2020-01-01T00:00:00.000Z', updatedAt: '2024-01-01T00:00:00.000Z',
-    metadataComplete: true, cover: '', totalEpisodes: 12
-  },
-  {
     id: 'anilist-102', anilistId: 102, malId: 202,
     title: 'Newer Broadcast', status: 'plan_to_watch',
     startDate: { year: 2021, month: 1, day: 1 }, endDate: { year: 2021, month: 6, day: 30 },
     addedAt: '2023-01-01T00:00:00.000Z', updatedAt: '2025-01-01T00:00:00.000Z',
+    metadataComplete: true, cover: '', totalEpisodes: 12
+  },
+  {
+    id: 'anilist-101', anilistId: 101, malId: 201,
+    title: 'Older Broadcast', status: 'plan_to_watch',
+    startDate: { year: 2002, month: 1, day: 1 }, endDate: { year: 2002, month: 6, day: 30 },
+    addedAt: '2020-01-01T00:00:00.000Z', updatedAt: '2024-01-01T00:00:00.000Z',
     metadataComplete: true, cover: '', totalEpisodes: 12
   },
   {
