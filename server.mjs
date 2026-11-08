@@ -1515,6 +1515,110 @@ async function searchPublicCatalog(rawQuery, rawPage=1, rawFilters={}) {
   if (publicCatalogSearchCache.size > 160) publicCatalogSearchCache.delete(publicCatalogSearchCache.keys().next().value);
   return result;
 }
+
+const jikanCharacterCache = new Map();
+let jikanLastRequestAt = 0;
+let jikanRequestQueue = Promise.resolve();
+async function fetchJikanAnimeCharacters(idMal) {
+  const id=Number(idMal);
+  if(!Number.isSafeInteger(id)||id<1)return [];
+  const cached=jikanCharacterCache.get(id);
+  if(cached&&Date.now()<cached.expiresAt)return cached.data;
+  const task=jikanRequestQueue.then(async()=>{
+    const wait=Math.max(0,1200-(Date.now()-jikanLastRequestAt));
+    if(wait)await new Promise(resolve=>setTimeout(resolve,wait));
+    jikanLastRequestAt=Date.now();
+    const response=await fetch('https://api.jikan.moe/v4/anime/'+id+'/characters',{
+      headers:{'Accept':'application/json','User-Agent':'Hekomi/1.0 (+https://hekomi.vercel.app; anime series credits)'},
+      signal:AbortSignal.timeout(14000)
+    });
+    if(!response.ok)throw new Error('Jikan character credits returned HTTP '+response.status+'.');
+    const payload=await response.json();
+    const rows=Array.isArray(payload.data)?payload.data:[];
+    const characters=rows.map(row=>{
+      const character=row.character||{};
+      const images=character.images||{};
+      const image=images.webp&&images.webp.image_url||images.jpg&&images.jpg.image_url||'';
+      const voices=(Array.isArray(row.voice_actors)?row.voice_actors:[]).map(voice=>{
+        const person=voice.person||{},personImages=person.images||{};
+        const personImage=personImages.webp&&personImages.webp.image_url||personImages.jpg&&personImages.jpg.image_url||'';
+        const lang=String(voice.language||'').trim();
+        return {
+          id:Number(person.mal_id)||null,
+          name:String(person.name||'').trim(),
+          image:personImage,
+          siteUrl:person.url&&/^https:\/\//i.test(person.url)?person.url:'',
+          language:lang,
+          languageV2:lang
+        };
+      }).filter(person=>person.name);
+      const japaneseVoiceActors=voices.filter(person=>/japanese/i.test(person.language));
+      const englishVoiceActors=voices.filter(person=>/english/i.test(person.language));
+      return {
+        id:Number(character.mal_id)||null,
+        malId:Number(character.mal_id)||null,
+        name:String(character.name||'').trim(),
+        nativeName:'',
+        image,
+        siteUrl:character.url&&/^https:\/\//i.test(character.url)?character.url:'',
+        role:String(row.role||'').toUpperCase()==='MAIN'?'MAIN':'SUPPORT',
+        japaneseVoiceActors,
+        englishVoiceActors
+      };
+    }).filter(character=>character.name);
+    jikanCharacterCache.set(id,{data:characters,expiresAt:Date.now()+24*60*60*1000});
+    if(jikanCharacterCache.size>500)jikanCharacterCache.delete(jikanCharacterCache.keys().next().value);
+    return characters;
+  });
+  jikanRequestQueue=task.catch(()=>{});
+  return task;
+}
+function characterNameScore(left,right) {
+  const normalize=value=>String(value||'').normalize('NFKC').toLocaleLowerCase()
+    .replace(/[\\p{P}\\p{S}\\p{Z}\\s]+/gu,'').trim();
+  const a=normalize(left),b=normalize(right);
+  if(!a||!b)return 0;
+  if(a===b)return 1;
+  const words=value=>new Set(String(value||'').normalize('NFKC').toLocaleLowerCase().split(/[^\\p{L}\\p{N}]+/u).filter(word=>word.length>1));
+  const aw=words(left),bw=words(right);
+  if(!aw.size||!bw.size)return 0;
+  let overlap=0;for(const word of aw)if(bw.has(word))overlap++;
+  return overlap/Math.max(aw.size,bw.size);
+}
+async function enrichAnimeWithJikanVoiceCast(media) {
+  if(!media||String(media.type).toUpperCase()!=='ANIME'||!Number(media.idMal))return media;
+  try {
+    const jikanCharacters=await fetchJikanAnimeCharacters(media.idMal);
+    if(!jikanCharacters.length)return media;
+    const characters=Array.isArray(media.characters)?media.characters.slice():[];
+    for(const incoming of jikanCharacters) {
+      const match=characters.map((existing,index)=>({
+        existing,index,
+        score:Math.max(
+          characterNameScore(existing.name,incoming.name),
+          characterNameScore(existing.nativeName,incoming.name),
+          ...(Array.isArray(existing.alternativeNames)?existing.alternativeNames.map(name=>characterNameScore(name,incoming.name)):[0])
+        )
+      })).sort((a,b)=>b.score-a.score)[0];
+      if(match&&match.score>=0.6) {
+        const existing=match.existing;
+        existing.japaneseVoiceActors=incoming.japaneseVoiceActors.length
+          ?incoming.japaneseVoiceActors:existing.japaneseVoiceActors||[];
+        existing.englishVoiceActors=incoming.englishVoiceActors.length
+          ?incoming.englishVoiceActors:existing.englishVoiceActors||[];
+        if(!existing.image&&incoming.image)existing.image=incoming.image;
+      } else {
+        characters.push(incoming);
+      }
+    }
+    media.characters=characters.slice(0,40);
+    media.characterCreditSource='AniList + MyAnimeList via Jikan';
+  } catch(error) {
+    console.warn('[Hekomi anime voice credits]',{idMal:media.idMal,message:String(error&&error.message||error)});
+  }
+  return media;
+}
+
 async function getMediaByMalId(idMal) {
   const id=Number(idMal);
   if(!Number.isSafeInteger(id)||id<1) return null;
@@ -1522,7 +1626,11 @@ async function getMediaByMalId(idMal) {
   if(cached&&Date.now()<cached.expiresAt)return cached.value;
   const data=await requestAniList(MEDIA_MAL_DETAIL_QUERY,{idMal:id});
   const media=packMedia(data.Media);
-  if(media){mediaDetailCache.set(key,{value:media,expiresAt:Date.now()+60*60*1000});if(mediaDetailCache.size>300)mediaDetailCache.delete(mediaDetailCache.keys().next().value);}
+  if(media){
+    await enrichAnimeWithJikanVoiceCast(media);
+    mediaDetailCache.set(key,{value:media,expiresAt:Date.now()+60*60*1000});
+    if(mediaDetailCache.size>300)mediaDetailCache.delete(mediaDetailCache.keys().next().value);
+  }
   return media;
 }
 async function getMediaDetail(id, expectedKind) {
@@ -1537,6 +1645,7 @@ async function getMediaDetail(id, expectedKind) {
   if (!raw || raw.isAdult || (expectedKind && String(raw.type).toLowerCase() !== expectedKind)) return null;
   const media = packMedia(raw);
   if (media) {
+    await enrichAnimeWithJikanVoiceCast(media);
     mediaDetailCache.set(key,{value:media,expiresAt:Date.now()+60*60*1000});
     if (mediaDetailCache.size > 300) mediaDetailCache.delete(mediaDetailCache.keys().next().value);
   }
