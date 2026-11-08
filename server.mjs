@@ -1351,12 +1351,13 @@ async function getSyoboiCalendar(rawStart, rawDays) {
 
   const request = (async () => {
     try {
-      let programRows = [], titleRows = [], primaryError = null, feedRows = [];
+      let programRows = [], titleRows = [], primaryError = null, feedRows = [], rss2Succeeded = false;
       // RSS2 is the date-scoped broadcast feed. The experimental json.php
       // ProgramByDate endpoint has returned current-week rows for past Start
       // dates, so it must not be the primary source for historical navigation.
       try {
         feedRows = await fetchSyoboiRssPrograms(start, days);
+        rss2Succeeded = true;
         programRows = feedRows;
       } catch (error) {
         primaryError = error;
@@ -1422,7 +1423,7 @@ async function getSyoboiCalendar(rawStart, rawDays) {
         unresolvedTitleCount: unresolvedTitles,
         aniListFallbackCount,
         englishTitleOnly: true,
-        source: (feedRows.length ? 'Syoboi RSS2 dated schedule' : 'Syoboi JSON date-validated fallback') + ' + AniList title search',
+        source: (rss2Succeeded ? 'Syoboi RSS2 dated schedule' : 'Syoboi JSON date-validated fallback') + ' + AniList title search',
         timezone: 'Asia/Tokyo',
         updatedAt: new Date().toISOString()
       };
