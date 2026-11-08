@@ -2735,16 +2735,18 @@ body[data-page="home"] #animeShowcase::before{
       addLocalAnime(entry);
       return;
     }
-    if(action==='mal'){
-      if(malId>0)await quickAddRemote(malId,title);
-      else notify('This title does not have a linked MAL ID.');
+    if(action==='both')addLocalAnime(entry);
+    if(!malConnected)await refreshMalAuthStatus();
+    if(!malConnected){
+      if(action==='both')notify('Saved locally. Sign in with MAL to add the same title to your account.');
+      else notify('Sign in with MyAnimeList to add this title there.');
+      showMalTab('about');
       return;
     }
+    if(!remoteReady)await loadRemoteList();
     if(action==='both'){
-      addLocalAnime(entry);
-      if(!malConnected){
-        notify('Saved locally. Sign in with MAL to add the same title to your account.');
-        showMalTab('about');
+      if(!malId){
+        notify('Saved locally. No linked MAL ID was available for the MAL copy.');
         return;
       }
       const existing=malRemote.find(item=>Number(item.node&&item.node.id)===Number(malId));
@@ -2752,8 +2754,12 @@ body[data-page="home"] #animeShowcase::before{
         notify('Saved locally. This title is already on your MAL list.');
         return;
       }
+      await quickAddRemote(malId,title);
+      return;
+    }
+    if(action==='mal'){
       if(malId>0)await quickAddRemote(malId,title);
-      else notify('Saved locally. No linked MAL ID was available for the MAL copy.');
+      else notify('This title does not have a linked MAL ID.');
     }
   }
   $('#discoverCatalog').addEventListener('click',event=>{
@@ -3303,6 +3309,9 @@ function showProfileTab(tab){activeProfileTab=tab;$$('#profileTabs button').forE
   function listTimestamp(...values){
     for(const value of values){
       if(value===null||value===undefined||value==='')continue;
+      if(typeof value==='object'&&Number(value.year)>0){
+        return Date.UTC(Number(value.year),Math.max(0,Number(value.month||1)-1),Math.max(1,Number(value.day||1)));
+      }
       const time=Date.parse(String(value));
       if(Number.isFinite(time))return time;
     }
