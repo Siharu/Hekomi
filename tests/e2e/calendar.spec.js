@@ -163,7 +163,7 @@ test('calendar follows a Monday-first timetable with selectable days and useful 
   await openCalendar(page);
   const days = page.locator('#hkCalDayNav [data-calendar-day]');
   await expect(days).toHaveCount(7);
-  await expect(days.first()).toContainText('MON');
+  await expect(days.first()).toContainText('Mon');
   await expect(days.last()).toContainText('Sun');
   await expect(page.locator('#hkCalGrid .hk-week-event')).toHaveCount(2);
 
