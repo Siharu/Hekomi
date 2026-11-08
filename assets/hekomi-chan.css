@@ -140,3 +140,39 @@
  #hekomiCompanion.is-sleeping canvas.home-mascot{left:10px!important;top:-1px!important;width:60px!important;height:76px!important}
  #hekomiCompanion.is-sleeping .hekomi-bed-blanket{left:17px;bottom:6px;width:51px;height:14px}
 }
+
+/* Hekomi-chan's dress-up closet — compact pixel-art wardrobe studio. */
+#hekomiCompanion .hekomi-wardrobe-toggle{position:absolute;right:0;top:83px;z-index:7;width:32px;height:32px;padding:7px;display:grid;place-items:center;border:1px solid color-mix(in srgb,var(--violet,#c5b5ff) 48%,var(--line,#34304b));border-radius:11px 11px 11px 4px;color:var(--text,#f1edf9);background:color-mix(in srgb,var(--panel,#171522) 78%,transparent);-webkit-backdrop-filter:blur(12px) saturate(145%);backdrop-filter:blur(12px) saturate(145%);box-shadow:0 5px 16px #08091655;cursor:pointer;pointer-events:auto;transition:transform .18s ease,border-color .18s ease,background .18s ease}
+#hekomiCompanion .hekomi-wardrobe-toggle:hover{transform:translateY(-2px);border-color:var(--mint,#8be1cf);background:color-mix(in srgb,var(--panel,#171522) 90%,var(--violet,#c5b5ff))}
+#hekomiCompanion .hekomi-wardrobe-toggle:focus-visible{outline:2px solid var(--mint,#8be1cf);outline-offset:3px}
+#hekomiCompanion .hekomi-wardrobe-toggle svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.hekomi-wardrobe-backdrop{position:fixed;inset:0;z-index:120;display:grid;place-items:center;padding:16px;background:rgba(7,7,14,.58);-webkit-backdrop-filter:blur(9px);backdrop-filter:blur(9px);animation:hekomiWardrobeFade .18s ease both}
+.hekomi-wardrobe-backdrop[hidden]{display:none!important}
+.hekomi-wardrobe{width:min(500px,100%);max-height:min(740px,calc(100dvh - 32px));overflow:auto;padding:22px;border:1px solid color-mix(in srgb,var(--violet,#c5b5ff) 35%,var(--line,#34304b));border-radius:24px 24px 18px 24px;background:linear-gradient(145deg,color-mix(in srgb,var(--panel,#171522) 93%,var(--violet,#c5b5ff) 7%),color-mix(in srgb,var(--panel2,#20202b) 96%,var(--mint,#8be1cf) 4%));color:var(--text,#f1edf9);box-shadow:0 28px 90px #0009}
+.hekomi-wardrobe-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:18px}
+.hekomi-wardrobe-kicker{font-size:9px;font-weight:850;letter-spacing:.19em;color:var(--mint,#8be1cf)}
+.hekomi-wardrobe-head h2{margin:6px 0 4px;font-size:24px;letter-spacing:-.045em}
+.hekomi-wardrobe-head p{margin:0;color:var(--muted,#a4a0b2);font-size:12px}
+.hekomi-wardrobe-close{width:34px;height:34px;flex:0 0 auto;border:1px solid var(--line,#34304b);border-radius:12px;background:#ffffff0a;color:var(--text,#f1edf9);font-size:22px;line-height:1;cursor:pointer}
+.hekomi-wardrobe-close:hover{border-color:var(--violet,#c5b5ff)}
+.hekomi-wardrobe-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.hekomi-wardrobe-card{position:relative;display:flex;align-items:center;gap:10px;min-width:0;min-height:76px;padding:10px;text-align:left;border:1px solid color-mix(in srgb,var(--line,#34304b) 88%,white 12%);border-radius:15px 15px 12px 15px;background:#ffffff05;color:var(--text,#f1edf9);cursor:pointer;transition:border-color .16s ease,background .16s ease,transform .16s ease}
+.hekomi-wardrobe-card:hover{transform:translateY(-2px);border-color:color-mix(in srgb,var(--violet,#c5b5ff) 56%,var(--line,#34304b));background:#ffffff0a}
+.hekomi-wardrobe-card.is-selected{border-color:var(--mint,#8be1cf);background:color-mix(in srgb,var(--mint,#8be1cf) 10%,transparent);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--mint,#8be1cf) 23%,transparent)}
+.hekomi-wardrobe-swatch{width:42px;height:48px;flex:0 0 auto;display:grid;place-items:center;border:1px solid #ffffff24;border-radius:12px;font-size:19px;box-shadow:inset 0 1px #ffffff25}
+.hekomi-wardrobe-swatch[data-look="school"]{background:linear-gradient(145deg,#26344e 0 48%,#edf0ec 49% 67%,#455b78 68%)}
+.hekomi-wardrobe-swatch[data-look="formal"]{background:linear-gradient(145deg,#35283f 0 42%,#b39bbf 43% 66%,#624b68 67%)}
+.hekomi-wardrobe-swatch[data-look="lazy"]{background:linear-gradient(145deg,#31564f,#9acbbb)}
+.hekomi-wardrobe-swatch[data-look="swimsuit"]{background:linear-gradient(145deg,#246b78,#4da9a8 55%,#f1c3c6)}
+.hekomi-wardrobe-swatch[data-look="date"]{background:linear-gradient(145deg,#713d5b,#efa5bb 55%,#ffe1e9)}
+.hekomi-wardrobe-card-copy{display:grid;gap:3px;min-width:0}
+.hekomi-wardrobe-card-copy strong{font-size:12px;line-height:1.3}
+.hekomi-wardrobe-card-copy small{font-size:10px;line-height:1.4;color:var(--muted,#a4a0b2)}
+.hekomi-wardrobe-check{display:none;margin-left:auto;color:var(--mint,#8be1cf);font-size:14px}
+.hekomi-wardrobe-card.is-selected .hekomi-wardrobe-check{display:block}
+.hekomi-wardrobe-foot{display:flex;align-items:center;gap:7px;margin-top:15px;padding-top:13px;border-top:1px solid color-mix(in srgb,var(--line,#34304b) 75%,transparent);font-size:10px;color:var(--muted,#a4a0b2)}
+.hekomi-wardrobe-foot span{color:var(--violet,#c5b5ff);font-size:16px}
+@keyframes hekomiWardrobeFade{from{opacity:0}to{opacity:1}}
+@media(max-width:520px){#hekomiCompanion .hekomi-wardrobe-toggle{right:0;top:76px;width:30px;height:30px}.hekomi-wardrobe{padding:17px;border-radius:20px 20px 15px 20px}.hekomi-wardrobe-head h2{font-size:21px}.hekomi-wardrobe-grid{gap:7px}.hekomi-wardrobe-card{gap:7px;min-height:69px;padding:8px}.hekomi-wardrobe-swatch{width:34px;height:42px;font-size:16px}.hekomi-wardrobe-card-copy strong{font-size:11px}.hekomi-wardrobe-card-copy small{font-size:9px}}
+@media(max-width:360px){.hekomi-wardrobe-grid{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:reduce){.hekomi-wardrobe-backdrop,.hekomi-wardrobe-card,#hekomiCompanion .hekomi-wardrobe-toggle{animation:none!important;transition:none!important}}
