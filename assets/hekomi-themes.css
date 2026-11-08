@@ -377,3 +377,87 @@ html.hk-theme-changing .btn-secondary,html.hk-theme-changing .input,html.hk-them
   #genreTransitionOverlay.is-active .hk-transition-copy,
   #genreTransitionOverlay.is-active .hk-transition-copy:after{animation:none!important;opacity:1!important;transform:none!important;filter:none!important}
 }
+
+/* Calendar surfaces were authored with a dark photo overlay; rebase them on the active palette. */
+html[data-theme="nocturne"]{--hk-calendar-wash:rgba(7,12,24,.84)}
+html[data-theme="archive"]{--hk-calendar-wash:rgba(247,243,233,.68)}
+html[data-theme="afterglow"]{--hk-calendar-wash:rgba(22,12,24,.86)}
+html[data-theme="verdant"]{--hk-calendar-wash:rgba(7,19,15,.84)}
+html[data-theme] .hk-calendar{
+  color:var(--text);
+  background-color:var(--panel)!important;
+  background-image:
+    linear-gradient(112deg,var(--hk-calendar-wash),color-mix(in srgb,var(--hk-calendar-wash) 86%,transparent) 52%,var(--hk-calendar-wash)),
+    var(--hk-calendar-wallpaper,linear-gradient(145deg,color-mix(in srgb,var(--violet) 12%,var(--panel)),color-mix(in srgb,var(--mint) 8%,var(--panel))))!important;
+  border-color:var(--line);
+  box-shadow:var(--hk-panel-shadow);
+}
+html[data-theme] .hk-calendar:before{
+  background:radial-gradient(ellipse at 100% 0%,color-mix(in srgb,var(--mint) 13%,transparent),transparent 44%);
+}
+html[data-theme] .hk-calendar-toolbar button,
+html[data-theme] .hk-calendar-images-toggle{
+  color:var(--text);background:color-mix(in srgb,var(--panel) 87%,transparent);
+  border-color:var(--line);
+}
+html[data-theme] .hk-calendar-toolbar button:hover,
+html[data-theme] .hk-calendar-images-toggle:hover{
+  background:var(--panel2);border-color:var(--violet);
+}
+html[data-theme] .hk-calendar-toolbar #hkCalWeekLabel{color:var(--muted);background:transparent}
+html[data-theme] .hk-calendar-toolbar .hk-cal-today{color:var(--mint);border-color:color-mix(in srgb,var(--mint) 42%,var(--line))}
+html[data-theme] .hk-week-summary{color:var(--muted)}
+html[data-theme] .hk-week-summary span:last-child{color:var(--mint)}
+html[data-theme] .hk-calendar-day-tab{
+  color:var(--muted);background:color-mix(in srgb,var(--panel2) 82%,transparent);
+  border-color:color-mix(in srgb,var(--line) 82%,transparent);
+}
+html[data-theme] .hk-calendar-day-tab:hover{
+  color:var(--text);background:color-mix(in srgb,var(--violet) 10%,var(--panel2));
+  border-color:color-mix(in srgb,var(--violet) 45%,var(--line));
+}
+html[data-theme] .hk-calendar-day-tab.is-active{
+  color:var(--text);
+  background:linear-gradient(155deg,color-mix(in srgb,var(--mint) 17%,var(--panel)),color-mix(in srgb,var(--violet) 10%,var(--panel)));
+  border-color:color-mix(in srgb,var(--mint) 55%,var(--line));
+  box-shadow:inset 0 1px color-mix(in srgb,var(--mint) 15%,transparent),var(--hk-panel-shadow);
+}
+html[data-theme] .hk-calendar-day-tab small{color:var(--muted)}
+html[data-theme] .hk-calendar-day-tab.is-active small{color:var(--mint)}
+html[data-theme] .hk-calendar-filters button{color:var(--muted)}
+html[data-theme] .hk-calendar-filters button:hover{color:var(--text);background:color-mix(in srgb,var(--text) 5%,transparent)}
+html[data-theme] .hk-calendar-filters button.is-active{
+  color:var(--violet);background:color-mix(in srgb,var(--violet) 13%,var(--panel));
+  border-color:color-mix(in srgb,var(--violet) 35%,var(--line));
+}
+html[data-theme] .hk-week-day-card{
+  color:var(--text);
+  background:color-mix(in srgb,var(--panel) 90%,transparent);
+  border-color:color-mix(in srgb,var(--line) 88%,transparent);
+  box-shadow:var(--hk-panel-shadow);
+  backdrop-filter:blur(13px) saturate(120%);
+}
+html[data-theme] .hk-week-day-card.is-today{border-color:color-mix(in srgb,var(--mint) 48%,var(--line))}
+html[data-theme] .hk-week-day-card header{
+  background:linear-gradient(100deg,color-mix(in srgb,var(--violet) 10%,transparent),color-mix(in srgb,var(--mint) 5%,transparent));
+  border-color:var(--line);
+}
+html[data-theme] .hk-week-day-name,html[data-theme] .hk-week-event-copy h4{color:var(--text)}
+html[data-theme] .hk-week-day-date,html[data-theme] .hk-week-event-time small,
+html[data-theme] .hk-week-event-episode,html[data-theme] .hk-week-empty,
+html[data-theme] .hk-calendar-foot{color:var(--muted)}
+html[data-theme] .hk-week-day-count,html[data-theme] .hk-calendar-today-tag,
+html[data-theme] .hk-week-event-time,html[data-theme] .hk-week-watch-tag{color:var(--mint)}
+html[data-theme] .hk-calendar-today-tag,html[data-theme] .hk-week-watch-tag{
+  background:color-mix(in srgb,var(--mint) 12%,var(--panel));
+}
+html[data-theme] .hk-week-event{border-color:var(--line)}
+html[data-theme] .hk-week-event:hover{border-color:color-mix(in srgb,var(--violet) 48%,var(--line))}
+html[data-theme] .hk-week-event-copy h4 a:hover,html[data-theme] .hk-calendar-foot a{color:var(--violet)}
+html[data-theme] .hk-week-event-poster{
+  background:linear-gradient(145deg,color-mix(in srgb,var(--violet) 14%,var(--panel)),color-mix(in srgb,var(--mint) 10%,var(--panel)));
+  border-color:var(--line);box-shadow:var(--hk-panel-shadow);
+}
+@media(prefers-reduced-motion:reduce){
+  html[data-theme] .hk-calendar-day-tab,html[data-theme] .hk-calendar-toolbar button{transition:none!important}
+}
