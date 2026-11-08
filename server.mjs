@@ -1093,6 +1093,7 @@ const FULL_ANIME_COLLECTION_QUERY = 'query HekomiFullAnimeCollection($page:Int!,
 const seasonCatalogCache = new Map();
 const CATALOG_SEARCH_QUERY = 'query HekomiCatalogSearch($search:String!,$page:Int!) { anime: Page(page:$page,perPage:24) { pageInfo { currentPage hasNextPage } media(search:$search,type:ANIME,sort:[SEARCH_MATCH],isAdult:false) { ' + MEDIA_CATALOG_FIELDS + ' } } manga: Page(page:$page,perPage:24) { pageInfo { currentPage hasNextPage } media(search:$search,type:MANGA,sort:[SEARCH_MATCH],isAdult:false) { ' + MEDIA_CATALOG_FIELDS + ' } } }';
 const MEDIA_DETAIL_QUERY = 'query HekomiMediaDetail($id:Int!) { Media(id:$id) { ' + MEDIA_CATALOG_FIELDS + ' ' + MEDIA_PROFILE_FIELDS + ' } }';
+const MEDIA_PROFILE_SEARCH_QUERY = 'query HekomiMediaProfileSearch($search:String!,$type:MediaType!) { results: Page(page:1,perPage:8) { media(search:$search,type:$type,sort:[SEARCH_MATCH],isAdult:false) { ' + MEDIA_CATALOG_FIELDS + ' } } }';
 const MEDIA_MAL_DETAIL_QUERY = 'query HekomiMalMediaDetail($idMal:Int!) { Media(idMal:$idMal,type:ANIME) { ' + MEDIA_CATALOG_FIELDS + ' ' + MEDIA_PROFILE_FIELDS + ' } }';
 const MEDIA_RECOMMENDATIONS_QUERY = 'query HekomiRecommendations($idMal:Int!) { Media(idMal:$idMal,type:ANIME) { recommendations(page:1,perPage:20,sort:[RATING_DESC]) { nodes { rating mediaRecommendation { ' + MEDIA_CATALOG_FIELDS + ' } } } } }';
 const publicCatalogCache = { data:null, expiresAt:0 };
@@ -1939,6 +1940,18 @@ const server=http.createServer(async(req,res)=>{
   if(req.method==='GET' && url.pathname==='/api/catalog') {
     try { return send(res,200,await getPublicCatalog(url.searchParams.get('refresh')==='1'),{'Cache-Control':'public, max-age=300'}); }
     catch(e) { return send(res,502,{error:'The public catalog is temporarily unavailable. '+(e.message||'')}); }
+  }
+  if(req.method==='GET' && url.pathname==='/api/catalog/profile-search') {
+    const title=String(url.searchParams.get('title')||'').trim().slice(0,140);
+    const kind=String(url.searchParams.get('kind')||'manga').toLowerCase();
+    if(!title||!['anime','manga'].includes(kind))return send(res,400,{error:'Provide a title and a valid anime or manga kind.'});
+    try {
+      const payload=await requestAniList(MEDIA_PROFILE_SEARCH_QUERY,{search:title,type:kind.toUpperCase()});
+      const results=(payload.results&&Array.isArray(payload.results.media)?payload.results.media:[]).map(packMedia).filter(Boolean);
+      return send(res,200,{results,kind,query:title,source:'AniList title search'},{'Cache-Control':'public, max-age=300, stale-while-revalidate=1800'});
+    } catch(e) {
+      return send(res,502,{error:'Series lookup is temporarily unavailable. '+(e.message||'')});
+    }
   }
   if(req.method==='GET' && url.pathname==='/api/catalog/detail') {
     const id=Number(url.searchParams.get('id'));
