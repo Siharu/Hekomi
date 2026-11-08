@@ -3383,8 +3383,8 @@ function showProfileTab(tab){activeProfileTab=tab;$$('#profileTabs button').forE
   }
   function sortMangaRows(rows){
     let result=rows.slice();
-    const start=item=>listTimestamp(item.startDate,item.start_date,item.firstPublished,item.publishedAt,item.addedAt);
-    const end=item=>listTimestamp(item.endDate,item.end_date,item.finishedAt,item.lastUpdate,item.updatedAt);
+    const start=item=>listTimestamp(item.startDate,item.start_date,item.firstPublished,item.publishedAt);
+    const end=item=>listTimestamp(item.endDate,item.end_date,item.finishedAt);
     const added=item=>listTimestamp(item.addedAt,item.createdAt,item.updatedAt);
     const updated=item=>listTimestamp(item.updatedAt,item.lastReadAt,item.lastUpdate,item.addedAt);
     switch(activeMangaListSort){
@@ -3401,7 +3401,7 @@ function showProfileTab(tab){activeProfileTab=tab;$$('#profileTabs button').forE
         break;
       case 'finished-recent':
         result=result.filter(item=>end(item)>0||/finished|completed/i.test(String(item.releaseStatus||'')));
-        result.sort((a,b)=>compareListDates(a,b,end,-1));
+        result.sort((a,b)=>compareListDates(a,b,item=>end(item)||updated(item),-1));
         break;
       case 'mal-added-recent':
         result.sort((a,b)=>compareListDates(a,b,added,-1));
@@ -3439,7 +3439,7 @@ function showProfileTab(tab){activeProfileTab=tab;$$('#profileTabs button').forE
     let items=malRemote.filter(item=>String(item.node&&item.node.title||'').toLowerCase().includes(term));
     if(activeMalStatus!=='all')items=items.filter(item=>(item.list_status&&item.list_status.status||'')===activeMalStatus);
     items=sortAnimeRows(items,'mal');
-    $('#malRemoteList').innerHTML=animeSortControl()+(recentRemote.length?'<section class="recently-updated"><div class="panel-head"><div><h3>Recently updated</h3><p class="muted small">Your latest MAL list changes.</p></div><span class="pill-label">'+recentRemote.length+' recent</span></div><div class="catalog-grid anime-list-grid">'+recentRemote.map(item=>{const n=item.node||{},s=item.list_status||{},id=Number(n.id)||0;return animeListCardMarkup({title:n.title||'Untitled anime',cover:animeCover(n),status:s.status||'plan_to_watch',score:s.score,watched:s.num_episodes_watched,total:n.num_episodes,malId:id,actions:'<button type="button" class="mini-btn" data-remote-details="'+id+'">Details</button><button type="button" class="mini-btn" data-remote-edit="'+id+'">Edit</button><a class="mini-btn" href="https://myanimelist.net/anime/'+id+'" target="_blank" rel="noopener noreferrer">MAL ↗</a>'});}).join('')+'</div></section>':'')+(items.length?'<div class="catalog-grid anime-list-grid">'+items.map(item=>{
+    $('#malRemoteList').innerHTML='<div class="hk-anime-library-controls">'+animeSortControl()+'</div>'+(recentRemote.length?'<section class="recently-updated"><div class="panel-head"><div><h3>Recently updated</h3><p class="muted small">Your latest MAL list changes.</p></div><span class="pill-label">'+recentRemote.length+' recent</span></div><div class="catalog-grid anime-list-grid">'+recentRemote.map(item=>{const n=item.node||{},s=item.list_status||{},id=Number(n.id)||0;return animeListCardMarkup({title:n.title||'Untitled anime',cover:animeCover(n),status:s.status||'plan_to_watch',score:s.score,watched:s.num_episodes_watched,total:n.num_episodes,malId:id,actions:'<button type="button" class="mini-btn" data-remote-details="'+id+'">Details</button><button type="button" class="mini-btn" data-remote-edit="'+id+'">Edit</button><a class="mini-btn" href="https://myanimelist.net/anime/'+id+'" target="_blank" rel="noopener noreferrer">MAL ↗</a>'});}).join('')+'</div></section>':'')+(items.length?'<div class="catalog-grid anime-list-grid">'+items.map(item=>{
       const n=item.node||{},s=item.list_status||{},id=Number(n.id)||0;
       const release=humanizeAnimeValue(n.status||'');
       const date=[metadataDate(n.start_date),metadataDate(n.end_date)].filter(Boolean).join(' → ');
