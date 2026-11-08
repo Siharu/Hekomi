@@ -13,39 +13,77 @@ function memeBatch(title, postId) {
   };
 }
 
-test('meme corner only renders unflagged anime memes and refreshes on demand', async ({ page }) => {
-  let calls = 0;
-  await page.route('https://meme-api.com/**', async route => {
-    calls += 1;
-    const title = calls === 1 ? 'Anime fans at 2 AM' : 'One more episode, surely';
-    const postId = calls === 1 ? 'safe-one' : 'safe-two';
-    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(memeBatch(title, postId)) });
-  });
+async function stubMemeImages(page) {
   await page.route('https://preview.redd.it/**', route =>
     route.fulfill({ status: 200, contentType: 'image/gif', body: pixel })
   );
+}
+
+test('meme corner rotates between anime and game memes and refreshes on demand', async ({ page }) => {
+  let calls = 0;
+  await page.route('https://meme-api.com/**', async route => {
+    calls += 1;
+    const url = new URL(route.request().url());
+    const subreddit = url.pathname.split('/')[2] || '';
+    const isGame = /gaming/i.test(subreddit);
+    const title = isGame ? 'Game fans at 2 AM' : 'Anime fans at 2 AM';
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(memeBatch(title, 'safe-' + calls))
+    });
+  });
+  await stubMemeImages(page);
 
   await page.goto('/');
   await page.locator('#hkMemeCorner').scrollIntoViewIfNeeded();
   await expect(page.locator('#hkMemeCaption')).toHaveText('Anime fans at 2 AM');
-  await expect(page.locator('#hkMemeSource')).toHaveAttribute('href', 'https://redd.it/safe-one');
-  await expect(page.locator('#hkMemeSubreddit')).toHaveText('R/Animemes');
+  await expect(page.locator('#hkMemeSubreddit')).toHaveText('ANIME MEME');
+  await expect(page.locator('#hkMemeSource')).toHaveAttribute('href', 'https://redd.it/safe-1');
   expect(calls).toBe(1);
 
   await page.locator('#hkMemeNext').click();
-  await expect(page.locator('#hkMemeCaption')).toHaveText('One more episode, surely');
-  await expect(page.locator('#hkMemeSource')).toHaveAttribute('href', 'https://redd.it/safe-two');
+  await expect(page.locator('#hkMemeCaption')).toHaveText('Game fans at 2 AM');
+  await expect(page.locator('#hkMemeSubreddit')).toHaveText('GAMES MEME');
+  await expect(page.locator('#hkMemeSource')).toHaveAttribute('href', 'https://redd.it/safe-2');
+  expect(calls).toBe(2);
+});
+
+test('meme corner automatically refreshes after 40 seconds', async ({ page }) => {
+  await page.clock.install();
+  let calls = 0;
+  await page.route('https://meme-api.com/**', async route => {
+    calls += 1;
+    const isGame = /gaming/i.test(new URL(route.request().url()).pathname);
+    const title = isGame ? 'Game devs at 2 AM' : 'Anime watchers at 2 AM';
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(memeBatch(title, 'auto-' + calls))
+    });
+  });
+  await stubMemeImages(page);
+
+  await page.goto('/');
+  await page.locator('#hkMemeCorner').scrollIntoViewIfNeeded();
+  await expect(page.locator('#hkMemeCaption')).toHaveText('Anime watchers at 2 AM');
+  expect(calls).toBe(1);
+
+  await page.clock.fastForward(40000);
+  await expect(page.locator('#hkMemeCaption')).toHaveText('Game devs at 2 AM');
   expect(calls).toBe(2);
 });
 
 test('meme corner stays within a narrow mobile viewport', async ({ page }) => {
   await page.setViewportSize({ width: 360, height: 800 });
   await page.route('https://meme-api.com/**', route =>
-    route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(memeBatch('Mobile meme', 'mobile-safe')) })
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(memeBatch('Mobile meme', 'mobile-safe'))
+    })
   );
-  await page.route('https://preview.redd.it/**', route =>
-    route.fulfill({ status: 200, contentType: 'image/gif', body: pixel })
-  );
+  await stubMemeImages(page);
 
   await page.goto('/');
   await page.locator('#hkMemeCorner').scrollIntoViewIfNeeded();
