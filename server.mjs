@@ -1790,7 +1790,7 @@ function renderSeoCatalogPage(req, kind, genre, items) {
 
 async function serveSitemap(req,res) {
   const origin=publicOrigin(req);
-  const staticPaths=['/','/discover','/manga','/catalog/anime','/catalog/manga',...SEO_GENRES.flatMap(genre=>['/genres/anime/'+genre.slug,'/genres/manga/'+genre.slug])];
+  const staticPaths=['/','/discover','/calendar','/manga','/catalog/anime','/catalog/manga',...SEO_GENRES.flatMap(genre=>['/genres/anime/'+genre.slug,'/genres/manga/'+genre.slug])];
   const entries=staticPaths.map(route=>({loc:origin+route,lastmod:''}));
   const mediaEntries=new Map();
   try {
@@ -2220,7 +2220,7 @@ if(req.method==='POST' && url.pathname==='/api/mangascrape/discover') {
   // Keep the root favicon URL stable while reusing the project's original ICO asset.
   const assetPath=normalizedPath==='/favicon.ico'?'/Anime Manga Duality Emblem.ico':normalizedPath;
   const appPath=assetPath==='/index.html'?'/':assetPath;
-  const pageRoutes=new Set(['/','/discover','/anime','/manga','/profile']);
+  const pageRoutes=new Set(['/','/discover','/calendar','/anime','/manga','/profile']);
   const isAppPage=pageRoutes.has(appPath);
   let filePath=path.resolve(__dirname, '.'+(isAppPage?'/index.html':assetPath));
   if(!filePath.startsWith(__dirname+path.sep) && filePath!==path.join(__dirname,'index.html')) return send(res,403,'Forbidden');
@@ -2240,6 +2240,11 @@ if(req.method==='POST' && url.pathname==='/api/mangascrape/discover') {
         discover:{
           title:'Anime & Manga Discovery — Search & Trending | Hekomi',
           description:'Explore trending anime and manga, search series by title, filter by genre and format, and find your next favourite story with Hekomi.',
+          robots:'index,follow,max-image-preview:large'
+        },
+        calendar:{
+          title:'Weekly Anime Episode Schedule | Hekomi',
+          description:'Browse anime episodes grouped by weekday, check Japanese broadcast times, and see which scheduled shows are in your watchlist.',
           robots:'index,follow,max-image-preview:large'
         },
         anime:{
@@ -2263,7 +2268,7 @@ if(req.method==='POST' && url.pathname==='/api/mangascrape/discover') {
       let html=data.toString('utf8');
       // This shared shell contains several hidden route views. Emit only the active route's H1.
       html=html.replace(/<h1\b([^>]*)>/gi,'<h2$1>').replace(/<\/h1>/gi,'</h2>');
-      const pageHeadingIds={home:'homeHeroTitle',discover:'catalogTitle',anime:'animePageTitle',manga:'mangaPageTitle',profile:'profilePageTitle'};
+      const pageHeadingIds={home:'homeHeroTitle',discover:'catalogTitle',calendar:'calendarPageTitle',anime:'animePageTitle',manga:'mangaPageTitle',profile:'profilePageTitle'};
       const pageHeadingId=pageHeadingIds[pageName]||pageHeadingIds.home;
       const headingOpen='<h2 id="'+pageHeadingId+'">';
       const headingStart=html.indexOf(headingOpen);
