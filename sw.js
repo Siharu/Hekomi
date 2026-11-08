@@ -1,4 +1,4 @@
-const CACHE = 'hekomi-shell-v27-poster-calendar';
+const CACHE = 'hekomi-shell-v28-anime-timetable';
 const SHELL = ['/', '/index.html', '/favicon.ico', '/manifest.webmanifest', '/icon.svg', '/Anime%20Manga%20Duality%20Emblem.ico', '/assets/folio-night-scene.svg', '/assets/hekomi-social.svg', '/assets/hekomi-manga-mark.svg', '/assets/hekomi-anime-mark.svg', '/assets/hekomi-dual-mark.svg', '/assets/hekomi-chan.js', '/assets/hekomi-mobile.css', '/assets/hekomi-calendar.css', '/assets/hekomi-calendar.js', '/assets/hekomi-meme.css', '/assets/hekomi-meme.js'];
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(SHELL)).then(() => self.skipWaiting()));
