@@ -2208,6 +2208,7 @@ body[data-page="home"] #animeShowcase::before{
 }
 </style>
 
+<link rel="stylesheet" href="/assets/hekomi-themes.css?v=20261108">
 </head>
 <body data-page="__HEKOMI_PAGE__">
 <div class="app-scroll-progress" aria-hidden="true"><span id="appScrollProgressBar"></span></div>
@@ -2801,32 +2802,60 @@ body[data-page="home"] #animeShowcase::before{
   const genreSoundPreferenceKey='hekomi_genre_transition_sound_v1';
   let genreTransitionSoundEnabled=(()=>{try{return localStorage.getItem(genreSoundPreferenceKey)==='1';}catch{return false;}})();
   let genreAudioContext=null,genreNavigationPending=false;
-  const themeModes = new Set(['classic','midnight','late-night','dawn','device']);
-  const themeModeNames = {classic:'Classic Blue',midnight:'Neon Glass', 'late-night':'Cinematic Anime', dawn:'Minimal Elegance', device:'Device Settings'};
+  const themeModes = new Set(['nocturne','archive','afterglow','verdant','system']);
+  const themeModeNames = {nocturne:'Nocturne',archive:'Archive',afterglow:'Afterglow',verdant:'Verdant',system:'System'};
+  const legacyThemeAliases = {classic:'archive',midnight:'nocturne','late-night':'afterglow',dawn:'archive',device:'system'};
   const themeSystemQuery = window.matchMedia('(prefers-color-scheme: light)');
-  let themePreference = (() => { try { const saved=localStorage.getItem(themePreferenceKey); return themeModes.has(saved)?saved:'classic'; } catch { return 'classic'; } })();
-  function applyTheme(mode, announce=false) {
-    if (!themeModes.has(mode)) mode='classic';
-    themePreference=mode;
-    const resolved=mode==='device' ? (themeSystemQuery.matches?'dawn':'midnight') : mode;
-    document.documentElement.dataset.theme=resolved;
-    document.documentElement.dataset.themePreference=mode;
-    const themeMeta=document.querySelector('meta[name="theme-color"]');
-    if(themeMeta) themeMeta.content=resolved==='classic'?'#f3f6fa':resolved==='dawn'?'#f5f0f7':resolved==='late-night'?'#100d13':'#080916';
-    try { localStorage.setItem(themePreferenceKey,mode); } catch {}
-    $$('[data-theme-choice]').forEach(button=>{
-      const selected=button.dataset.themeChoice===mode;
-      button.setAttribute('aria-pressed',String(selected));
-    });
-    if(announce) notify('Appearance set to '+themeModeNames[mode]+'.');
+  const themeMetaColors = {nocturne:'#090f1d',archive:'#f2eee5',afterglow:'#180f1b',verdant:'#0b1714'};
+  let themePreference = (() => {
+    try {
+      const saved=localStorage.getItem(themePreferenceKey);
+      if(themeModes.has(saved))return saved;
+      if(saved&&legacyThemeAliases[saved])return legacyThemeAliases[saved];
+      return 'nocturne';
+    } catch { return 'nocturne'; }
+  })();
+  function applyTheme(mode, announce=false, originElement=null) {
+    if(!themeModes.has(mode))mode=legacyThemeAliases[mode]||'nocturne';
+    const root=document.documentElement;
+    const reducedMotion=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const resolved=mode==='system'?(themeSystemQuery.matches?'archive':'nocturne'):mode;
+    const update=()=>{
+      themePreference=mode;
+      root.dataset.theme=resolved;
+      root.dataset.themePreference=mode;
+      const themeMeta=document.querySelector('meta[name="theme-color"]');
+      if(themeMeta)themeMeta.content=themeMetaColors[resolved]||themeMetaColors.nocturne;
+      try{localStorage.setItem(themePreferenceKey,mode);}catch{}
+      $$('[data-theme-choice]').forEach(button=>{
+        button.setAttribute('aria-pressed',String(button.dataset.themeChoice===mode));
+      });
+      if(announce)notify('Appearance set to '+themeModeNames[mode]+'.');
+    };
+    if(announce&&!reducedMotion&&typeof document.startViewTransition==='function'){
+      const rect=originElement?.getBoundingClientRect?.();
+      const x=rect?rect.left+rect.width/2:window.innerWidth/2;
+      const y=rect?rect.top+rect.height/2:window.innerHeight/2;
+      root.style.setProperty('--hk-theme-origin-x',x+'px');
+      root.style.setProperty('--hk-theme-origin-y',y+'px');
+      try{
+        const transition=document.startViewTransition(update);
+        transition.finished.catch(()=>{});
+      }catch{update();}
+    }else{
+      const useFallback=announce&&!reducedMotion;
+      if(useFallback)root.classList.add('hk-theme-changing');
+      update();
+      if(useFallback)window.setTimeout(()=>root.classList.remove('hk-theme-changing'),680);
+    }
   }
   function openThemeSettings() {
     const options=[
-      {value:'classic',title:'Classic Blue',description:'A clean white-and-blue layout with calm surfaces and clear typography.'},
-      {value:'midnight',title:'Neon Glass',description:'Purple glow, glassy surfaces, and futuristic energy.'},
-      {value:'late-night',title:'Cinematic Anime',description:'Deep indigo, dramatic depth, and a dreamy after-hours mood.'},
-      {value:'dawn',title:'Minimal Elegance',description:'Soft light surfaces, quiet colors, and distraction-free reading.'},
-      {value:'device',title:'Device Settings',description:'Follow your device’s light or dark setting.'}
+      {value:'nocturne',title:'Nocturne',description:'Ink-blue nights, lunar violet and cool sea-glass.'},
+      {value:'archive',title:'Archive',description:'Warm paper, quiet ink, terracotta and muted teal.'},
+      {value:'afterglow',title:'Afterglow',description:'Plum shadows, rose light and a soft champagne accent.'},
+      {value:'verdant',title:'Verdant',description:'Deep forest tones, moss gold and fresh jade.'},
+      {value:'system',title:'System',description:'Follow your device: Archive in light mode, Nocturne in dark mode.'}
     ];
     const buttons=options.map(option=>
       '<button type="button" class="theme-option" data-theme-choice="'+option.value+'" aria-pressed="'+String(themePreference===option.value)+'">'+
@@ -2835,8 +2864,8 @@ body[data-page="home"] #animeShowcase::before{
         '<span class="theme-check" aria-hidden="true">✓</span></button>'
     ).join('');
     const soundLabel=genreTransitionSoundEnabled?'On':'Off';
-    openModal('<div class="modal-top"><div><h2>Appearance</h2><p class="theme-settings-copy">Choose your vibe. Switch moods any time — your choice is saved on this device.</p></div><button class="close" data-close aria-label="Close appearance settings">×</button></div><div class="theme-options">'+buttons+'</div><div class="genre-sound-setting"><div><strong>Genre transition sounds</strong><small>Optional short audio accents when opening anime. Off by default.</small></div><button type="button" class="btn-secondary" id="genreSoundToggle" aria-pressed="'+String(genreTransitionSoundEnabled)+'">Sound: '+soundLabel+'</button></div><p class="small muted" style="margin:14px 0 0">Device Settings updates automatically when your operating system switches between light and dark appearance.</p>');
-    $$('#modalRoot [data-theme-choice]').forEach(button=>button.addEventListener('click',()=>applyTheme(button.dataset.themeChoice,true)));
+    openModal('<div class="modal-top"><div><h2>Appearance</h2><p class="theme-settings-copy">Four palettes with their own atmosphere. Your selection is saved on this device.</p></div><button class="close" data-close aria-label="Close appearance settings">×</button></div><div class="theme-options">'+buttons+'</div><div class="genre-sound-setting"><div><strong>Genre transition sounds</strong><small>Optional short audio accents when opening anime. Off by default.</small></div><button type="button" class="btn-secondary" id="genreSoundToggle" aria-pressed="'+String(genreTransitionSoundEnabled)+'">Sound: '+soundLabel+'</button></div>');
+    $$('#modalRoot [data-theme-choice]').forEach(button=>button.addEventListener('click',()=>applyTheme(button.dataset.themeChoice,true,button)));
     $('#genreSoundToggle').addEventListener('click',()=>{
       genreTransitionSoundEnabled=!genreTransitionSoundEnabled;
       try{localStorage.setItem(genreSoundPreferenceKey,genreTransitionSoundEnabled?'1':'0');}catch{}
@@ -2847,9 +2876,9 @@ body[data-page="home"] #animeShowcase::before{
     });
   }
   applyTheme(themePreference);
-  const syncDeviceTheme=()=>{if(themePreference==='device')applyTheme('device');};
-  if(themeSystemQuery.addEventListener) themeSystemQuery.addEventListener('change',syncDeviceTheme);
-  else if(themeSystemQuery.addListener) themeSystemQuery.addListener(syncDeviceTheme);
+  const syncDeviceTheme=()=>{if(themePreference==='system')applyTheme('system');};
+  if(themeSystemQuery.addEventListener)themeSystemQuery.addEventListener('change',syncDeviceTheme);
+  else if(themeSystemQuery.addListener)themeSystemQuery.addListener(syncDeviceTheme);
 
   let localAnime=read(key.anime), mangaLibrary=read(key.manga), sources=read(key.sources); let malConnected=false, malUsername='', malConfigured=true; let malRemote=[]; let malSearchResultNodes=new Map(); let lastInspection=null; let activeMalStatus='all', activeLocalAnimeStatus='all', activeMangaType='all', activeMangaStatus='all'; let activeAnimeListSort='default', activeMangaListSort='default'; let remoteReady=false; let toastTimer;
   let profileData=(()=>{try{return {displayName:'Hekomi reader',handle:'reader',bio:'A little corner for the stories that stay with me.',avatarUrl:'',...JSON.parse(localStorage.getItem('hekomi_profile_v1')||'{}')};}catch{return {displayName:'Hekomi reader',handle:'reader',bio:'A little corner for the stories that stay with me.',avatarUrl:''};}})();
@@ -2991,6 +3020,7 @@ body[data-page="home"] #animeShowcase::before{
   function startGenreTransition(theme,title,image){
     const overlay=$('#genreTransitionOverlay');
     if(!overlay)return;
+    const genre=String(theme||'dream').toLowerCase().replace(/[^a-z0-9-]/g,'')||'dream';
     const imageUrl=safeImageUrl(image);
     const scene=document.createElement('div');
     scene.className='hk-transition-scene';
@@ -3001,32 +3031,36 @@ body[data-page="home"] #animeShowcase::before{
     const shade=document.createElement('div');
     shade.className='hk-transition-shade';
     shade.setAttribute('aria-hidden','true');
+    const frame=document.createElement('div');
+    frame.className='hk-transition-frame';
     const poster=document.createElement('img');
     poster.className='hk-transition-poster';
     poster.alt='';
     poster.setAttribute('aria-hidden','true');
+    if(imageUrl){
+      backdrop.src=imageUrl;
+      poster.src=imageUrl;
+      poster.addEventListener('error',()=>scene.classList.add('is-no-image'),{once:true});
+    }else{
+      scene.classList.add('is-no-image');
+    }
+    frame.append(poster);
     const copy=document.createElement('div');
     copy.className='hk-transition-copy';
     const kicker=document.createElement('span');
     kicker.className='hk-transition-kicker';
-    kicker.textContent=(theme||'dream').toUpperCase()+' / SERIES OPENING';
+    kicker.textContent=genre.toUpperCase()+' / SERIES OPENING';
     const heading=document.createElement('strong');
     heading.className='hk-transition-title';
     heading.textContent=title||'Opening anime';
     copy.append(kicker,heading);
-    if(imageUrl){
-      backdrop.src=imageUrl;
-      poster.src=imageUrl;
-    }else{
-      scene.classList.add('is-no-image');
-    }
-    scene.append(backdrop,shade,poster,copy);
-    overlay.dataset.genre=theme||'dream';
+    scene.append(backdrop,shade,frame,copy);
+    overlay.dataset.genre=genre;
     overlay.replaceChildren(scene);
     overlay.classList.remove('is-active');
     void overlay.offsetWidth;
     overlay.classList.add('is-active');
-    window.setTimeout(()=>{overlay.classList.remove('is-active');},560);
+    window.setTimeout(()=>overlay.classList.remove('is-active'),760);
   }
   document.addEventListener('click',event=>{
     const link=event.target.closest('a[data-genre-transition]');
@@ -3046,7 +3080,7 @@ body[data-page="home"] #animeShowcase::before{
     const image=link.dataset.transitionImage||link.querySelector('.catalog-cover img')?.currentSrc||link.querySelector('.catalog-cover img')?.src||'';
     playGenreTransitionSound(theme);
     startGenreTransition(theme,title,image);
-    const delay=window.matchMedia('(prefers-reduced-motion: reduce)').matches?70:430;
+    const delay=window.matchMedia('(prefers-reduced-motion: reduce)').matches?70:640;
     window.setTimeout(()=>destination.then(url=>{window.location.assign(url);}).catch(()=>window.location.assign(fallback)),delay);
   });
   document.addEventListener('click',event=>{const a=event.target.closest('a[href]');if(!a||event.defaultPrevented||a.target==='_blank'||event.metaKey||event.ctrlKey||event.shiftKey||event.altKey)return;let destination;try{destination=new URL(a.href,window.location.href);}catch{return;}if(destination.origin!==window.location.origin)return;const route=(destination.pathname!=='/'&&destination.pathname.endsWith('/')?destination.pathname.slice(0,-1):destination.pathname)||'/';if(route==='/anime'||route==='/manga'||route==='/profile'||route==='/calendar'){event.preventDefault();setMode(route==='/manga'?'manga':route==='/profile'?'profile':route==='/calendar'?'calendar':'mal');}});
