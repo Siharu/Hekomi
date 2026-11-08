@@ -52,6 +52,20 @@
     catch{return '';}
   };
   const normalizeTitle=value=>String(value||'').normalize('NFKC').toLocaleLowerCase().replace(/[\p{P}\p{S}\p{Z}\s]+/gu,'').trim();
+  const hasJapaneseOrCjkScript=/[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}]/u;
+  const hasEnglishScheduleTitle=value=>{
+    const title=String(value||'').trim();
+    return !!title&&/[A-Za-z]/.test(title)&&!hasJapaneseOrCjkScript.test(title);
+  };
+  const displayTitleFor=item=>{
+    const watched=findWatchedMatch(item);
+    return item.title&&!item.titleUnavailable?item.title:(watched&&watched.title)||item.title||'';
+  };
+  const posterFor=item=>{
+    const watched=findWatchedMatch(item);
+    return (watched&&watched.cover)||safeCover(item.cover)||'';
+  };
+  const isRenderableProgram=item=>hasEnglishScheduleTitle(displayTitleFor(item))&&!!posterFor(item);
   let remoteWatchlist=[],remoteWatchlistFetchedAt=0,remoteWatchlistTask=null;
   function readLocalAnime(){
     try{
@@ -133,26 +147,27 @@
   }
   function selectedItemsForDay(key){
     return state.programs
-      .filter(item=>item.date===key)
+      .filter(item=>item.date===key&&isRenderableProgram(item))
       .sort((a,b)=>String(a.airingAt||a.time||'').localeCompare(String(b.airingAt||b.time||'')));
   }
   function renderEpisode(item,index){
     const watched=findWatchedMatch(item);
-    const title=item.title&&!item.titleUnavailable?item.title:(watched&&watched.title)||item.title||'Anime broadcast';
+    const title=displayTitleFor(item);
     const episode=item.episode?'Episode '+item.episode:'Episode listing';
-    const subtitle=item.subtitle?'<p class="hk-week-event-subtitle">'+escape(item.subtitle)+'</p>':'';
-    const cover=watched&&watched.cover
-      ?'<img class="hk-week-event-cover" src="'+escape(watched.cover)+'" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer">'
-      :'<span class="hk-week-event-cover hk-week-event-cover-empty" aria-hidden="true">H</span>';
+    const cover=posterFor(item);
     const watchTag=watched?'<span class="hk-week-watch-tag">IN YOUR WATCHLIST</span>':'';
     const stateLabel=item.status==='upcoming'?'UPCOMING':'AIRED';
+    const listingType=String(item.listingType||'TV').toUpperCase();
     const href=/^https:\/\//i.test(String(item.url||''))?item.url:'https://cal.syoboi.jp/';
+    const poster='<a class="hk-week-event-poster" href="'+escape(href)+'" target="_blank" rel="noopener noreferrer" aria-label="View '+escape(title)+'">'+
+      '<img class="hk-week-event-cover" src="'+escape(cover)+'" alt="'+escape(title)+' poster" loading="lazy" decoding="async" referrerpolicy="no-referrer"></a>';
     return '<article class="hk-week-event" data-state="'+escape(item.status)+'"'+(watched?' data-watching="true"':'')+' style="--hk-episode-index:'+index+'">'+
       '<div class="hk-week-event-time">'+escape(item.time||'TBA')+'<small>JST</small></div>'+
-      cover+
-      '<div class="hk-week-event-copy"><h4><a href="'+escape(href)+'" target="_blank" rel="noopener noreferrer">'+escape(title)+'</a></h4>'+
-      '<p class="hk-week-event-episode">'+escape(episode)+'</p>'+watchTag+subtitle+
-      '<span class="hk-week-event-state">'+stateLabel+'</span></div></article>';
+      poster+
+      '<div class="hk-week-event-copy"><div class="hk-week-event-meta"><span class="hk-week-event-kind">'+escape(listingType)+'</span><span class="hk-week-event-state">'+stateLabel+'</span></div>'+
+      '<h4><a href="'+escape(href)+'" target="_blank" rel="noopener noreferrer">'+escape(title)+'</a></h4>'+
+      '<p class="hk-week-event-episode">'+escape(episode)+'</p>'+watchTag+
+      '</div></article>';
   }
   function renderDay(day){
     const items=selectedItemsForDay(day.key);
@@ -160,7 +175,7 @@
     let body='';
     if(state.loading)body='<div class="hk-week-empty">Loading episodes…</div>';
     else if(state.error)body='<div class="hk-week-empty">'+escape(state.error)+'</div>';
-    else if(!items.length)body='<div class="hk-week-empty">No listed episodes</div>';
+    else if(!items.length)body='<div class="hk-week-empty">No matched English-title episodes with poster art today.</div>';
     else body='<div class="hk-week-events">'+items.map(renderEpisode).join('')+'</div>';
     return '<section class="hk-week-day-card'+(isToday?' is-today':'')+'" data-date="'+day.key+'" aria-label="'+escape(day.weekday)+' episode schedule">'+
       '<header class="hk-week-day-heading"><div><span class="hk-week-day-name">'+escape(day.weekday)+'</span><span class="hk-week-day-date">'+escape(day.shortDate)+'</span></div>'+
@@ -194,9 +209,9 @@
       if(!response.ok)throw new Error(data.error||'Episode schedule unavailable.');
       if(!Array.isArray(data.programs))throw new Error('Schedule response is missing its episode list.');
       if(request!==state.request)return;
-      state.programs=data.programs;
-      if(data.rawProgramCount>0&&!data.programs.length){
-        throw new Error('The source returned broadcast records, but none could be displayed.');
+      state.programs=data.programs.filter(isRenderableProgram);
+      if(data.rawProgramCount>0&&!state.programs.length){
+        throw new Error('No anime with a verified English title and poster could be matched for this week.');
       }
     }catch(error){
       if(request!==state.request)return;

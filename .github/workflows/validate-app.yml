@@ -46,8 +46,13 @@ jobs:
           node-version: '22'
       - name: Install server dependencies
         run: npm install --no-audit --no-fund
-      - name: Check backend syntax
-        run: node --check server.mjs
+      - name: Check backend and calendar JavaScript syntax
+        run: |
+          node --check server.mjs
+          node --check lib/syoboi-calendar.mjs
+          node --check assets/hekomi-calendar.js
+      - name: Run calendar unit tests
+        run: node --test tests/unit/syoboi-calendar.test.js
       - name: Check browser JavaScript syntax and required UI hooks
         shell: bash
         run: |
@@ -56,7 +61,9 @@ jobs:
           const html = await fs.readFile('index.html', 'utf8');
           const server = await fs.readFile('server.mjs', 'utf8');
           const mascotJs = await fs.readFile('assets/hekomi-chan.js', 'utf8');
+          const calendarJs = await fs.readFile('assets/hekomi-calendar.js', 'utf8');
           new Function(mascotJs);
+          new Function(calendarJs);
           const scripts = [...html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)];
           const appScripts = scripts.filter(match => !/application\/(?:ld\+json|json)/i.test(match[1]));
           if (!appScripts.length) throw new Error('No inline application script found in Hekomi HTML.');

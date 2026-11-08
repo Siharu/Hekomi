@@ -6,7 +6,7 @@ import dns from 'node:dns/promises';
 import net from 'node:net';
 import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
-import { applyAniListAiringFallback, extractSyoboiProgramRows, normalizeSyoboiPrograms, syoboiField, syoboiRows } from './lib/syoboi-calendar.mjs';
+import { enrichSyoboiPrograms, extractSyoboiProgramRows, normalizeSyoboiPrograms, syoboiField, syoboiRows } from './lib/syoboi-calendar.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PORT = Number(process.env.PORT || 4173);
@@ -1334,21 +1334,8 @@ async function getSyoboiCalendar(rawStart, rawDays) {
       }
 
       const now = new Date();
-      let programs = normalizeSyoboiPrograms(programRows, titleRows, feedRows, now);
-      let aniListFallbackCount = 0;
-      if (programs.some(item => item.titleUnavailable)) {
-        try {
-          const airingAnime = await getSyoboiAniListFallbackAnime();
-          const enriched = applyAniListAiringFallback(programs, airingAnime, 300);
-          aniListFallbackCount = enriched.filter(item =>
-            item.metadataSource === 'AniList'
-          ).length;
-          programs = enriched;
-        } catch {
-          // Keep the Syoboi schedule visible even when AniList is unavailable.
-        }
-      }
-      if (!programs.length) {
+      const normalizedPrograms = normalizeSyoboiPrograms(programRows, titleRows, feedRows, now);
+      if (!normalizedPrograms.length) {
         const sample = programRows[0] || {};
         const timeValue = syoboiField(sample, 'StTime') ?? syoboiField(sample, 'StTimeU');
         throw new Error(
@@ -1357,15 +1344,28 @@ async function getSyoboiCalendar(rawStart, rawDays) {
         );
       }
 
-      const unresolvedTitles = programs.filter(item => item.titleUnavailable).length;
+      // Keep Syoboi's Japan broadcast times, but only expose rows that AniList
+      // can confidently map to an English/romanized title and a real cover image.
+      let programs = [];
+      try {
+        const airingAnime = await getSyoboiAniListFallbackAnime();
+        programs = enrichSyoboiPrograms(normalizedPrograms, airingAnime, 300);
+      } catch {
+        // Fail closed instead of rendering Japanese-only, posterless records.
+        programs = [];
+      }
+      const aniListFallbackCount = programs.length;
+      const unresolvedTitles = Math.max(0, normalizedPrograms.length - programs.length);
       const data = {
         start, days, programs, total: programs.length,
         rawProgramCount: programRows.length,
+        normalizedProgramCount: normalizedPrograms.length,
         titleCount: titleRows.length,
         fallbackProgramCount: feedRows.length,
         unresolvedTitleCount: unresolvedTitles,
         aniListFallbackCount,
-        source: aniListFallbackCount ? 'Syoboi Calendar + RSS2 + AniList fallback' : feedRows.length ? 'Syoboi Calendar + RSS2 fallback' : 'Syoboi Calendar',
+        englishTitleOnly: true,
+        source: 'Syoboi Calendar' + (feedRows.length ? ' + RSS2' : '') + ' + AniList English metadata',
         timezone: 'Asia/Tokyo',
         updatedAt: new Date().toISOString()
       };

@@ -43,8 +43,8 @@ jobs:
           node-version: '22'
       - name: Install dependencies
         run: npm install --no-audit --no-fund
-      - name: Run unit tests
-        run: npm run test:unit
+      - name: Run calendar unit tests
+        run: node --test tests/unit/syoboi-calendar.test.js
       - name: Install Playwright Chromium
         run: npx playwright install --with-deps chromium
       - name: Run headless browser tests

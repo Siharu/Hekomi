@@ -26,16 +26,18 @@ function scheduleFixture() {
     timezone: 'Asia/Tokyo',
     programs: [
       {
-        id: 'pid-1', tid: 1001, title: watchedTitle, shortTitle: 'Sousou no Frieren',
+        id: 'pid-1', tid: 1001, anilistId: 1001, malId: 1001, title: watchedTitle, shortTitle: 'Sousou no Frieren',
+        cover: 'https://cdn.example.test/frieren-catalog.webp',
         date, time: '20:00', airingAt: date + 'T11:00:00.000Z',
         episode: 1, status: 'upcoming', listingType: 'TV', channel: 'TOKYO MX',
-        url: 'https://cal.syoboi.jp/tid/1001'
+        url: 'https://anilist.co/anime/1001'
       },
       {
-        id: 'pid-2', tid: 1002, title: 'Spy x Family',
+        id: 'pid-2', tid: 1002, anilistId: 1002, malId: 1002, title: 'Spy x Family',
+        cover: 'https://cdn.example.test/spy-catalog.webp',
         date, time: '21:00', airingAt: date + 'T12:00:00.000Z',
         episode: 2, status: 'upcoming', listingType: 'TV', channel: 'TV Tokyo',
-        url: 'https://cal.syoboi.jp/tid/1002'
+        url: 'https://anilist.co/anime/1002'
       }
     ]
   };
@@ -82,7 +84,7 @@ test('weekly schedule has its own Calendar page and does not load on Home', asyn
   await expect(page.locator('#hkCalWeekTotal')).not.toContainText('UPDATING');
 });
 
-test('local AniList-backed watching entry adds its cover to the matching broadcast only', async ({ page }) => {
+test('local AniList-backed watching entry overrides only its matching calendar poster', async ({ page }) => {
   await page.addInitScript(({ cover }) => {
     localStorage.setItem('folio_local_anime_v1', JSON.stringify([
       {
@@ -113,7 +115,7 @@ test('local AniList-backed watching entry adds its cover to the matching broadca
   await expect(frieren).toHaveAttribute('data-watching', 'true');
   await expect(frieren.locator('.hk-week-event-cover')).toHaveAttribute('src', localCover);
   await expect(spy).not.toHaveAttribute('data-watching', 'true');
-  await expect(spy.locator('.hk-week-event-cover')).toHaveCount(0);
+  await expect(spy.locator('.hk-week-event-cover')).toHaveAttribute('src', 'https://cdn.example.test/spy-catalog.webp');
   await expect(page.locator('.hk-week-day-card[data-date="' + todayInTokyo() + '"] .hk-week-event')).toHaveCount(2);
 });
 
@@ -144,6 +146,28 @@ test('signed-in MAL watching entry supplies a poster when no local copy exists',
   await expect(frieren).toHaveAttribute('data-watching', 'true');
   await expect(frieren.locator('.hk-week-event-cover')).toHaveAttribute('src', malCover);
   await expect(frieren.locator('.hk-week-watch-tag')).toContainText('IN YOUR WATCHLIST');
+});
+
+test('calendar omits Japanese-only and posterless broadcast rows', async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem('folio_local_anime_v1', '[]'));
+  await mockCalendar(page);
+  await page.route(url => url.pathname === '/api/calendar', route => {
+    const fixture = scheduleFixture();
+    fixture.rawProgramCount = 3;
+    fixture.programs.push({
+      id: 'pid-japanese', title: '薬屋のひとりごと', titleUnavailable: false,
+      date: todayInTokyo(), time: '22:00', airingAt: todayInTokyo() + 'T13:00:00.000Z',
+      episode: 1, status: 'upcoming', listingType: 'TV', url: 'https://cal.syoboi.jp/'
+    });
+    return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(fixture) });
+  });
+  await page.route(url => url.pathname === '/api/mal/list', route =>
+    route.fulfill({ status: 401, contentType: 'application/json', body: '{}' })
+  );
+  await openCalendar(page);
+  await expect(page.locator('.hk-week-event')).toHaveCount(2);
+  await expect(page.locator('.hk-week-event').filter({ hasText: '薬屋のひとりごと' })).toHaveCount(0);
+  await expect(page.locator('.hk-week-event-cover')).toHaveCount(2);
 });
 
 test('calendar cards remain within the mobile viewport', async ({ page }) => {

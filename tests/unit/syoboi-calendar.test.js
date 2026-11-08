@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   applyAniListAiringFallback,
+  enrichSyoboiPrograms,
   extractSyoboiProgramRows,
   normalizeSyoboiPrograms,
   parseSyoboiDate
@@ -101,6 +102,57 @@ test('uses a unique AniList airing-time and episode match when Syoboi titles are
   assert.equal(resolved.anilistId, 777);
   assert.equal(resolved.malId, 888);
   assert.equal(resolved.cover, 'https://cdn.example.test/airing-series.webp');
+});
+
+test('maps a Japanese Syoboi title to a verified English AniList title and poster', () => {
+  const airingAt = '2026-11-02T11:00:00.000Z';
+  const [resolved] = enrichSyoboiPrograms([{
+    id: 'pid-900', tid: 900,
+    title: '葬送のフリーレン',
+    shortTitle: '',
+    airingAt,
+    episode: 5,
+    date: '2026-11-02',
+    time: '20:00',
+    status: 'upcoming',
+    listingType: 'TV'
+  }], [{
+    id: 777, idMal: 888,
+    title: 'Frieren: Beyond Journey’s End',
+    titleEnglish: 'Frieren: Beyond Journey’s End',
+    titleRomaji: 'Sousou no Frieren',
+    titleNative: '葬送のフリーレン',
+    cover: 'https://cdn.example.test/frieren.webp',
+    siteUrl: 'https://anilist.co/anime/777',
+    nextAiringEpisode: { airingAt: 1793617200, episode: 5 }
+  }]);
+
+  assert.equal(resolved.title, 'Frieren: Beyond Journey’s End');
+  assert.equal(resolved.titleLanguage, 'en');
+  assert.equal(resolved.titleUnavailable, false);
+  assert.equal(resolved.metadataSource, 'AniList');
+  assert.equal(resolved.anilistId, 777);
+  assert.equal(resolved.malId, 888);
+  assert.equal(resolved.cover, 'https://cdn.example.test/frieren.webp');
+  assert.equal(resolved.url, 'https://anilist.co/anime/777');
+});
+
+test('does not expose unmatched, Japanese-only, or posterless calendar rows', () => {
+  const program = {
+    id: 'pid-901', title: '知らないアニメ',
+    airingAt: '2026-11-02T11:00:00.000Z', episode: 1
+  };
+  const candidates = [
+    {
+      id: 1, titleEnglish: '', titleRomaji: '', titleNative: '知らないアニメ',
+      cover: 'https://cdn.example.test/japanese-only.webp'
+    },
+    {
+      id: 2, titleEnglish: 'Known English Title', titleNative: '別のタイトル',
+      cover: 'http://cdn.example.test/insecure.webp'
+    }
+  ];
+  assert.deepEqual(enrichSyoboiPrograms([program], candidates), []);
 });
 
 test('does not guess when multiple AniList titles share a broadcast slot', () => {
