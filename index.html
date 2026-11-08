@@ -2517,7 +2517,12 @@ body[data-page="home"] #animeShowcase::before{
       '<div class="catalog-cover-badges"><span class="catalog-badge">'+esc(typeLabel)+'</span><span class="catalog-badge score">★ '+score+'</span></div></div></a>'+
       '<div class="catalog-card-body"><h4 itemprop="name"><a href="'+detail+'"'+transitionAttrs+'>'+esc(title)+'</a></h4><div class="catalog-card-meta">'+esc(meta)+(kind==='ANIME'&&m.episodes?' · '+Number(m.episodes)+' eps':'')+(kind==='MANGA'&&m.volumes?' · '+Number(m.volumes)+' vols':'')+'</div>'+
       '<div class="catalog-genres">'+genres+'</div><p class="catalog-synopsis" itemprop="description">'+esc(desc||'Open the details page for available series information.')+'</p>'+
-      '<div class="catalog-card-actions"><a class="mini-btn catalog-detail-link" href="'+detail+'"'+transitionAttrs+'>Details ↗</a><button type="button" class="mini-btn" data-catalog-add="1" data-catalog-kind="'+kind+'" data-id="'+Number(m.id)+'" data-mal-id="'+(Number(m.idMal)||0)+'" data-title="'+esc(title)+'" data-cover="'+esc(cover)+'" data-description="'+esc(desc)+'" data-format="'+esc(m.format||'')+'" data-origin="'+esc(m.countryOfOrigin||'')+'" data-detail="'+detail+'">'+(kind==='ANIME'?(localAnime.some(a=>(Number(m.idMal)>0&&Number(a.malId)===Number(m.idMal))||Number(a.anilistId)===Number(m.id))?'Update Hekomi':'＋ Hekomi'):'＋ Manga shelf')+'</button>'+(kind==='ANIME'&&Number(m.idMal)>0?'<button type="button" class="mini-btn catalog-mal-add" data-catalog-mal-add="1" data-mal-id="'+Number(m.idMal)+'" data-title="'+esc(title)+'">'+(!malConnected?'Connect MAL':malRemote.some(a=>Number(a.node&&a.node.id)===Number(m.idMal))?'Update MAL':'＋ MAL')+'</button>':'')+'</div></div></article>';
+      '<div class="catalog-card-actions"><a class="mini-btn catalog-detail-link" href="'+detail+'"'+transitionAttrs+'>Details ↗</a>'+
+      '<details class="catalog-action-menu" data-catalog-kind="'+kind+'" data-catalog-id="'+Number(m.id)+'" data-catalog-mal-id="'+(Number(m.idMal)||0)+'" data-catalog-title="'+esc(title)+'" data-catalog-cover="'+esc(cover)+'" data-catalog-description="'+esc(desc)+'" data-catalog-format="'+esc(m.format||'')+'" data-catalog-origin="'+esc(m.countryOfOrigin||'')+'" data-catalog-detail="'+esc(detail)+'">'+
+      '<summary aria-label="More actions for '+esc(title)+'" title="Add to your lists">⋮</summary><div class="catalog-action-popover">'+
+      '<button type="button" data-catalog-action="local">'+(kind==='ANIME'?'Add to local':'Add to manga library')+'</button>'+
+      (kind==='ANIME'&&(Number(m.idMal)||0)>0?'<button type="button" data-catalog-action="mal">Add to MAL</button><button type="button" data-catalog-action="both">Add to both</button>':'')+
+      '</div></details></div></div></article>';
   }
   function renderCatalogGrid(container,items,kind){const target=typeof container==='string'?$(container):container;if(!target)return;target.innerHTML=items&&items.length?items.map(m=>catalogCardMarkup(m,kind)).join(''):'<div class="catalog-loading">No matching titles were found. Try another search.</div>';}
 
@@ -2703,27 +2708,68 @@ body[data-page="home"] #animeShowcase::before{
   const setSeasonControls=(season,year)=>{if(seasonNames.includes(season))seasonPicker.value=season;seasonYearPicker.value=String(year||new Date().getFullYear());};
   $('#loadSeasonButton').addEventListener('click',async()=>{const season=seasonPicker.value,year=Number(seasonYearPicker.value),button=$('#loadSeasonButton');button.disabled=true;button.textContent='Loading…';$('#seasonalCatalogGrid').innerHTML=catalogLoadingMarkup(6);try{const data=await api('/api/catalog/season?season='+encodeURIComponent(season)+'&year='+encodeURIComponent(year));renderCatalogGrid('#seasonalCatalogGrid',data.anime||[],'ANIME');$('#seasonalCatalogSubtitle').textContent=season+' '+year+' · '+(data.total||data.anime?.length||0)+' titles';}catch(e){$('#seasonalCatalogGrid').innerHTML='<div class="catalog-loading">Could not load that season: '+esc(e.message||'Please try again.')+'</div>';}finally{button.disabled=false;button.textContent='Explore season';}});
   $('#discoverCatalog').addEventListener('click',event=>{const button=event.target.closest('[data-rail-scroll]');if(!button)return;const target=document.getElementById(button.dataset.railScroll);if(!target)return;const reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;target.scrollBy({left:Number(button.dataset.direction||1)*target.clientWidth*.82,behavior:reduce?'auto':'smooth'});});
-  $('#discoverCatalog').addEventListener('click',event=>{
-    const malButton=event.target.closest('[data-catalog-mal-add]');
-    if(malButton){
-      const id=Number(malButton.dataset.malId),title=malButton.dataset.title||'Anime';
-      if(id>0){const existing=malRemote.find(item=>Number(item.node&&item.node.id)===id);if(existing)editRemote(id);else void quickAddRemote(id,title);}
+  function makeCatalogAnimeEntry(menu){
+    const id=Number(menu.dataset.catalogId)||0;
+    const malId=Number(menu.dataset.catalogMalId)||0;
+    const title=menu.dataset.catalogTitle||'Untitled anime';
+    const cover=menu.dataset.catalogCover||'';
+    const entry={id:'anilist-'+id,title,picture:cover,cover,description:menu.dataset.catalogDescription||'',metadataProvider:'AniList',status:'plan_to_watch',score:0,episodes:0,anilistId:id,malId:malId||null};
+    const media=lastCatalogSearchItems.find(item=>Number(item.id)===id&&item._catalogKind==='ANIME')||null;
+    if(media)applyAniListAnimeMetadata(entry,media);
+    return entry;
+  }
+  function makeCatalogMangaEntry(menu){
+    const origin=menu.dataset.catalogOrigin||'',format=menu.dataset.catalogFormat||'';
+    const type=origin==='KR'?'Manhwa':origin==='CN'?'Manhua':format==='ONE_SHOT'?'One-shot':'Manga';
+    const id=Number(menu.dataset.catalogId)||0;
+    return {
+      title:menu.dataset.catalogTitle||'Untitled manga',
+      url:window.location.origin+(menu.dataset.catalogDetail||'/'),
+      cover:menu.dataset.catalogCover||'',
+      description:menu.dataset.catalogDescription||'',
+      type,source:'https://anilist.co/manga/'+id+'/',chapters:[]
+    };
+  }
+  async function performAnimeListAction(action,entry,malId,title){
+    if(action==='local'){
+      addLocalAnime(entry);
       return;
     }
-    const button=event.target.closest('[data-catalog-add]');if(!button)return;
-    const id=Number(button.dataset.id),malId=Number(button.dataset.malId)||0,title=button.dataset.title||'Untitled',cover=button.dataset.cover||'',description=button.dataset.description||'',kind=button.dataset.catalogKind;
-    const media=lastCatalogSearchItems.find(item=>Number(item.id)===id&&item._catalogKind===kind)||null;
-    if(kind==='ANIME'){
-      const entry={id:'anilist-'+id,title,picture:cover,cover,description,metadataProvider:'AniList',status:'plan_to_watch',score:0,episodes:0,anilistId:id,malId:malId||null};
-      if(media)applyAniListAnimeMetadata(entry,media);
-      const existing=localAnime.find(item=>(malId&&Number(item.malId)===malId)||Number(item.anilistId)===id);
-      if(existing)editLocalAnime(existing.id);else addLocalAnime(entry);
-    }else{
-      const type=button.dataset.origin==='KR'?'Manhwa':button.dataset.origin==='CN'?'Manhua':button.dataset.format==='ONE_SHOT'?'One-shot':'Manga';
-      addMangaEntry({title,url:window.location.origin+button.dataset.detail,cover,description,type,source:'https://anilist.co/manga/'+id+'/',chapters:[]});
+    if(action==='mal'){
+      if(malId>0)await quickAddRemote(malId,title);
+      else notify('This title does not have a linked MAL ID.');
+      return;
+    }
+    if(action==='both'){
+      addLocalAnime(entry);
+      if(!malConnected){
+        notify('Saved locally. Sign in with MAL to add the same title to your account.');
+        showMalTab('about');
+        return;
+      }
+      const existing=malRemote.find(item=>Number(item.node&&item.node.id)===Number(malId));
+      if(existing){
+        notify('Saved locally. This title is already on your MAL list.');
+        return;
+      }
+      if(malId>0)await quickAddRemote(malId,title);
+      else notify('Saved locally. No linked MAL ID was available for the MAL copy.');
+    }
+  }
+  $('#discoverCatalog').addEventListener('click',event=>{
+    const actionButton=event.target.closest('[data-catalog-action]');
+    if(!actionButton)return;
+    const menu=actionButton.closest('[data-catalog-kind]');
+    if(!menu)return;
+    menu.open=false;
+    const action=actionButton.dataset.catalogAction;
+    if(menu.dataset.catalogKind==='ANIME'){
+      const entry=makeCatalogAnimeEntry(menu);
+      void performAnimeListAction(action,entry,Number(menu.dataset.catalogMalId)||0,menu.dataset.catalogTitle||'Anime');
+    }else if(action==='local'){
+      addMangaEntry(makeCatalogMangaEntry(menu));
     }
   });
-
   const themePreferenceKey = 'hekomi_theme_preference_v1';
   const genreSoundPreferenceKey='hekomi_genre_transition_sound_v1';
   let genreTransitionSoundEnabled=(()=>{try{return localStorage.getItem(genreSoundPreferenceKey)==='1';}catch{return false;}})();
@@ -2778,7 +2824,7 @@ body[data-page="home"] #animeShowcase::before{
   if(themeSystemQuery.addEventListener) themeSystemQuery.addEventListener('change',syncDeviceTheme);
   else if(themeSystemQuery.addListener) themeSystemQuery.addListener(syncDeviceTheme);
 
-  let localAnime=read(key.anime), mangaLibrary=read(key.manga), sources=read(key.sources); let malConnected=false, malUsername='', malConfigured=true; let malRemote=[]; let lastInspection=null; let activeMalStatus='all', activeLocalAnimeStatus='all', activeMangaType='all', activeMangaStatus='all'; let activeAnimeListSort='default', activeMangaListSort='default'; let remoteReady=false; let toastTimer;
+  let localAnime=read(key.anime), mangaLibrary=read(key.manga), sources=read(key.sources); let malConnected=false, malUsername='', malConfigured=true; let malRemote=[]; let malSearchResultNodes=new Map(); let lastInspection=null; let activeMalStatus='all', activeLocalAnimeStatus='all', activeMangaType='all', activeMangaStatus='all'; let activeAnimeListSort='default', activeMangaListSort='default'; let remoteReady=false; let toastTimer;
   let profileData=(()=>{try{return {displayName:'Hekomi reader',handle:'reader',bio:'A little corner for the stories that stay with me.',avatarUrl:'',...JSON.parse(localStorage.getItem('hekomi_profile_v1')||'{}')};}catch{return {displayName:'Hekomi reader',handle:'reader',bio:'A little corner for the stories that stay with me.',avatarUrl:''};}})();
   let mangaPreferences=(()=>{try{return {defaultFeed:'trending',defaultProvider:'mangahook',compactCards:false,enabledExtensions:['mangahook','batoto','mangabuddy','mangakakalot','gomanga','mangadex'],...JSON.parse(localStorage.getItem('hekomi_preferences_v1')||'{}')};}catch{return {defaultFeed:'trending',defaultProvider:'mangahook',compactCards:false,enabledExtensions:['mangahook','batoto','mangabuddy','mangakakalot','gomanga','mangadex']};}})();
   if(!Array.isArray(mangaPreferences.enabledExtensions))mangaPreferences.enabledExtensions=['batoto','mangabuddy','mangakakalot','mangahook','gomanga','mangadex'];
@@ -3437,16 +3483,11 @@ function showProfileTab(tab){activeProfileTab=tab;$$('#profileTabs button').forE
           '<div class="resulttext"><h3>'+esc(n.title||'Untitled')+'</h3><p>'+esc(n.media_type||'Anime')+' · '+esc(n.status?humanizeAnimeValue(n.status):'Status unavailable')+' · '+(n.num_episodes||'?')+' episodes · MAL score '+(n.mean||'—')+' · ID '+n.id+'</p>'+
           (date?'<p class="muted small">Aired: '+esc(date)+'</p>':'')+(genres?'<p class="muted small">'+esc(genres)+'</p>':'')+
           '<p>'+esc((n.synopsis||'').slice(0,220))+(String(n.synopsis||'').length>220?'…':'')+'</p>'+
-          '<div class="resultactions"><button class="mini-btn" data-add-mal="'+Number(n.id)+'" data-title="'+esc(n.title||'Untitled')+'">＋ Add to MAL list</button><button class="mini-btn" data-local-add="'+Number(n.id)+'">Save locally</button><button class="mini-btn" data-search-details="'+Number(n.id)+'">Full details</button><a class="mini-btn" href="https://myanimelist.net/anime/'+Number(n.id)+'" target="_blank" rel="noreferrer">MAL ↗</a></div></div></div>';
+          '<div class="resultactions"><button class="mini-btn" data-search-details="'+Number(n.id)+'">Full details</button><a class="mini-btn" href="https://myanimelist.net/anime/'+Number(n.id)+'" target="_blank" rel="noreferrer">MAL ↗</a><details class="hk-search-action-menu"><summary aria-label="Add '+esc(n.title||'anime')+' to your lists">⋮</summary><div class="hk-list-action-popover"><button type="button" data-mal-search-action="mal" data-mal-search-id="'+Number(n.id)+'">Add to MAL</button><button type="button" data-mal-search-action="local" data-mal-search-id="'+Number(n.id)+'">Add to local</button><button type="button" data-mal-search-action="both" data-mal-search-id="'+Number(n.id)+'">Add to both</button></div></details></div></div></div>';
       }).join('')||'<div class="empty"><strong>No matches found</strong>Try another title.</div>';
-      const nodes=new Map(list.map(item=>[Number((item.node||{}).id),item.node||{}]));
-      $$('[data-add-mal]').forEach(button=>button.onclick=()=>quickAddRemote(Number(button.dataset.addMal),button.dataset.title));
-      $$('[data-local-add]').forEach(button=>button.onclick=()=>{
-        const node=nodes.get(Number(button.dataset.localAdd));
-        if(node)addLocalAnime(malAnimeRecord(node));
-      });
+      malSearchResultNodes=new Map(list.map(item=>[Number((item.node||{}).id),item.node||{}]));
       $$('[data-search-details]').forEach(button=>button.onclick=()=>{
-        const node=nodes.get(Number(button.dataset.searchDetails));
+        const node=malSearchResultNodes.get(Number(button.dataset.searchDetails));
         if(node)openSearchAnimeDetails(node);
       });
     }catch(error){$('#malSearchStatus').textContent=error.message;}
@@ -4173,6 +4214,16 @@ function mangaFeedCardMarkup(item,index){
   function renderSources(){const root=$('#sourceList');if(!sources.length){root.innerHTML='<div class="empty"><strong>No saved websites yet</strong>Inspect a permitted website, then save it as a source.</div>';return;}root.innerHTML=sources.map(s=>`<div class="source-card"><div class="source-row"><div class="source-favicon">⌘</div><div style="min-width:0;flex:1"><h3>${esc(s.title||new URL(s.origin).hostname)}</h3><div class="source-url">${esc(s.origin)}</div><div class="small muted" style="margin-top:6px">Saved ${new Date(s.addedAt).toLocaleDateString()}</div></div></div><div class="source-tools"><button class="mini-btn" data-inspect-source="${esc(s.url)}">Inspect again</button><button class="mini-btn" data-remove-source="${esc(s.id)}">Remove</button><a class="mini-btn" target="_blank" rel="noreferrer" href="${esc(s.origin)}">Open ↗</a></div></div>`).join('');$$('[data-inspect-source]').forEach(b=>b.onclick=()=>{showMangaTab('discover');$('#crawlUrl').value=b.dataset.inspectSource;runInspection();});$$('[data-remove-source]').forEach(b=>b.onclick=()=>{sources=sources.filter(s=>s.id!==b.dataset.removeSource);write(key.sources,sources);renderSources();notify('Website removed.');});}
 
   document.addEventListener('click',event=>{
+    const malSearchAction=event.target.closest('[data-mal-search-action]');
+    if(malSearchAction){
+      const node=malSearchResultNodes.get(Number(malSearchAction.dataset.malSearchId));
+      if(!node)return;
+      const action=malSearchAction.dataset.malSearchAction;
+      const entry=malAnimeRecord(node);
+      malSearchAction.closest('details')?.removeAttribute('open');
+      void performAnimeListAction(action,entry,Number(node.id)||0,node.title||'Anime');
+      return;
+    }
     const animeButton=event.target.closest('[data-anime-list-sort]');
     if(animeButton){
       activeAnimeListSort=animeButton.dataset.animeListSort||'default';
