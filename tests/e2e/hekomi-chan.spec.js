@@ -137,3 +137,49 @@ test('Hekomi-chan wardrobe can be dismissed with Escape', async ({ page }) => {
   await page.keyboard.press('Escape');
   await expect(page.locator('.hekomi-wardrobe-backdrop')).toBeHidden();
 });
+
+
+test('Hekomi-chan has distinct front, back and side-facing sprite views', async ({ page }) => {
+  await openHekomiWithAiringFixture(page);
+
+  const views = await page.evaluate(() => {
+    const companion = window.hekomiChan;
+    const result = {};
+    for (const direction of ['south', 'north', 'east']) {
+      companion.setDirection(direction);
+      companion.paint(performance.now(), true);
+      result[direction] = companion.canvas.toDataURL();
+    }
+    companion.setDirection('west');
+    companion.paint(performance.now(), true);
+    result.westTransform = getComputedStyle(companion.canvas).transform;
+    result.westDirection = companion.canvas.dataset.direction;
+    result.vectorDirections = [
+      companion.directionForVector(0, -80),
+      companion.directionForVector(0, 80),
+      companion.directionForVector(-80, 0),
+      companion.directionForVector(80, 0)
+    ];
+    return result;
+  });
+
+  expect(new Set([views.north, views.south, views.east]).size).toBe(3);
+  expect(views.westTransform).toContain('matrix(-1');
+  expect(views.westDirection).toBe('west');
+  expect(views.vectorDirections).toEqual(['north', 'south', 'west', 'east']);
+});
+
+test('Hekomi-chan uses a quiet idle pose and preserves wardrobe through direction changes', async ({ page }) => {
+  await openHekomiWithAiringFixture(page);
+  await page.evaluate(() => {
+    const companion = window.hekomiChan;
+    companion.setOutfit('date');
+    companion.setDirection('north');
+    companion.paint(performance.now(), true);
+  });
+  await expect.poll(() => page.evaluate(() => ({
+    outfit: window.hekomiChan.outfit,
+    direction: window.hekomiChan.direction,
+    stored: localStorage.getItem('hekomi_wardrobe_v1')
+  }))).toEqual({ outfit: 'date', direction: 'north', stored: 'date' });
+});
