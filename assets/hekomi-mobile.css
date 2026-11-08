@@ -27,7 +27,7 @@
     bottom:calc(8px + max(0px,100vh - 100dvh) + env(safe-area-inset-bottom))!important;
     order:initial!important; flex:initial!important; width:auto!important;
     margin:0!important; padding:6px!important; display:grid!important;
-    grid-template-columns:repeat(5,minmax(0,1fr))!important;
+    grid-template-columns:repeat(6,minmax(0,1fr))!important;
     align-items:stretch; gap:3px!important; overflow:visible!important;
     border:1px solid color-mix(in srgb,var(--violet) 24%,var(--line))!important;
     border-radius:18px!important; background:color-mix(in srgb,var(--panel) 96%,#080916)!important;
@@ -587,3 +587,15 @@
 }
 .catalog-action-menu[open]{z-index:140}
 .catalog-action-popover{z-index:150}
+
+
+/* Calendar is a standalone workspace, not a Home-page section. */
+body[data-page="calendar"] #calendarView{display:block!important;max-width:1180px;margin:0 auto}
+body[data-page="calendar"] .calendar-page-head{margin:clamp(22px,4vw,42px) 0 20px}
+body[data-page="calendar"] .calendar-page-head h1{max-width:720px}
+body[data-page="calendar"] #hkCalendar{width:100%;max-width:none;margin:0 0 30px}
+@media(max-width:760px){
+  body[data-page="calendar"] .calendar-page-head{margin:13px 0 13px}
+  body[data-page="calendar"] .calendar-page-head p{font-size:12px;line-height:1.5}
+  body[data-page="calendar"] #hkCalendar{margin-bottom:18px}
+}
