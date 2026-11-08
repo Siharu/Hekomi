@@ -314,10 +314,10 @@
     const leftY=65+lead,rightY=65+trail;
     blocks(ctx,[
       [20,61,25,6,'ink'],
-      [21,leftY,9,Math.max(4,10-lead),'pant0'],
-      [35,rightY,9,Math.max(4,10-trail),'pant0'],
-      [22,68+lead,7,3,'pant1'],[36,68+trail,7,3,'pant1'],
-      [24,66+lead,2,4,'pant2'],[37,66+trail,2,4,'pant2']
+      [21,65-lead,9,10+lead,'pant0'],
+      [35,65-trail,9,10+trail,'pant0'],
+      [22,69-lead,7,3,'pant1'],[36,69-trail,7,3,'pant1'],
+      [24,66-lead,2,4,'pant2'],[37,66-trail,2,4,'pant2']
     ],dy);
   }
   function drawWalkArmsVertical(ctx,step,dy){
@@ -353,7 +353,7 @@
       feet=side[step%4];
     }else if(walking){
       const lead=[0,1,3,1][step%4],trail=[3,1,0,1][step%4];
-      feet=[[19,74+lead,13,4],[34,74+trail,13,4]];
+      feet=[[19,75-lead,13,4],[34,75-trail,13,4]];
     }else{
       feet=[[19,74,13,4],[33,74,13,4]];
     }
@@ -805,6 +805,7 @@
         const dx=this.target.x-this.x,dy=this.target.y-this.y,dist=Math.hypot(dx,dy);
         if(dist<2.2){
           this.x=this.target.x;this.y=this.target.y;this.walkSpeed=0;
+          this.applyPosition();
           if(this.route.length){
             this.target=this.route.shift();
             this.setDirection(this.directionForVector(this.target.x-this.x,this.target.y-this.y));
