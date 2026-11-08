@@ -2293,23 +2293,33 @@ body[data-page="home"] #animeShowcase::before{
 
     <section id="calendarView" class="view hidden" aria-labelledby="calendarPageTitle">
       <div class="workspace-head calendar-page-head">
-        <div><span class="mode-label">HEKOMI · BROADCAST SCHEDULE</span><h1 id="calendarPageTitle">Weekly airing schedule</h1><p>Every episode grouped by weekday, with Japanese broadcast times and watchlist matches.</p></div>
+        <div><span class="mode-label">HEKOMI · BROADCAST SCHEDULE</span><h1 id="calendarPageTitle">Weekly airing schedule</h1><p>Browse episodes by day, check broadcast times, and keep your watchlist close.</p></div>
       </div>
-      <section class="hk-calendar" id="hkCalendar" data-collapsed="false" aria-labelledby="hkCalendarTitle">
+      <section class="hk-calendar hk-timetable" id="hkCalendar" data-collapsed="false" data-images="shown" aria-labelledby="hkCalendarTitle">
         <div class="hk-calendar-heading">
-          <div><span class="eyebrow">HEKOMI / WEEKLY EPISODE SCHEDULE</span><h2 id="hkCalendarTitle">What's airing this week?</h2><p>Anime episodes grouped by weekday · Japan broadcast time (JST)</p></div>
+          <div class="hk-calendar-title-copy"><span class="eyebrow">HEKOMI / WEEKLY EPISODE TIMETABLE</span><h2 id="hkCalendarTitle">What's airing this week?</h2><p>Choose a day to see its episodes in broadcast order · Japan time (JST)</p></div>
           <div class="hk-calendar-toolbar" aria-label="Weekly schedule navigation">
-            <button type="button" id="hkCalToday">This week</button>
             <button type="button" class="hk-cal-arrow" id="hkCalPrev" aria-label="Previous week">‹</button>
             <span id="hkCalWeekLabel">LOADING WEEK</span>
             <button type="button" class="hk-cal-arrow" id="hkCalNext" aria-label="Next week">›</button>
-            <button type="button" id="hkCalCollapse" aria-expanded="true" aria-controls="hkCalendarContent">Collapse</button>
+            <button type="button" class="hk-cal-today" id="hkCalToday">Today</button>
           </div>
         </div>
         <div class="hk-calendar-content" id="hkCalendarContent">
           <div class="hk-week-summary"><span id="hkCalWeekRange">Loading dates…</span><span id="hkCalWeekTotal">LOADING…</span></div>
-          <div class="hk-week-grid" id="hkCalGrid" role="list" aria-label="Anime episodes grouped by weekday"><div class="hk-week-empty">Loading this week's episodes…</div></div>
-          <div class="hk-calendar-foot"><span>Each day shows the anime episodes scheduled for that day.</span><span>Schedule data: <a href="https://cal.syoboi.jp/" target="_blank" rel="noopener noreferrer">Syoboi Calendar ↗</a></span></div>
+          <nav class="hk-calendar-day-nav" id="hkCalDayNav" aria-label="Choose a day of the week">
+            <button type="button" class="hk-calendar-day-tab is-active" aria-pressed="true"><span>MON</span><strong>—</strong><small>Loading</small></button>
+          </nav>
+          <div class="hk-calendar-tools">
+            <div class="hk-calendar-filters" id="hkCalFilters" role="group" aria-label="Filter episodes">
+              <button type="button" data-calendar-filter="all" class="is-active" aria-pressed="true">All episodes</button>
+              <button type="button" data-calendar-filter="watching" aria-pressed="false">Watching</button>
+              <button type="button" data-calendar-filter="upcoming" aria-pressed="false">Upcoming</button>
+            </div>
+            <button type="button" class="hk-calendar-images-toggle" id="hkCalImages" aria-pressed="true">Images: On</button>
+          </div>
+          <div class="hk-week-grid" id="hkCalGrid" aria-live="polite" aria-label="Selected day's anime episodes"><div class="hk-week-empty">Loading this week's episodes…</div></div>
+          <div class="hk-calendar-foot"><span>Times are shown in Japan Standard Time (JST).</span><span>Schedule data: <a href="https://cal.syoboi.jp/" target="_blank" rel="noopener noreferrer">Syoboi Calendar ↗</a></span></div>
         </div>
       </section>
     </section>
