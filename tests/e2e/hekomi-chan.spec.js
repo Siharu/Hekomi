@@ -183,3 +183,25 @@ test('Hekomi-chan uses a quiet idle pose and preserves wardrobe through directio
     stored: localStorage.getItem('hekomi_wardrobe_v1')
   }))).toEqual({ outfit: 'date', direction: 'north', stored: 'date' });
 });
+
+
+test('Hekomi-chan breaks diagonal wandering into cardinal walking segments', async ({ page }) => {
+  await openHekomiWithAiringFixture(page);
+  const route = await page.evaluate(() => {
+    const companion = window.hekomiChan;
+    companion.findPerchTarget = () => null;
+    companion.blocked = () => false;
+    const start = { x: companion.x, y: companion.y };
+    companion.findSpot = () => ({ x: start.x + 100, y: start.y + 100 });
+    companion.moveToNext();
+    return {
+      start,
+      first: companion.target,
+      remainingStops: companion.route.length,
+      direction: companion.direction
+    };
+  });
+  expect(route.remainingStops).toBe(1);
+  expect(route.first.x === route.start.x || route.first.y === route.start.y).toBe(true);
+  expect(['east', 'south']).toContain(route.direction);
+});
