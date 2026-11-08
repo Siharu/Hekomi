@@ -1231,8 +1231,8 @@ async function searchSyoboiAniListTitles(programs) {
     const batch = missing.slice(offset, offset + 12);
     const definitions = batch.map((_, index) => '$term' + index + ':String!').join(',');
     const fields = batch.map((_, index) =>
-      'match' + index + ':Media(search:$term' + index + ',type:ANIME,sort:[SEARCH_MATCH],isAdult:false){' +
-      SYOBOI_ANILIST_SEARCH_FIELDS + '}'
+      'match' + index + ':Page(page:1,perPage:8){media(search:$term' + index + ',type:ANIME,sort:[SEARCH_MATCH],isAdult:false){' +
+      SYOBOI_ANILIST_SEARCH_FIELDS + '}}'
     ).join(' ');
     const variables = Object.fromEntries(batch.map((item, index) => ['term' + index, item.term]));
     try {
@@ -1241,9 +1241,11 @@ async function searchSyoboiAniListTitles(programs) {
         variables
       );
       for (let index = 0; index < batch.length; index++) {
-        const packed = packMedia(payload['match' + index]);
+        const result = payload['match' + index] || {};
+        const packed = (Array.isArray(result.media) ? result.media : [])
+          .map(packMedia).filter(Boolean);
         syoboiAniListTitleSearchCache.set(batch[index].key, {
-          data: packed ? [packed] : [],
+          data: packed,
           expiresAt: Date.now() + 12 * 60 * 60 * 1000
         });
       }
