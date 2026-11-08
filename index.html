@@ -3396,7 +3396,9 @@ function showProfileTab(tab){activeProfileTab=tab;$$('#profileTabs button').forE
       const data=seriesProfileCache.has(key)?seriesProfileCache.get(key):await task;
       if(data){
         for(const field of ['anilistId','malId','authors','artists','characters','staff','relations']){
-          if(data[field]!==undefined)entry[field]=data[field];
+          if(data[field]===undefined)continue;
+          const existing=Array.isArray(entry[field])?entry[field]:[];
+          entry[field]=Array.isArray(data[field])&&data[field].length===0&&existing.length?existing:data[field];
         }
         if(kind==='anime'&&Array.isArray(localAnime)&&localAnime.some(item=>String(item.id)===String(entry.id))){
           const saved=localAnime.find(item=>String(item.id)===String(entry.id));
