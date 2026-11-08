@@ -520,3 +520,56 @@
   body[data-page="home"] #landing > #hkCalendar { order:2!important; }
   body[data-page="home"] #landing > .catalog-discovery { order:3!important; }
 }
+
+
+/* List sorting and compact per-card collection actions. */
+.hk-anime-library-controls,.hk-manga-library-controls{
+  display:flex;justify-content:flex-end;align-items:center;gap:8px;margin:10px 0 8px;
+}
+.hk-list-sort{position:relative;z-index:24;display:inline-flex;flex:0 0 auto}
+.hk-list-sort>summary{
+  display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:35px;
+  padding:0 11px;border:1px solid var(--line);border-radius:10px;
+  background:var(--panel2);color:var(--text);font-size:11px;font-weight:700;
+  cursor:pointer;list-style:none;white-space:nowrap;touch-action:manipulation;
+}
+.hk-list-sort>summary::-webkit-details-marker{display:none}
+.hk-list-sort>summary:before{content:"↕";color:var(--mint);font-size:15px;line-height:1}
+.hk-list-sort[open]>summary{border-color:color-mix(in srgb,var(--violet) 55%,var(--line));background:var(--panel)}
+.hk-list-sort-menu,.catalog-action-popover,.hk-list-action-popover{
+  position:absolute;z-index:80;right:0;top:calc(100% + 6px);display:grid;
+  min-width:220px;max-width:min(280px,calc(100vw - 32px));max-height:min(70vh,390px);
+  overflow:auto;gap:3px;padding:6px;border:1px solid var(--line);
+  border-radius:12px;background:var(--panel);box-shadow:0 14px 36px #0009;
+}
+.hk-list-sort-menu button,.catalog-action-popover button,.hk-list-action-popover button{
+  display:flex;align-items:center;width:100%;min-height:37px;padding:8px 10px;
+  border:0;border-radius:7px;background:transparent;color:var(--text);
+  font-size:11px;font-weight:600;text-align:left;cursor:pointer;
+}
+.hk-list-sort-menu button:hover,.catalog-action-popover button:hover,.hk-list-action-popover button:hover{
+  background:color-mix(in srgb,var(--violet) 12%,var(--panel2));
+}
+.hk-list-sort-menu button[aria-pressed="true"]{background:color-mix(in srgb,var(--mint) 12%,var(--panel2));color:var(--mint)}
+.catalog-action-menu,.hk-search-action-menu{position:relative;display:inline-flex;flex:0 0 auto}
+.catalog-action-menu>summary,.hk-search-action-menu>summary{
+  display:grid;place-items:center;width:34px;height:34px;min-height:34px;
+  border:1px solid var(--line);border-radius:9px;background:var(--panel2);
+  color:var(--text);font-size:21px;line-height:1;list-style:none;cursor:pointer;
+  touch-action:manipulation;
+}
+.catalog-action-menu>summary::-webkit-details-marker,.hk-search-action-menu>summary::-webkit-details-marker{display:none}
+.catalog-action-menu[open]>summary,.hk-search-action-menu[open]>summary{
+  border-color:color-mix(in srgb,var(--violet) 55%,var(--line));background:var(--panel);
+}
+.catalog-action-popover{min-width:160px}
+.hk-list-action-popover{min-width:155px}
+.catalog-action-popover button,.hk-list-action-popover button{min-height:39px}
+.catalog-card-actions{align-items:center}
+@media(max-width:760px){
+  .hk-anime-library-controls,.hk-manga-library-controls{margin:8px 0 7px}
+  .hk-list-sort>summary{min-height:34px;padding:0 9px;font-size:10px}
+  .hk-list-sort-menu{min-width:205px}
+  .catalog-action-menu>summary,.hk-search-action-menu>summary{width:31px;height:32px;min-height:32px}
+  .catalog-action-popover,.hk-list-action-popover{min-width:150px}
+}
