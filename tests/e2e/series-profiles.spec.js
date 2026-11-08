@@ -1,5 +1,13 @@
 import { test, expect } from '@playwright/test';
 
+async function stubPublicCatalog(page) {
+  await page.route(url => url.pathname === '/api/catalog', route => route.fulfill({
+    status: 200,
+    contentType: 'application/json',
+    body: JSON.stringify({ anime: [], manga: [], airing: [], seasonal: [], season: 'FALL', seasonYear: 2026 })
+  }));
+}
+
 async function stubMalAuth(page) {
   await page.route('**/api/mal/auth/status', route => route.fulfill({
     status: 200,
@@ -107,6 +115,7 @@ test('anime detail modal shows characters, Japanese and English voice actors, an
   }, { cover: animeProfile.cover });
 
   await stubMalAuth(page);
+  await stubPublicCatalog(page);
   await page.route(url => url.pathname === '/api/catalog/detail', route =>
     route.fulfill({
       status: 200,
@@ -148,6 +157,7 @@ test('MangaDex-style manga library entry can hydrate AniList authors, artists, a
   });
 
   await stubMalAuth(page);
+  await stubPublicCatalog(page);
   await page.route(url => url.pathname === '/api/catalog/profile-search', route =>
     route.fulfill({
       status: 200,
