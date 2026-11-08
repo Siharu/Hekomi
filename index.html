@@ -3350,6 +3350,7 @@ function showProfileTab(tab){activeProfileTab=tab;$$('#profileTabs button').forE
   function animeSeriesCreditsMarkup(entry,loading=false){
     const characters=Array.isArray(entry.characters)?entry.characters:[];
     const staff=Array.isArray(entry.staff)?entry.staff:[];
+    const related=seriesRelationsMarkup(entry);
     const characterCards=characters.map(character=>{
       const image=character.image
         ?'<img src="'+esc(character.image)+'" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.style.display=\'none\'">'
@@ -3363,10 +3364,10 @@ function showProfileTab(tab){activeProfileTab=tab;$$('#profileTabs button').forE
     }).join('');
     const staffCards=staff.map(person=>seriesCreditPersonCard(person,person.role||'Production staff')).join('');
     if(!characters.length&&!staff.length){
-      return '<div class="hk-series-credits-empty">'+(loading?'Loading characters, voice cast and production staff…':'No character or staff credits are listed for this title yet.')+'</div>';
+      return related||'<div class="hk-series-credits-empty">'+(loading?'Loading characters, voice cast and production staff…':'No character or staff credits are listed for this title yet.')+'</div>';
     }
     return (characters.length?'<section class="hk-series-credit-section"><header><h3>Characters &amp; voice cast</h3><span>'+characters.length+'</span></header><div class="hk-series-character-grid">'+characterCards+'</div></section>':'')+
-      (staff.length?'<section class="hk-series-credit-section"><header><h3>Production staff</h3><span>'+staff.length+'</span></header><div class="hk-series-people-grid">'+staffCards+'</div></section>':'');
+      (staff.length?'<section class="hk-series-credit-section"><header><h3>Production staff</h3><span>'+staff.length+'</span></header><div class="hk-series-people-grid">'+staffCards+'</div></section>':'')+related;
   }
   function mangaSeriesCreditsMarkup(entry,loading=false){
     const normalize=list=>(Array.isArray(list)?list:[]).map(item=>typeof item==='string'?{name:item}:item).filter(item=>item&&item.name);
@@ -3420,6 +3421,10 @@ function showProfileTab(tab){activeProfileTab=tab;$$('#profileTabs button').forE
         if(kind==='anime'&&Array.isArray(localAnime)&&localAnime.some(item=>String(item.id)===String(entry.id))){
           const saved=localAnime.find(item=>String(item.id)===String(entry.id));
           if(saved){Object.assign(saved,{anilistId:entry.anilistId,authors:entry.authors,artists:entry.artists,characters:entry.characters,staff:entry.staff,relations:entry.relations,seriesProfileLoaded:true});write(key.anime,localAnime);}
+        }
+        if(kind==='manga'&&Array.isArray(mangaLibrary)&&mangaLibrary.some(item=>String(item.id)===String(entry.id))){
+          const saved=mangaLibrary.find(item=>String(item.id)===String(entry.id));
+          if(saved){Object.assign(saved,{anilistId:entry.anilistId,malId:entry.malId,authors:entry.authors,artists:entry.artists,characters:entry.characters,staff:entry.staff,relations:entry.relations,seriesProfileLoaded:true});write(key.manga,mangaLibrary);}
         }
       }
       const target=document.getElementById(kind==='anime'?'animeSeriesCredits':'mangaSeriesCredits');
