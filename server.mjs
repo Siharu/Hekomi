@@ -1621,7 +1621,7 @@ body[data-detail-genre="drama"] .detail-art-backdrop{--detail-accent:#b2a1d8}
     '<dl class="detail-info">'+infoRows+'</dl></article></main>',
     '<footer class="detail-credit">Catalog metadata supplied by <a href="https://anilist.co/" target="_blank" rel="noreferrer">AniList</a>. Cover artwork belongs to its respective rights holders. Hekomi is an independent project and is not affiliated with AniList, MyAnimeList, studios, or publishers.</footer></div>',
     '<div class="home-visual hekomi-profile-companion" aria-label="Hekomi-chan, your wandering pixel companion"><div class="home-mascot-bubble"><span>HEKOMI-CHAN / ONLINE</span><strong id="hekomiChanMessage" aria-live="polite">I’m keeping an eye on this series.</strong></div><canvas class="home-mascot" id="hekomiChanCanvas" width="64" height="80" role="img" aria-label="Hekomi-chan, the pixel-art Hekomi mascot.">Hekomi-chan</canvas></div>',
-    '<script defer src="/assets/hekomi-chan.js?v=20261108-four-direction"></script></body></html>'
+    '<script defer src="/assets/hekomi-chan.js?v=20261108-four-way-polish"></script></body></html>'
   ].join('');
 }
 
