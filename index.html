@@ -2744,6 +2744,10 @@ body[data-page="home"] #animeShowcase::before{
       return;
     }
     if(!remoteReady)await loadRemoteList();
+    if(!remoteReady){
+      notify('Could not refresh your MAL list, so no MAL change was made.');
+      return;
+    }
     if(action==='both'){
       if(!malId){
         notify('Saved locally. No linked MAL ID was available for the MAL copy.');
