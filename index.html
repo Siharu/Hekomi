@@ -2918,6 +2918,25 @@ body[data-page="home"] #animeShowcase::before{
       // The data-media CSS state now owns the settled appearance.
     }).catch(()=>{});
   }
+  const animeSortOptions=[
+    ['default','Default order'],
+    ['air-oldest','Oldest by airing date'],
+    ['ptw-oldest','Oldest by added PTW list'],
+    ['completed-recent','Recently completed list'],
+    ['finished-recent','Recently finished airing list'],
+    ['mal-added-recent','Recently added to MAL list'],
+    ['updated-recent','Last updated by you list']
+  ];
+  const mangaSortOptions=[
+    ['default','Default order'],
+    ['air-oldest','Oldest by release date'],
+    ['ptw-oldest','Oldest added to Plan to Read'],
+    ['completed-recent','Recently completed'],
+    ['finished-recent','Recently finished publishing'],
+    ['mal-added-recent','Recently added to library'],
+    ['updated-recent','Last updated by you']
+  ];
+
   function renderPage(page){
     const visualPage=page==='mal'?'anime':page==='manga'?'manga':page;
     document.body.dataset.page=visualPage;
@@ -3310,24 +3329,6 @@ function showProfileTab(tab){activeProfileTab=tab;$$('#profileTabs button').forE
   function renderWeebStats(){const remote=remoteReady&&malRemote.length>0;const items=remote?malRemote.map(x=>({title:x.node&&x.node.title||'',status:String(x.list_status&&x.list_status.status||''),episodes:Number(x.list_status&&x.list_status.num_episodes_watched)||0,total:Number(x.node&&x.node.num_episodes)||0,score:Number(x.list_status&&x.list_status.score)||0,genres:[...(x.node&&Array.isArray(x.node.genres)?x.node.genres:[])]})):localAnime.map(x=>({title:x.title||'',status:String(x.status||''),episodes:Number(x.episodes)||0,total:Number(x.totalEpisodes||x.total_episodes)||0,score:Number(x.score)||0,genres:Array.isArray(x.genres)?x.genres:[]}));const totalEpisodes=items.reduce((n,x)=>n+x.episodes,0),completed=items.filter(x=>x.status==='completed').length,scored=items.filter(x=>x.score>0),mean=scored.length?scored.reduce((n,x)=>n+x.score,0)/scored.length:0,days=totalEpisodes*24/60/24;$('#weebEpisodes').textContent=totalEpisodes.toLocaleString();$('#weebDays').textContent=days<10?days.toFixed(1):Math.round(days).toLocaleString();$('#weebCompleted').textContent=completed.toLocaleString();$('#weebScore').textContent=mean?mean.toFixed(1)+'/10':'—';$('#weebTimeFoot').textContent='About '+Math.round(totalEpisodes*24).toLocaleString()+' minutes of runtime.';$('#weebStatsSubtitle').textContent=remote?'Based on '+items.length.toLocaleString()+' entries from your synced MAL list.':'Based on '+items.length.toLocaleString()+' local entries on this device.';const ratio=(a,b)=>b?Math.max(0,Math.min(1,a/b)):0;const finishedRatio=ratio(completed,items.length),episodeRatio=ratio(totalEpisodes,Math.max(1,items.length*24)),scoreRatio=ratio(mean,10),planRatio=ratio(items.filter(x=>x.status==='plan_to_watch').length,items.length),varietyRatio=ratio(new Set(items.map(x=>x.status)).size,5),completionRatio=ratio(items.filter(x=>x.status==='watching').length,items.length);const vals=[episodeRatio,finishedRatio,scoreRatio,planRatio,varietyRatio,completionRatio];let archetype='The Unclassified Weeb',roast='Sync a list or add a few local titles to reveal your anime energy.';if(items.length){if(totalEpisodes>=5000) {archetype='The Episode Devourer';roast='Time is a construct. The next episode is inevitable.';}else if(planRatio>.55){archetype='The Eternal Queue Keeper';roast='Your plan-to-watch list has its own gravitational field.';}else if(finishedRatio>.65){archetype='The Completionist';roast='You finish what you start. The rarest power of all.';}else if(mean>=8.5&&scored.length>=5){archetype='The Generous Sensei';roast='You hand out 9s like emotional support.';}else if(totalEpisodes<100&&items.length<8){archetype='The Freshly Awakened';roast='The rabbit hole has only just opened.';}else{archetype='The Seasonal Wanderer';roast='New show, new obsession, same sleep schedule casualties.';}}$('#weebType').textContent=archetype;$('#weebRoast').textContent=roast;const labels=['Episodes','Completion','Scores','Backlog','Variety','Currently watching'];const cx=130,cy=118,r=83,point=(v,i)=>{const a=(-Math.PI/2+i*Math.PI/3),rr=r*v;return (cx+Math.cos(a)*rr).toFixed(1)+','+(cy+Math.sin(a)*rr).toFixed(1)};let svg='<svg viewBox="0 0 260 246" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Six-axis anime habit radar chart">';for(let ring=1;ring<=4;ring++)svg+='<polygon points="'+labels.map((_,i)=>point(ring/4,i)).join(' ')+'" fill="none" stroke="#464153" stroke-width="1"/>';labels.forEach((label,i)=>{const a=-Math.PI/2+i*Math.PI/3,x=cx+Math.cos(a)*r,y=cy+Math.sin(a)*r;svg+='<line x1="'+cx+'" y1="'+cy+'" x2="'+x.toFixed(1)+'" y2="'+y.toFixed(1)+'" stroke="#393644"/>';const lx=cx+Math.cos(a)*(r+18),ly=cy+Math.sin(a)*(r+18);svg+='<text x="'+lx.toFixed(1)+'" y="'+ly.toFixed(1)+'" fill="#a9a2bc" font-size="9" text-anchor="middle" dominant-baseline="middle">'+label+'</text>';});svg+='<polygon points="'+vals.map((v,i)=>point(v,i)).join(' ')+'" fill="#9f87ff" fill-opacity=".27" stroke="#b9a7ff" stroke-width="2.5" stroke-linejoin="round">';svg+='</polygon></svg>';$('#weebRadar').innerHTML=svg;const genres={};items.forEach(x=>x.genres.forEach(g=>{const name=typeof g==='string'?g:g&&g.name;if(name)genres[name]=(genres[name]||0)+1;}));const ranked=Object.entries(genres).sort((a,b)=>b[1]-a[1]).slice(0,5);$('#weebGenreBadge').textContent=ranked.length?'Top '+ranked.length+' genres':'No genre data';$('#weebGenreBars').innerHTML=ranked.length?ranked.map(([name,count])=>'<div class="weeb-genre-row"><span>'+esc(name)+'</span><div class="weeb-genre-track"><div class="weeb-genre-fill" style="width:'+Math.round(count/ranked[0][1]*100)+'%"></div></div><strong>'+count+'</strong></div>').join():'<p class="muted small">Your current MAL list does not include genre metadata, so Hekomi won’t guess your favorite genre. Genre breakdown will appear for entries with genre data.</p>';}
   $('#refreshWeebStats').addEventListener('click',renderWeebStats);
 
-  const animeSortOptions=[
-    ['default','Default order'],
-    ['air-oldest','Oldest by airing date'],
-    ['ptw-oldest','Oldest by added PTW list'],
-    ['completed-recent','Recently completed list'],
-    ['finished-recent','Recently finished airing list'],
-    ['mal-added-recent','Recently added to MAL list'],
-    ['updated-recent','Last updated by you list']
-  ];
-  const mangaSortOptions=[
-    ['default','Default order'],
-    ['air-oldest','Oldest by release date'],
-    ['ptw-oldest','Oldest added to Plan to Read'],
-    ['completed-recent','Recently completed'],
-    ['finished-recent','Recently finished publishing'],
-    ['mal-added-recent','Recently added to library'],
-    ['updated-recent','Last updated by you']
-  ];
   function listTimestamp(...values){
     for(const value of values){
       if(value===null||value===undefined||value==='')continue;

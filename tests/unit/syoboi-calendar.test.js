@@ -5,7 +5,8 @@ import {
   enrichSyoboiPrograms,
   extractSyoboiProgramRows,
   normalizeSyoboiPrograms,
-  parseSyoboiDate
+  parseSyoboiDate,
+  syoboiAniListSearchTerms
 } from '../../lib/syoboi-calendar.mjs';
 
 const fixedNow = new Date('2026-11-01T00:00:00.000Z');
@@ -153,6 +154,54 @@ test('does not expose unmatched, Japanese-only, or posterless calendar rows', ()
     }
   ];
   assert.deepEqual(enrichSyoboiPrograms([program], candidates), []);
+});
+
+test('searches anime titles and skips unresolved broadcast placeholders', () => {
+  const terms = syoboiAniListSearchTerms([
+    { title: '葬送のフリーレン', shortTitle: 'Sousou no Frieren' },
+    { title: '葬送のフリーレン', shortTitle: 'Sousou no Frieren' },
+    { title: 'Anime broadcast #123', shortTitle: '' },
+    { title: 'Frieren: Beyond Journey’s End', shortTitle: '' }
+  ]);
+  assert.deepEqual(terms, [
+    '葬送のフリーレン',
+    'Sousou no Frieren',
+    'Frieren: Beyond Journey’s End'
+  ]);
+});
+
+test('matches historical broadcasts by title even when AniList has no next airing episode', () => {
+  const [resolved] = enrichSyoboiPrograms([{
+    id: 'pid-902',
+    tid: 902,
+    title: '葬送のフリーレン',
+    shortTitle: 'Sousou no Frieren',
+    airingAt: '2024-02-02T11:00:00.000Z',
+    date: '2024-02-02',
+    time: '20:00',
+    episode: 18,
+    status: 'aired',
+    listingType: 'TV'
+  }], [{
+    id: 777,
+    idMal: 888,
+    title: 'Frieren: Beyond Journey’s End',
+    titleEnglish: 'Frieren: Beyond Journey’s End',
+    titleRomaji: 'Sousou no Frieren',
+    titleNative: '葬送のフリーレン',
+    cover: 'https://cdn.example.test/frieren-history.webp',
+    siteUrl: 'https://anilist.co/anime/777',
+    status: 'FINISHED',
+    nextAiringEpisode: null
+  }]);
+
+  assert.equal(resolved.title, 'Frieren: Beyond Journey’s End');
+  assert.equal(resolved.titleLanguage, 'en');
+  assert.equal(resolved.anilistId, 777);
+  assert.equal(resolved.malId, 888);
+  assert.equal(resolved.cover, 'https://cdn.example.test/frieren-history.webp');
+  assert.equal(resolved.date, '2024-02-02');
+  assert.equal(resolved.status, 'aired');
 });
 
 test('does not guess when multiple AniList titles share a broadcast slot', () => {

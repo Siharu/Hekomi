@@ -74,7 +74,7 @@ jobs:
           for (const required of ['class HekomiWanderer', "root.id='hekomiCompanion'", 'drawSprite', 'drawWalkLegs', 'drawSleepArms', 'findSpot()', 'sleep(now)', 'dialogueForPage()', 'setInteractable()', 'requestAnimationFrame', 'prefers-reduced-motion']) {
             if (!mascotJs.includes(required)) throw new Error('Hekomi-chan roaming behavior is missing: ' + required);
           }
-          for (const required of ['detail-art-backdrop', 'data-detail-genre', 'detailVisualStyles']) {
+          for (const required of ['fetchSyoboiRssPrograms(start, days)', 'searchSyoboiAniListTitles(programs)', 'getSyoboiAniListFallbackAnime(normalizedPrograms)', 'detail-art-backdrop', 'data-detail-genre', 'detailVisualStyles']) {
             if (!server.includes(required)) throw new Error('Required Hekomi detail-page hook is missing: ' + required);
           }
           const lines = html.split('\n').map(line => line.trimStart());

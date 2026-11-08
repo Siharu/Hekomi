@@ -6,7 +6,7 @@ import dns from 'node:dns/promises';
 import net from 'node:net';
 import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
-import { enrichSyoboiPrograms, extractSyoboiProgramRows, normalizeSyoboiPrograms, syoboiField, syoboiRows } from './lib/syoboi-calendar.mjs';
+import { enrichSyoboiPrograms, extractSyoboiProgramRows, normalizeSyoboiPrograms, syoboiAniListSearchTerms, syoboiField, syoboiRows } from './lib/syoboi-calendar.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PORT = Number(process.env.PORT || 4173);
@@ -1191,7 +1191,9 @@ async function fetchAllAnimeCollection({season=null,seasonYear=null,status=null}
 }
 
 const syoboiAniListFallbackCache = { data: null, expiresAt: 0, pending: null };
-async function getSyoboiAniListFallbackAnime() {
+const syoboiAniListTitleSearchCache = new Map();
+const SYOBOI_ANILIST_SEARCH_FIELDS = 'id idMal type title { romaji english native } coverImage { color extraLarge large medium } nextAiringEpisode { airingAt timeUntilAiring episode } siteUrl startDate { year month day } endDate { year month day } episodes';
+async function getSyoboiAniListCurrentlyReleasingAnime() {
   if (syoboiAniListFallbackCache.data && Date.now() < syoboiAniListFallbackCache.expiresAt) {
     return syoboiAniListFallbackCache.data;
   }
@@ -1208,6 +1210,77 @@ async function getSyoboiAniListFallbackAnime() {
     }
   })();
   return syoboiAniListFallbackCache.pending;
+}
+
+async function searchSyoboiAniListTitles(programs) {
+  const terms = syoboiAniListSearchTerms(programs, 180);
+  const now = Date.now();
+  const missing = [];
+  for (const term of terms) {
+    const key = term.normalize('NFKC').toLocaleLowerCase();
+    if (!key) continue;
+    const cached = syoboiAniListTitleSearchCache.get(key);
+    if (cached && now < cached.expiresAt) continue;
+    missing.push({ key, term });
+  }
+
+  // AniList search supports Japanese, romanized, and English title queries.
+  // Batch aliases into a single GraphQL request instead of making one request
+  // for every channel/episode row in the broadcast feed.
+  for (let offset = 0; offset < missing.length; offset += 12) {
+    const batch = missing.slice(offset, offset + 12);
+    const definitions = batch.map((_, index) => '$term' + index + ':String!').join(',');
+    const fields = batch.map((_, index) =>
+      'match' + index + ':Page(page:1,perPage:8){media(search:$term' + index + ',type:ANIME,sort:[SEARCH_MATCH],isAdult:false){' +
+      SYOBOI_ANILIST_SEARCH_FIELDS + '}}'
+    ).join(' ');
+    const variables = Object.fromEntries(batch.map((item, index) => ['term' + index, item.term]));
+    try {
+      const payload = await requestAniList(
+        'query HekomiSyoboiTitleSearch(' + definitions + '){' + fields + '}',
+        variables
+      );
+      for (let index = 0; index < batch.length; index++) {
+        const result = payload['match' + index] || {};
+        const packed = (Array.isArray(result.media) ? result.media : [])
+          .map(packMedia).filter(Boolean);
+        syoboiAniListTitleSearchCache.set(batch[index].key, {
+          data: packed,
+          expiresAt: Date.now() + 12 * 60 * 60 * 1000
+        });
+      }
+    } catch {
+      // A temporary AniList failure must not poison the title cache for long.
+      for (const item of batch) {
+        syoboiAniListTitleSearchCache.set(item.key, {
+          data: [],
+          expiresAt: Date.now() + 60 * 1000
+        });
+      }
+    }
+  }
+
+  const matches = new Map();
+  for (const term of terms) {
+    const key = term.normalize('NFKC').toLocaleLowerCase();
+    const cached = syoboiAniListTitleSearchCache.get(key);
+    for (const media of cached && Array.isArray(cached.data) ? cached.data : []) {
+      if (media && media.id) matches.set(Number(media.id), media);
+    }
+  }
+  return [...matches.values()];
+}
+
+async function getSyoboiAniListFallbackAnime(programs = []) {
+  const [currentlyReleasing, titleMatches] = await Promise.all([
+    getSyoboiAniListCurrentlyReleasingAnime().catch(() => []),
+    searchSyoboiAniListTitles(programs).catch(() => [])
+  ]);
+  const merged = new Map();
+  for (const media of [...titleMatches, ...currentlyReleasing]) {
+    if (media && media.id && !merged.has(Number(media.id))) merged.set(Number(media.id), media);
+  }
+  return [...merged.values()];
 }
 
 let syoboiLastRequestAt = 0;
@@ -1280,76 +1353,63 @@ async function getSyoboiCalendar(rawStart, rawDays) {
 
   const request = (async () => {
     try {
-      let programRows = [], titleRows = [], primaryError = null;
+      let programRows = [], titleRows = [], primaryError = null, feedRows = [], rss2Succeeded = false;
+      // RSS2 is the date-scoped broadcast feed. The experimental json.php
+      // ProgramByDate endpoint has returned current-week rows for past Start
+      // dates, so it must not be the primary source for historical navigation.
       try {
-        const endpoint = new URL('https://cal.syoboi.jp/json.php');
-        endpoint.searchParams.set('Req', 'ProgramByDate,TitleLarge');
-        endpoint.searchParams.set('Start', start);
-        endpoint.searchParams.set('Days', String(days));
-        const response = await fetchSyoboi(endpoint, {
-          headers: {
-            'Accept': 'application/json',
-            'User-Agent': 'Hekomi/1.0 (+https://hekomi.vercel.app; anime broadcast calendar)'
-          },
-          signal: AbortSignal.timeout(14000)
-        });
-        if (!response.ok) throw new Error('Syoboi Calendar returned HTTP ' + response.status + '.');
-        const payload = await response.json();
-        titleRows = syoboiRows(payload && (payload.Titles || payload.TitleLarge || payload.Title));
-        programRows = extractSyoboiProgramRows(payload && (payload.Programs || payload));
-        if (!programRows.length) throw new Error('Syoboi Calendar returned no programme rows.');
+        feedRows = await fetchSyoboiRssPrograms(start, days);
+        rss2Succeeded = true;
+        programRows = feedRows;
       } catch (error) {
         primaryError = error;
       }
 
-      const titlesByTid = new Map(titleRows.map(item => [
-        String(syoboiField(item, 'TID') ?? item._key ?? ''), item
-      ]));
-      const needsFeedTitles = programRows.some(item => {
-        const tid = String(syoboiField(item, 'TID') ?? '');
-        const metadata = titlesByTid.get(tid) || {};
-        return !(
-          syoboiField(metadata, 'Title') ||
-          syoboiField(metadata, 'ShortTitle') ||
-          syoboiField(item, 'Title') ||
-          syoboiField(item, 'ShortTitle')
-        );
-      });
-
-      let feedRows = [];
-      if (!programRows.length || needsFeedTitles) {
+      // If RSS2 is temporarily unavailable, keep the JSON endpoint as a
+      // carefully date-validated fallback. Never show its current-week rows
+      // when the user has navigated to another week.
+      if (!programRows.length && primaryError) {
         try {
-          feedRows = await fetchSyoboiRssPrograms(start, days);
+          const endpoint = new URL('https://cal.syoboi.jp/json.php');
+          endpoint.searchParams.set('Req', 'ProgramByDate,TitleLarge');
+          endpoint.searchParams.set('Start', start);
+          endpoint.searchParams.set('Days', String(days));
+          const response = await fetchSyoboi(endpoint, {
+            headers: {
+              'Accept': 'application/json',
+              'User-Agent': 'Hekomi/1.0 (+https://hekomi.vercel.app; anime broadcast calendar)'
+            },
+            signal: AbortSignal.timeout(14000)
+          });
+          if (!response.ok) throw new Error('Syoboi Calendar returned HTTP ' + response.status + '.');
+          const payload = await response.json();
+          titleRows = syoboiRows(payload && (payload.Titles || payload.TitleLarge || payload.Title));
+          programRows = extractSyoboiProgramRows(payload && (payload.Programs || payload));
         } catch (error) {
-          // Retain valid JSON programme rows when the secondary feed is down.
-          if (!programRows.length) primaryError = new Error(
+          primaryError = new Error(
             (primaryError && primaryError.message ? primaryError.message + ' ' : '') +
-            'RSS title fallback failed: ' + String(error && error.message || error)
+            'Date-validated Syoboi fallback failed: ' + String(error && error.message || error)
           );
         }
       }
-      if (!programRows.length && feedRows.length) programRows = feedRows;
-      if (!programRows.length) {
-        throw primaryError || new Error('Syoboi did not return any broadcast records.');
-      }
 
       const now = new Date();
-      const normalizedPrograms = normalizeSyoboiPrograms(programRows, titleRows, feedRows, now);
-      if (!normalizedPrograms.length) {
-        const sample = programRows[0] || {};
-        const timeValue = syoboiField(sample, 'StTime') ?? syoboiField(sample, 'StTimeU');
-        throw new Error(
-          'Syoboi returned ' + programRows.length + ' programme records, but none had a usable airing time. ' +
-          'Sample time: ' + String(timeValue ?? 'missing') + '.'
-        );
+      const rangeEnd = new Date(startDate.getTime() + days * 86400000).toISOString().slice(0, 10);
+      const allNormalizedPrograms = normalizeSyoboiPrograms(programRows, titleRows, feedRows, now);
+      const normalizedPrograms = allNormalizedPrograms.filter(item =>
+        item.date >= start && item.date < rangeEnd
+      );
+      if (!normalizedPrograms.length && !feedRows.length && primaryError) {
+        throw primaryError;
       }
 
-      // Keep Syoboi's Japan broadcast times, but only expose rows that AniList
-      // can confidently map to an English/romanized title and a real cover image.
+      // Enrich titles independently of nextAiringEpisode. Title searches also
+      // find finished shows, so historical weeks do not depend on the current
+      // RELEASING-only catalogue.
       let programs = [];
       try {
-        const airingAnime = await getSyoboiAniListFallbackAnime();
-        programs = enrichSyoboiPrograms(normalizedPrograms, airingAnime, 300);
+        const animeMetadata = await getSyoboiAniListFallbackAnime(normalizedPrograms);
+        programs = enrichSyoboiPrograms(normalizedPrograms, animeMetadata, 300);
       } catch {
         // Fail closed instead of rendering Japanese-only, posterless records.
         programs = [];
@@ -1365,7 +1425,7 @@ async function getSyoboiCalendar(rawStart, rawDays) {
         unresolvedTitleCount: unresolvedTitles,
         aniListFallbackCount,
         englishTitleOnly: true,
-        source: 'Syoboi Calendar' + (feedRows.length ? ' + RSS2' : '') + ' + AniList English metadata',
+        source: (rss2Succeeded ? 'Syoboi RSS2 dated schedule' : 'Syoboi JSON date-validated fallback') + ' + AniList title search',
         timezone: 'Asia/Tokyo',
         updatedAt: new Date().toISOString()
       };
