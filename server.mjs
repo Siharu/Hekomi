@@ -1086,13 +1086,14 @@ async function malRequest(req, res, pathname, query) {
 
 const ANILIST_ENDPOINT = 'https://graphql.anilist.co';
 const MEDIA_CATALOG_FIELDS = 'id idMal type title { romaji english native } coverImage { color extraLarge large medium } bannerImage description(asHtml:false) genres averageScore popularity favourites status episodes chapters volumes season seasonYear format countryOfOrigin source duration startDate { year month day } endDate { year month day } studios(isMain:true) { nodes { name } } nextAiringEpisode { airingAt timeUntilAiring episode } trailer { id site thumbnail } siteUrl updatedAt isLicensed isAdult';
+const MEDIA_PROFILE_FIELDS = 'characters(page:1,perPage:18,sort:[ROLE]) { edges { role node { id name { full native } image { large } siteUrl } japaneseVoiceActors: voiceActors(language:JAPANESE,sort:[RELEVANCE]) { id name { full native } image { large } siteUrl language } englishVoiceActors: voiceActors(language:ENGLISH,sort:[RELEVANCE]) { id name { full native } image { large } siteUrl language } } } staff(page:1,perPage:30,sort:[RELEVANCE]) { edges { role node { id name { full native } image { large } siteUrl } } } relations { edges { relationType node { id type title { english romaji native } coverImage { large medium } siteUrl } } }';
 const HOME_CATALOG_QUERY = 'query HekomiHomeCatalog { anime: Page(page:1,perPage:10) { media(type:ANIME,sort:[TRENDING_DESC,POPULARITY_DESC],isAdult:false) { ' + MEDIA_CATALOG_FIELDS + ' } } manga: Page(page:1,perPage:10) { media(type:MANGA,sort:[TRENDING_DESC,POPULARITY_DESC],isAdult:false) { ' + MEDIA_CATALOG_FIELDS + ' } } }';
 function currentAnimeSeason(date=new Date()) { const month=date.getUTCMonth()+1; return month<=3?'WINTER':month<=6?'SPRING':month<=9?'SUMMER':'FALL'; }
 const FULL_ANIME_COLLECTION_QUERY = 'query HekomiFullAnimeCollection($page:Int!,$season:MediaSeason,$seasonYear:Int) { results: Page(page:$page,perPage:50) { pageInfo { currentPage hasNextPage total } media(type:ANIME,season:$season,seasonYear:$seasonYear,status:RELEASING,sort:[POPULARITY_DESC],isAdult:false) { ' + MEDIA_CATALOG_FIELDS + ' } } }';
 const seasonCatalogCache = new Map();
 const CATALOG_SEARCH_QUERY = 'query HekomiCatalogSearch($search:String!,$page:Int!) { anime: Page(page:$page,perPage:24) { pageInfo { currentPage hasNextPage } media(search:$search,type:ANIME,sort:[SEARCH_MATCH],isAdult:false) { ' + MEDIA_CATALOG_FIELDS + ' } } manga: Page(page:$page,perPage:24) { pageInfo { currentPage hasNextPage } media(search:$search,type:MANGA,sort:[SEARCH_MATCH],isAdult:false) { ' + MEDIA_CATALOG_FIELDS + ' } } }';
-const MEDIA_DETAIL_QUERY = 'query HekomiMediaDetail($id:Int!) { Media(id:$id) { ' + MEDIA_CATALOG_FIELDS + ' } }';
-const MEDIA_MAL_DETAIL_QUERY = 'query HekomiMalMediaDetail($idMal:Int!) { Media(idMal:$idMal,type:ANIME) { ' + MEDIA_CATALOG_FIELDS + ' } }';
+const MEDIA_DETAIL_QUERY = 'query HekomiMediaDetail($id:Int!) { Media(id:$id) { ' + MEDIA_CATALOG_FIELDS + ' ' + MEDIA_PROFILE_FIELDS + ' } }';
+const MEDIA_MAL_DETAIL_QUERY = 'query HekomiMalMediaDetail($idMal:Int!) { Media(idMal:$idMal,type:ANIME) { ' + MEDIA_CATALOG_FIELDS + ' ' + MEDIA_PROFILE_FIELDS + ' } }';
 const MEDIA_RECOMMENDATIONS_QUERY = 'query HekomiRecommendations($idMal:Int!) { Media(idMal:$idMal,type:ANIME) { recommendations(page:1,perPage:20,sort:[RATING_DESC]) { nodes { rating mediaRecommendation { ' + MEDIA_CATALOG_FIELDS + ' } } } } }';
 const publicCatalogCache = { data:null, expiresAt:0 };
 const publicCatalogSearchCache = new Map();
@@ -1141,6 +1142,45 @@ function packMedia(item) {
   const title = item.title && (item.title.english || item.title.romaji || item.title.native) || 'Untitled';
   const cover = item.coverImage && (item.coverImage.extraLarge || item.coverImage.large || item.coverImage.medium) || '';
   const studios = item.studios && Array.isArray(item.studios.nodes) ? item.studios.nodes.map(studio=>studio&&studio.name).filter(Boolean) : [];
+  const profilePerson = person => person ? {
+    id:Number(person.id)||null,
+    name:String(person.name && (person.name.full || person.name.native) || '').trim(),
+    nativeName:String(person.name && person.name.native || '').trim(),
+    image:String(person.image && person.image.large || ''),
+    siteUrl:String(person.siteUrl || ''),
+    language:String(person.language || '')
+  } : null;
+  const characters = item.characters && Array.isArray(item.characters.edges)
+    ? item.characters.edges.map(edge => {
+        const japaneseVoiceActors = (Array.isArray(edge.japaneseVoiceActors) ? edge.japaneseVoiceActors : []).map(profilePerson).filter(person=>person&&person.name);
+        const englishVoiceActors = (Array.isArray(edge.englishVoiceActors) ? edge.englishVoiceActors : []).map(profilePerson).filter(person=>person&&person.name);
+        return {
+          ...profilePerson(edge.node),
+          role:String(edge.role || ''),
+          japaneseVoiceActors,
+          englishVoiceActors
+        };
+      }).filter(person=>person&&person.name)
+    : [];
+  const staff = item.staff && Array.isArray(item.staff.edges)
+    ? item.staff.edges.map(edge => ({...profilePerson(edge.node),role:String(edge.role || '')})).filter(person=>person&&person.name)
+    : [];
+  const authors = staff.filter(person=>/author|writer|story|scenario|screenplay|original creator|creator/i.test(person.role));
+  const artists = staff.filter(person=>/artist|illustrat|drawing|art\b|character design/i.test(person.role));
+  const relations = item.relations && Array.isArray(item.relations.edges)
+    ? item.relations.edges.map(edge => {
+        const media=edge.node||{}, title=media.title||{};
+        const coverImage=media.coverImage||{};
+        return {
+          id:Number(media.id)||null,
+          type:String(media.type||''),
+          relationType:String(edge.relationType||''),
+          title:String(title.english||title.romaji||title.native||'').trim(),
+          cover:String(coverImage.large||coverImage.medium||''),
+          siteUrl:String(media.siteUrl||'')
+        };
+      }).filter(item=>item.id&&item.title)
+    : [];
   const nextAiringEpisode = item.nextAiringEpisode ? {
     episode:Number(item.nextAiringEpisode.episode)||null,
     airingAt:Number(item.nextAiringEpisode.airingAt)||null,
@@ -1162,6 +1202,7 @@ function packMedia(item) {
     volumes:item.volumes||null,season:item.season||'',seasonYear:item.seasonYear||(item.startDate&&item.startDate.year)||null,
     format:item.format||'',countryOfOrigin:item.countryOfOrigin||'',source:item.source||'',
     duration:Number(item.duration)||null,studios,nextAiringEpisode,trailer,
+    authors,artists,characters,staff,relations,
     siteUrl:item.siteUrl||'',isLicensed:!!item.isLicensed,isAdult:false,
     startDate:item.startDate||null,endDate:item.endDate||null,updatedAt:Number(item.updatedAt)||null
   };
