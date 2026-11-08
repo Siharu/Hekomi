@@ -54,7 +54,7 @@ async function openCalendar(page) {
   await page.goto('/');
   const response = await responsePromise;
   expect(response.status()).toBe(200);
-  await expect(page.locator('#hkCalMonthTotal')).not.toContainText('UPDATING');
+  await expect(page.locator('#hkCalWeekTotal')).not.toContainText('UPDATING');
 }
 
 test('local AniList-backed watching entry adds its cover to the matching broadcast only', async ({ page }) => {
@@ -81,14 +81,15 @@ test('local AniList-backed watching entry adds its cover to the matching broadca
   );
 
   await openCalendar(page);
-  const events = page.locator('.hk-cal-event');
+  const events = page.locator('.hk-week-event');
   await expect(events).toHaveCount(2);
   const frieren = events.filter({ hasText: watchedTitle });
   const spy = events.filter({ hasText: 'Spy x Family' });
   await expect(frieren).toHaveAttribute('data-watching', 'true');
-  await expect(frieren.locator('.hk-cal-event-cover')).toHaveAttribute('src', localCover);
+  await expect(frieren.locator('.hk-week-event-cover')).toHaveAttribute('src', localCover);
   await expect(spy).not.toHaveAttribute('data-watching', 'true');
-  await expect(spy.locator('.hk-cal-event-cover')).toHaveCount(0);
+  await expect(spy.locator('.hk-week-event-cover')).toHaveCount(0);
+  await expect(page.locator('.hk-week-day-card[data-date="' + todayInTokyo() + '"] .hk-week-event')).toHaveCount(2);
 });
 
 test('signed-in MAL watching entry supplies a poster when no local copy exists', async ({ page }) => {
@@ -117,7 +118,7 @@ test('signed-in MAL watching entry supplies a poster when no local copy exists',
   const frieren = page.locator('.hk-cal-event').filter({ hasText: watchedTitle });
   await expect(frieren).toHaveAttribute('data-watching', 'true');
   await expect(frieren.locator('.hk-cal-event-cover')).toHaveAttribute('src', malCover);
-  await expect(frieren.locator('.hk-cal-event-watch-tag')).toContainText('IN YOUR WATCHLIST');
+  await expect(frieren.locator('.hk-week-watch-tag')).toContainText('IN YOUR WATCHLIST');
 });
 
 test('calendar cards remain within the mobile viewport', async ({ page }) => {
@@ -135,7 +136,7 @@ test('calendar cards remain within the mobile viewport', async ({ page }) => {
 
   await page.goto('/');
   await page.waitForResponse(response => response.url().includes('/api/calendar'));
-  await expect(page.locator('.hk-cal-event-cover')).toBeVisible();
+  await expect(page.locator('.hk-week-event-cover')).toBeVisible();
   const dimensions = await page.evaluate(() => ({
     viewport: document.documentElement.clientWidth,
     content: document.documentElement.scrollWidth
