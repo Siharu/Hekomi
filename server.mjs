@@ -1213,7 +1213,7 @@ async function getSyoboiAniListCurrentlyReleasingAnime() {
 }
 
 async function searchSyoboiAniListTitles(programs) {
-  const terms = syoboiAniListSearchTerms(programs, 96);
+  const terms = syoboiAniListSearchTerms(programs, 180);
   const now = Date.now();
   const missing = [];
   for (const term of terms) {
