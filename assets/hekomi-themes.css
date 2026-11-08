@@ -461,3 +461,139 @@ html[data-theme] .hk-week-event-poster{
 @media(prefers-reduced-motion:reduce){
   html[data-theme] .hk-calendar-day-tab,html[data-theme] .hk-calendar-toolbar button{transition:none!important}
 }
+
+
+/* Hekomi card finish — soft, uneven corners and restrained tinted-glass edges. */
+html[data-theme]{
+  --hk-glass-violet:color-mix(in srgb,var(--violet) 17%,transparent);
+  --hk-glass-mint:color-mix(in srgb,var(--mint) 13%,transparent);
+  --hk-glass-edge:color-mix(in srgb,var(--text) 10%,transparent);
+  --hk-glass-outline:color-mix(in srgb,var(--line) 64%,var(--violet) 36%);
+}
+html[data-theme="archive"]{
+  --hk-glass-violet:color-mix(in srgb,#a45e42 13%,transparent);
+  --hk-glass-mint:color-mix(in srgb,#387869 10%,transparent);
+}
+html[data-theme="afterglow"]{
+  --hk-glass-violet:color-mix(in srgb,#efa8c9 17%,transparent);
+  --hk-glass-mint:color-mix(in srgb,#dfc58d 13%,transparent);
+}
+html[data-theme="verdant"]{
+  --hk-glass-violet:color-mix(in srgb,#c2cb8d 15%,transparent);
+  --hk-glass-mint:color-mix(in srgb,#88d4b5 14%,transparent);
+}
+
+/* Main information cards: two very soft colour catches, not a flat corporate slab. */
+html[data-theme] :is(.panel,.card,.source-card,.resultitem,.catalog-card,.profile-recommend-card,.weeb-stats,.weeb-archetype,.weeb-metric,.profile-mal-card,.profile-notify-card,.genre-sound-setting,.hk-meme-corner,.hk-week-day-card){
+  border-color:var(--hk-glass-outline);
+  box-shadow:
+    inset 0 1px 0 var(--hk-glass-edge),
+    inset 1px 0 0 color-mix(in srgb,var(--hk-glass-edge) 72%,transparent),
+    0 14px 34px color-mix(in srgb,var(--bg) 18%,transparent);
+  backdrop-filter:blur(15px) saturate(122%);
+  -webkit-backdrop-filter:blur(15px) saturate(122%);
+}
+html[data-theme] :is(.panel,.weeb-stats,.hk-meme-corner){
+  border-radius:26px 20px 29px 22px;
+  background-color:color-mix(in srgb,var(--panel) 91%,transparent);
+  background-image:
+    radial-gradient(ellipse at 0 0,var(--hk-glass-violet),transparent 48%),
+    radial-gradient(ellipse at 100% 100%,var(--hk-glass-mint),transparent 45%),
+    linear-gradient(145deg,color-mix(in srgb,var(--panel) 96%,white 4%),var(--panel));
+}
+html[data-theme] :is(.card,.catalog-card,.source-card,.profile-recommend-card){
+  border-radius:19px 15px 22px 16px;
+  background-color:color-mix(in srgb,var(--panel) 92%,transparent);
+  background-image:
+    radial-gradient(ellipse at 0 0,var(--hk-glass-violet),transparent 54%),
+    radial-gradient(ellipse at 100% 100%,var(--hk-glass-mint),transparent 48%),
+    linear-gradient(145deg,color-mix(in srgb,var(--panel) 97%,white 3%),var(--panel));
+}
+html[data-theme] .resultitem{
+  border-radius:16px 12px 18px 13px;
+  background-color:color-mix(in srgb,var(--panel) 88%,transparent);
+  background-image:
+    radial-gradient(ellipse at 0 0,var(--hk-glass-violet),transparent 65%),
+    radial-gradient(ellipse at 100% 100%,var(--hk-glass-mint),transparent 58%),
+    linear-gradient(145deg,var(--panel),color-mix(in srgb,var(--panel) 92%,var(--panel2)));
+}
+html[data-theme] :is(.weeb-archetype,.weeb-metric,.profile-mal-card,.profile-notify-card,.genre-sound-setting){
+  border-radius:17px 13px 19px 15px;
+  background-color:color-mix(in srgb,var(--panel) 89%,transparent);
+  background-image:
+    radial-gradient(ellipse at 0 0,var(--hk-glass-violet),transparent 63%),
+    radial-gradient(ellipse at 100% 100%,var(--hk-glass-mint),transparent 60%),
+    linear-gradient(145deg,var(--panel),color-mix(in srgb,var(--panel) 92%,var(--panel2)));
+}
+
+/* Keep the two portal cards expressive while giving their corners the same glass finish. */
+html[data-theme] .choice{
+  border-radius:28px 20px 30px 22px;
+  background-image:
+    radial-gradient(ellipse at 0 0,var(--hk-glass-violet),transparent 52%),
+    radial-gradient(ellipse at 100% 100%,var(--hk-glass-mint),transparent 48%),
+    var(--hk-choice-surface)!important;
+  border-color:var(--hk-glass-outline);
+  box-shadow:inset 0 1px 0 var(--hk-glass-edge),0 18px 40px color-mix(in srgb,var(--bg) 25%,transparent);
+}
+html[data-theme] .choice.manga{
+  background-image:
+    radial-gradient(ellipse at 0 0,var(--hk-glass-mint),transparent 52%),
+    radial-gradient(ellipse at 100% 100%,var(--hk-glass-violet),transparent 48%),
+    var(--hk-choice-manga-surface)!important;
+}
+
+/* Feature and calendar containers get a softer frame without washing out artwork. */
+html[data-theme] .anime-showcase{
+  border-radius:28px 20px 30px 22px;
+  border-color:var(--hk-glass-outline);
+  box-shadow:inset 0 1px 0 var(--hk-glass-edge),0 22px 58px color-mix(in srgb,var(--bg) 34%,transparent);
+}
+html[data-theme] .seasonal-shelf{
+  border-radius:25px 19px 28px 21px;
+  background-image:
+    radial-gradient(ellipse at 0 0,var(--hk-glass-violet),transparent 55%),
+    radial-gradient(ellipse at 100% 100%,var(--hk-glass-mint),transparent 50%),
+    var(--hk-shelf-surface)!important;
+  box-shadow:inset 0 1px 0 var(--hk-glass-edge),0 16px 38px color-mix(in srgb,var(--bg) 23%,transparent);
+}
+html[data-theme] .hk-calendar{
+  border-radius:24px 18px 27px 20px;
+  box-shadow:inset 0 1px 0 var(--hk-glass-edge),0 18px 42px color-mix(in srgb,var(--bg) 27%,transparent);
+}
+html[data-theme] .hk-calendar:before{
+  background:
+    radial-gradient(ellipse at 0 0,var(--hk-glass-violet),transparent 47%),
+    radial-gradient(ellipse at 100% 100%,var(--hk-glass-mint),transparent 48%);
+}
+html[data-theme] .hk-week-day-card{
+  border-radius:18px 14px 20px 15px;
+  background-image:
+    radial-gradient(ellipse at 0 0,var(--hk-glass-violet),transparent 64%),
+    radial-gradient(ellipse at 100% 100%,var(--hk-glass-mint),transparent 62%),
+    linear-gradient(145deg,color-mix(in srgb,var(--panel) 94%,transparent),color-mix(in srgb,var(--panel2) 83%,transparent));
+  box-shadow:inset 0 1px 0 var(--hk-glass-edge),0 10px 25px color-mix(in srgb,var(--bg) 16%,transparent);
+}
+html[data-theme] .hk-week-event{
+  border-radius:13px 10px 15px 11px;
+}
+html[data-theme] .catalog-card .catalog-cover{
+  border-radius:0;
+}
+html[data-theme] .profile-recommend-card img{
+  border-radius:0;
+}
+html[data-theme] :is(.panel,.card,.source-card,.resultitem,.catalog-card,.profile-recommend-card,.choice,.weeb-stats,.weeb-archetype,.weeb-metric,.hk-week-day-card,.hk-calendar,.hk-meme-corner,.seasonal-shelf,.anime-showcase){
+  transition:border-color 220ms ease,box-shadow 260ms ease,background-color 260ms ease,transform 260ms cubic-bezier(.2,.76,.22,1);
+}
+html[data-theme] :is(.panel,.card,.source-card,.resultitem,.catalog-card,.profile-recommend-card,.choice,.weeb-stats,.hk-calendar,.hk-meme-corner,.seasonal-shelf):hover{
+  border-color:color-mix(in srgb,var(--violet) 38%,var(--line));
+}
+@media(max-width:600px){
+  html[data-theme] :is(.panel,.weeb-stats,.hk-meme-corner){border-radius:22px 17px 24px 18px}
+  html[data-theme] :is(.card,.catalog-card,.source-card,.profile-recommend-card){border-radius:16px 13px 18px 14px}
+  html[data-theme] .choice{border-radius:23px 17px 25px 19px}
+}
+@media(prefers-reduced-motion:reduce){
+  html[data-theme] :is(.panel,.card,.source-card,.resultitem,.catalog-card,.profile-recommend-card,.choice,.weeb-stats,.hk-week-day-card,.hk-calendar,.hk-meme-corner,.seasonal-shelf,.anime-showcase){transition:none!important}
+}
