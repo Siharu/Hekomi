@@ -218,45 +218,198 @@
       else blocks(ctx,[[30,40,5,1,'eye0'],[34,41,2,1,'eye0']]);
     }else blocks(ctx,[[30,40,5,1,'eye0'],[34,41,2,1,'eye0']]);
   }
-  function drawSprite(ctx,frame){
-    ctx.clearRect(0,0,W,H);
-    const dy=frame.bob;
-    drawBackHair(ctx,frame.hair||'long',dy);
-    if(frame.sitting)drawPerchLegs(ctx,frame.step,dy);
-    else if(frame.walking)drawWalkLegs(ctx,frame.step,dy);
-    else blocks(ctx,LEGS,dy);
-    blocks(ctx,TORSO,dy);
-    if(frame.sleeping)drawSleepArms(ctx,dy);
-    else if(frame.walking)drawWalkArms(ctx,frame.step,dy);
-    else if(frame.action==='making-bed')drawMakingBedArm(ctx,frame.wave,dy);
-    else if(frame.action==='eating')drawLeftArm(ctx,dy);
-    else if(frame.sitting)drawPerchArms(ctx,frame.step,dy);
-    else {drawLeftArm(ctx,dy);drawWaveArm(ctx,frame.wave,dy);}
-    blocks(ctx,FACE,dy);
-    blocks(ctx,FRINGE,dy);
-    drawHairAccessories(ctx,frame.hair||'long',dy);
-    blocks(ctx,[
-      [13,45,5,12,'hair0'],[14,54,4,7,'hair1'],[45,46,5,12,'hair0'],
-      [46,54,4,8,'hair1'],[17,58,3,5,'hair0'],[44,60,3,5,'hair1']
-    ],dy);
-    drawEyeMakeup(ctx,frame.makeup||'soft');
-    drawEyes(ctx,frame.expression,frame.blink,frame.gazeX||0,frame.gazeY||0);
-    drawFaceDetails(ctx,frame.expression,frame.chewFrame||0);
-    drawMakeupDetails(ctx,frame.makeup||'soft');
-    drawWardrobeOutfit(ctx,frame.outfit||'lazy',dy);
-    if(frame.action==='eating'){
-      drawEatingArm(ctx,frame.chewFrame||0,dy);
+  function drawRearHead(ctx,style,dy){
+    const longHair=[
+      [16,10,32,9,'ink'],[13,16,38,16,'ink'],[11,27,8,24,'ink'],[45,27,8,24,'ink'],
+      [15,16,34,14,'hair0'],[14,29,8,20,'hair0'],[42,29,8,20,'hair0'],
+      [18,21,28,18,'hair1'],[20,35,6,15,'hair0'],[38,35,6,15,'hair0'],
+      [21,45,6,11,'hair1'],[37,45,6,11,'hair1'],[25,50,14,5,'hair0'],
+      [18,22,3,13,'hair2'],[43,25,3,12,'hair2'],[20,39,2,10,'hair2'],[42,40,2,10,'hair2'],
+      [25,22,4,2,'hair3'],[34,25,5,2,'hair3'],[17,34,2,5,'hair3'],[45,36,2,5,'hair3']
+    ];
+    if(style==='formal-bun'){
       blocks(ctx,[
-        [42,34,5,4,'white'],[41,35,2,3,'skin1'],
-        [43,37,4,1,'mint0'],[44,34,1,1,'skin3']
+        [20,2,25,12,'ink'],[22,1,21,10,'hair0'],[25,3,15,6,'hair1'],
+        [16,10,32,10,'ink'],[16,16,32,17,'hair0'],[18,21,28,17,'hair1'],
+        [15,29,7,18,'hair0'],[42,29,7,18,'hair0'],[19,38,5,9,'hair2'],[40,38,5,9,'hair2'],
+        [27,12,10,2,'formal2']
+      ],dy);
+    }else if(style==='twin-buns'){
+      blocks(ctx,[
+        [7,4,14,12,'ink'],[9,3,11,10,'hair0'],[12,5,6,5,'hair1'],
+        [43,4,14,12,'ink'],[45,3,11,10,'hair0'],[48,5,6,5,'hair1'],
+        [13,15,38,12,'ink'],[14,20,8,28,'hair0'],[42,20,8,28,'hair0'],
+        [18,22,28,19,'hair1'],[17,38,6,13,'hair0'],[41,38,6,13,'hair0'],
+        [20,47,5,7,'hair1'],[39,47,5,7,'hair1'],[21,24,3,8,'hair2'],[40,28,3,8,'hair2']
+      ],dy);
+    }else if(style==='messy-bun'){
+      blocks(ctx,[
+        [18,3,29,11,'ink'],[21,1,23,10,'hair0'],[24,3,15,6,'hair1'],
+        [15,12,34,14,'ink'],[16,18,9,29,'hair0'],[40,18,9,29,'hair0'],
+        [20,20,24,18,'hair1'],[18,36,7,12,'hair0'],[39,36,7,12,'hair0'],
+        [22,44,6,8,'hair1'],[37,44,6,8,'hair1'],[14,13,5,4,'hair2'],[45,13,5,4,'hair2']
+      ],dy);
+    }else{
+      blocks(ctx,longHair,dy);
+      if(style==='school-ponytail')blocks(ctx,[
+        [47,13,9,9,'ink'],[51,20,9,10,'ink'],[54,29,7,15,'ink'],
+        [52,42,7,10,'hair0'],[49,49,6,9,'hair1'],[50,22,4,4,'hair2'],[55,35,3,5,'hair2']
+      ],dy);
+      if(style==='date-half-up')blocks(ctx,[
+        [21,7,23,8,'ink'],[23,5,19,7,'hair0'],[26,7,13,4,'hair1'],
+        [18,13,7,6,'hair0'],[41,13,7,6,'hair0'],[22,15,3,3,'hair3']
       ],dy);
     }
+    if(style==='formal-bun')blocks(ctx,[[39,4,6,2,'makeupGold'],[40,3,2,5,'makeupGold']],dy);
+    if(style==='twin-buns')blocks(ctx,[[10,11,4,2,'swim2'],[49,11,4,2,'swim2']],dy);
+    if(style==='messy-bun')blocks(ctx,[[18,10,5,2,'lazy2'],[43,8,4,2,'lazy3']],dy);
+  }
+
+  function drawSideFace(ctx,frame,dy){
+    blocks(ctx,[
+      [22,18,25,27,'ink'],[25,19,20,24,'skin0'],[28,20,16,22,'skin1'],
+      [31,21,12,19,'skin2'],[42,28,4,7,'skin0'],[44,34,3,3,'skin0'],
+      [45,35,3,2,'skin2'],[27,24,3,13,'skin0']
+    ],dy);
+    // One visible eye and a small nose bridge give her a real profile silhouette.
+    if(frame.blink||frame.expression==='sleepy'){
+      blocks(ctx,[[36,31,7,2,'eye0'],[37,32,5,1,'eye2']],dy);
+    }else if(frame.expression==='happy'){
+      blocks(ctx,[[36,31,2,2,'eye0'],[38,33,4,2,'eye0'],[39,34,2,1,'eye2']],dy);
+    }else{
+      const shadow=frame.makeup==='sun-kissed'?'makeupCoral':frame.makeup==='fresh'?'makeupRose':'makeupShadow';
+      blocks(ctx,[[35,28,8,2,shadow],[36,30,7,2,'eye0'],[37,32,5,4,'white'],[39,32,3,4,'eye2'],[40,32,1,2,'eye3']],dy);
+    }
+    blocks(ctx,[
+      [42,35,3,1,'skin0'],[44,36,2,1,'skin2'],
+      [37,38,6,2,frame.makeup==='soft'?'blush':'makeupRose'],
+      [40,41,5,1,'eye0'],[42,42,3,1,'skin0']
+    ],dy);
+    // A loose front lock hides the far eye instead of showing two eyes on a side view.
+    blocks(ctx,[
+      [17,20,13,25,'hair0'],[19,27,9,16,'hair1'],[20,37,6,9,'hair0'],
+      [21,20,3,8,'hair2'],[22,32,2,7,'hair2']
+    ],dy);
+    blocks(ctx,FRINGE,dy);
+    blocks(ctx,[
+      [13,43,5,12,'hair0'],[14,52,4,8,'hair1'],[45,45,5,12,'hair0'],
+      [46,53,4,7,'hair1'],[17,57,3,5,'hair0'],[44,59,3,5,'hair1']
+    ],dy);
+    drawHairAccessories(ctx,frame.hair||'long',dy);
+  }
+
+  function drawRearOutfit(ctx,outfit,dy){
+    const back={
+      school:'uniform0',formal:'formal0',lazy:'lazy0',swimsuit:'swim0',date:'date1'
+    }[outfit]||'shirt0';
+    blocks(ctx,[
+      [24,48,16,9,'ink'],[25,49,14,7,back],
+      [31,50,2,7,outfit==='formal'?'formal2':outfit==='date'?'date2':'shirt2'],
+      [28,54,8,1,outfit==='formal'?'makeupGold':'shirt3']
+    ],dy);
+  }
+
+  function drawWalkLegsVertical(ctx,step,dy,direction){
+    const lead=[0,1,3,1][step%4],trail=[3,1,0,1][step%4];
+    const back=direction==='north';
+    blocks(ctx,[
+      [20,61,25,6,'ink'],
+      [21,65+lead,9,Math.max(4,10-lead),'pant0'],
+      [35,65+trail,9,Math.max(4,10-trail),'pant0'],
+      [22,68+lead,7,3,'pant1'],[36,68+trail,7,3,'pant1'],
+      [20,74+lead*.35,12,3,'ink'],[35,74+trail*.35,12,3,'ink'],
+      [22,75+lead*.35,8,1,back?'pant2':'shoe1'],
+      [36,75+trail*.35,8,1,back?'pant2':'shoe1']
+    ],dy);
+  }
+
+  function drawWalkArmsVertical(ctx,step,dy){
+    const swing=[-2,0,2,0][step%4];
+    blocks(ctx,[
+      [13,47,9,12,'ink'],[15,48,6,9,'shirt0'],[16,49,4,6,'shirt2'],
+      [14,55+swing,5,8,'skin0'],[13,60+swing,6,4,'skin1'],
+      [41,47,10,12,'ink'],[43,48,6,9,'shirt0'],[43,49,5,6,'shirt2'],
+      [46,55-swing,5,8,'skin0'],[46,60-swing,6,4,'skin1'],
+      [15,62+swing,3,2,'skin2'],[48,62-swing,3,2,'skin2']
+    ],dy);
+  }
+
+  function drawIdleArms(ctx,frame,dy){
+    const sway=[0,-1,0,1][frame%4];
+    blocks(ctx,[
+      [14,48,7,10,'ink'],[15,49,5,8,'shirt0'],[16,50,4,5,'shirt2'],
+      [14,57+sway,5,7,'skin0'],[15,59+sway,5,4,'skin1'],[16,62+sway,3,2,'skin2'],
+      [41,48,9,10,'ink'],[43,49,6,8,'shirt0'],[43,50,5,5,'shirt2'],
+      [46,57-sway,5,7,'skin0'],[46,59-sway,5,4,'skin1'],[47,62-sway,3,2,'skin2']
+    ],dy);
+  }
+
+  function drawShoes(ctx,step,walking,dy){
+    const shift=walking?[0,1,2,1][step%4]:0;
+    blocks(ctx,[
+      [19,75+shift,12,3,'ink'],[34,75+(3-shift),12,3,'ink'],
+      [21,75+shift,8,1,'shoe1'],[36,75+(3-shift),8,1,'shoe1']
+    ],dy);
+  }
+
+  function drawSprite(ctx,frame){
+    ctx.clearRect(0,0,W,H);
+    const dy=Math.round(frame.bob||0);
+    const direction=frame.direction||'south';
+    const side=direction==='east'||direction==='west';
+    const rear=direction==='north';
+    const walking=!!frame.walking;
+    const step=frame.step||0;
+
+    // Hair behind the body, feet first, then the outfit so sleeves and shoes
+    // can be drawn on top. This avoids the old "floating hand under the shirt" look.
+    drawBackHair(ctx,frame.hair||'long',dy);
+    if(frame.sitting)drawPerchLegs(ctx,step,dy);
+    else if(walking&&side)drawWalkLegs(ctx,step,dy);
+    else if(walking)drawWalkLegsVertical(ctx,step,dy,direction);
+    else blocks(ctx,LEGS,dy);
+
+    blocks(ctx,TORSO,dy);
+    drawWardrobeOutfit(ctx,frame.outfit||'lazy',dy);
+    if(rear)drawRearOutfit(ctx,frame.outfit||'lazy',dy);
+
+    if(frame.sleeping)drawSleepArms(ctx,dy);
+    else if(walking&&side)drawWalkArms(ctx,step,dy);
+    else if(walking)drawWalkArmsVertical(ctx,step,dy);
+    else if(frame.action==='making-bed')drawMakingBedArm(ctx,frame.wave,dy);
+    else if(frame.action==='eating')drawLeftArm(ctx,dy);
+    else if(frame.sitting)drawPerchArms(ctx,step,dy);
+    else if(frame.greeting) {drawLeftArm(ctx,dy);drawWaveArm(ctx,frame.wave,dy);}
+    else drawIdleArms(ctx,frame.idleFrame||0,dy);
+
+    if(rear){
+      drawRearHead(ctx,frame.hair||'long',dy);
+    }else if(side){
+      drawSideFace(ctx,frame,dy);
+    }else{
+      blocks(ctx,FACE,dy);
+      blocks(ctx,FRINGE,dy);
+      drawHairAccessories(ctx,frame.hair||'long',dy);
+      blocks(ctx,[
+        [13,45,5,12,'hair0'],[14,54,4,7,'hair1'],[45,46,5,12,'hair0'],
+        [46,54,4,8,'hair1'],[17,58,3,5,'hair0'],[44,60,3,5,'hair1']
+      ],dy);
+      drawEyeMakeup(ctx,frame.makeup||'soft');
+      drawEyes(ctx,frame.expression,frame.blink,frame.gazeX||0,frame.gazeY||0);
+      drawFaceDetails(ctx,frame.expression,frame.chewFrame||0);
+      drawMakeupDetails(ctx,frame.makeup||'soft');
+    }
+
+    if(frame.action==='eating'&&!rear){
+      drawEatingArm(ctx,frame.chewFrame||0,dy);
+      blocks(ctx,[[42,34,5,4,'white'],[41,35,2,3,'skin1'],[43,37,4,1,'mint0'],[44,34,1,1,'skin3']],dy);
+    }
+    if(!frame.sleeping)drawShoes(ctx,step,walking,dy);
     blocks(ctx,[
       [43,22,3,1,'mint1'],[44,21,1,3,'mint1'],[46,22,2,1,'accent'],
       [17,18,2,1,'hair4'],[48,35,1,3,'hair3'],[13,44,1,4,'hair3']
     ],dy);
   }
-
   function drawWalkLegs(ctx,step,dy){
     const poses=[
       [[20,61,25,5,'ink'],[21,65,9,7,'pant0'],[35,65,9,7,'pant0'],[21,70,9,3,'pant1'],[36,70,8,3,'pant1'],[17,74,14,4,'shoe0'],[36,74,13,4,'shoe0'],[20,74,9,2,'shoe1'],[38,74,8,2,'shoe1'],[30,65,4,10,'ink']],
@@ -288,6 +441,7 @@
     constructor(canvas,message,root,bubble){
       this.canvas=canvas;this.ctx=canvas.getContext('2d',{alpha:true});this.message=message;
       this.root=root;this.bubble=bubble;this.state='idle';this.target=null;this.face=1;
+      this.direction='south';this.walkSpeed=0;this.walkPhase=0;
       this.x=12;this.y=12;this.last=0;this.lastSpeech=0;this.speechUntil=0;this.lastObstacleCheck=0;
       this.stateUntil=0;this.walkFrame=0;this.stops=0;this.sleepCount=0;this.hiddenPause=false;
       this.nextBlink=performance.now()+1800+Math.random()*2600;this.blinkUntil=0;this.gazeX=0;this.gazeY=0;this.nextGlance=performance.now()+2200+Math.random()*3800;this.activity='idle';
@@ -429,6 +583,18 @@
       }
       return {x:b.maxX,y:b.maxY};
     }
+    directionForVector(dx,dy){
+      if(Math.abs(dx)>Math.abs(dy)*1.08)return dx<0?'west':'east';
+      return dy<0?'north':'south';
+    }
+    setDirection(direction){
+      if(!['north','south','east','west'].includes(direction))return;
+      this.direction=direction;
+      this.face=direction==='west'?-1:1;
+      this.root.classList.toggle('face-left',direction==='west');
+      this.canvas.style.transform=direction==='west'?'scaleX(-1)':'none';
+    }
+
     moveToNext(){
       const perch=this.findPerchTarget();
       const goPerch=Boolean(perch)&&Math.random()<.38;
@@ -437,8 +603,9 @@
       if(distance<50){if(goPerch){this.nextPose='perch';this.arrive();}else this.arrive();return;}
       this.nextPose=goPerch?'perch':'';
       this.target=next;this.state='walk';this.activity='idle';
+      this.walkSpeed=0;this.walkPhase=0;
+      this.setDirection(this.directionForVector(next.x-this.x,next.y-this.y));
       this.root.classList.remove('is-sleeping','is-making-bed','is-waking-up','is-eating','is-perching');
-      this.canvas.style.transform=this.face<0?'scaleX(-1)':'none';
       this.canvas.style.pointerEvents='none';this.hideSpeech();
     }
     setInteractable(){
@@ -559,7 +726,7 @@
       if(this.scrollTimer){clearTimeout(this.scrollTimer);this.scrollTimer=0;}
       if(this.state==='sleep'){this.say('Huh?! I wasn’t sleeping!',5000,true);this.wake(now);return;}
       const line=this.pick(['Hehe! You noticed me!','Need a little company?','I like it here.','Let’s explore!','I was just stretching.']);
-      this.state='greet';this.activity='noticed';this.gazeX=0;this.gazeY=-1;
+      this.state='greet';this.activity='noticed';this.gazeX=0;this.gazeY=-1;this.setDirection('south');
       this.root.classList.remove('is-making-bed','is-eating','is-perching','is-waking-up');
       this.say(line,6200,true);this.stateUntil=now+3000;
       this.canvas.style.pointerEvents='auto';
@@ -612,13 +779,17 @@
       }
       if(this.state==='walk'&&this.target){
         const dx=this.target.x-this.x,dy=this.target.y-this.y,dist=Math.hypot(dx,dy);
-        if(dist<4)this.arrive();
+        if(dist<2.2){this.x=this.target.x;this.y=this.target.y;this.walkSpeed=0;this.arrive();}
         else{
-          const step=Math.min(dist,62*dt);
+          const nextDirection=this.directionForVector(dx,dy);
+          if(nextDirection!==this.direction)this.setDirection(nextDirection);
+          const brakingSpeed=Math.sqrt(Math.max(0,2*250*dist));
+          const wantedSpeed=Math.min(68,brakingSpeed);
+          this.walkSpeed+=(wantedSpeed-this.walkSpeed)*Math.min(1,dt*8);
+          const step=Math.min(dist,Math.max(5,this.walkSpeed)*dt);
           this.x+=dx/dist*step;this.y+=dy/dist*step;
-          this.walkFrame=(this.walkFrame+1)%4;
-          this.root.classList.toggle('face-left',this.face<0);
-          this.canvas.style.transform=this.face<0?'scaleX(-1)':'none';
+          this.walkPhase+=dt*(this.walkSpeed/64)*2.15;
+          this.walkFrame=Math.floor(this.walkPhase*4)%4;
           this.canvas.style.pointerEvents='none';
           this.applyPosition();
         }
@@ -645,16 +816,16 @@
       this.lastPaint=time;
       const walking=this.state==='walk',sleeping=this.state==='sleep';
       const makingBed=this.state==='make-bed',eating=this.state==='eat',sitting=this.state==='perch';
-      const frame=Math.floor(time/260);
+      const frame=Math.floor(time/120);
+      const gaitStep=walking?Math.floor(this.walkPhase*4)%4:Math.floor(time/300)%4;
       const blink=sleeping||time<this.blinkUntil;
       const expression=sleeping?'sleepy':eating?'eating':this.state==='greet'?'happy':this.state==='wake'?'surprised':this.activity==='curious'?'surprised':this.activity==='annoyed'?'annoyed':'normal';
-      const bob=sleeping?(Math.floor(time/1500)%2):walking?frame%2:(Math.floor(time/1050)%2);
-      const sway=walking?0:Math.round(Math.sin(time/1450)*0.5);
+      const bob=sleeping?Math.round(Math.sin(time/1150)*.6):walking?Math.round(Math.sin(this.walkPhase*Math.PI*2)*.8):Math.round(Math.sin(time/900)*.45);
       drawSprite(this.ctx,{
-        expression,blink,walking,sleeping,sitting,
+        expression,blink,walking,sleeping,sitting,greeting:this.state==='greet',
         action:makingBed?'making-bed':eating?'eating':'',
-        step:frame%6,wave:Math.floor(time/420)%6,chewFrame:Math.floor(time/480)%2,
-        bob:bob+sway,gazeX:this.gazeX,gazeY:this.gazeY,
+        step:gaitStep,wave:Math.floor(time/300)%6,chewFrame:Math.floor(time/480)%2,
+        idleFrame:Math.floor(time/420)%4,bob,gazeX:this.gazeX,gazeY:this.gazeY,direction:this.direction,
         outfit:this.outfit,hair:WARDROBE_PRESETS[this.outfit].hair,makeup:WARDROBE_PRESETS[this.outfit].makeup
       });
     }
