@@ -3333,6 +3333,20 @@ function showProfileTab(tab){activeProfileTab=tab;$$('#profileTabs button').forE
       :'<strong>'+esc(person.name)+'</strong>';
     return '<article class="hk-series-person">'+image+'<div class="hk-series-person-copy">'+name+(subtitle?'<small>'+esc(subtitle)+'</small>':'')+'</div></article>';
   }
+  function seriesRelationsMarkup(entry){
+    const relations=Array.isArray(entry.relations)?entry.relations:[];
+    if(!relations.length)return '';
+    const cards=relations.map(relation=>{
+      const image=relation.cover
+        ?'<img src="'+esc(relation.cover)+'" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.style.display=\'none\'">'
+        :'<span class="hk-series-person-placeholder">↗</span>';
+      const title=relation.siteUrl&&/^https:\/\//i.test(relation.siteUrl)
+        ?'<a href="'+esc(relation.siteUrl)+'" target="_blank" rel="noopener noreferrer">'+esc(relation.title)+'</a>'
+        :'<strong>'+esc(relation.title)+'</strong>';
+      return '<article class="hk-series-person hk-series-related">'+image+'<div class="hk-series-person-copy">'+title+'<small>'+esc(String(relation.relationType||'Related').replace(/_/g,' ').toLowerCase().replace(/\\b\\w/g,ch=>ch.toUpperCase()))+' · '+esc(relation.type||'')+'</small></div></article>';
+    }).join('');
+    return '<section class="hk-series-credit-section"><header><h3>Related series</h3><span>'+relations.length+'</span></header><div class="hk-series-people-grid">'+cards+'</div></section>';
+  }
   function animeSeriesCreditsMarkup(entry,loading=false){
     const characters=Array.isArray(entry.characters)?entry.characters:[];
     const staff=Array.isArray(entry.staff)?entry.staff:[];
@@ -3368,15 +3382,15 @@ function showProfileTab(tab){activeProfileTab=tab;$$('#profileTabs button').forE
     if(artists.length)sections.push('<section class="hk-series-credit-section"><header><h3>Artists &amp; illustration</h3><span>'+artists.length+'</span></header><div class="hk-series-people-grid">'+artistCards+'</div></section>');
     if(characters.length)sections.push('<section class="hk-series-credit-section"><header><h3>Characters</h3><span>'+characters.length+'</span></header><div class="hk-series-people-grid">'+characterCards+'</div></section>');
     if(!sections.length&&staff.length)sections.push('<section class="hk-series-credit-section"><header><h3>Creators &amp; staff</h3><span>'+staff.length+'</span></header><div class="hk-series-people-grid">'+staff.map(person=>seriesCreditPersonCard(person,person.role||'')).join('')+'</div></section>');
-    return sections.length?sections.join(''):'<div class="hk-series-credits-empty">'+(loading?'Finding the AniList series profile and creator credits…':'No author, artist or character credits are available for this title yet.')+'</div>';
+    if(sections.length)sections.push(seriesRelationsMarkup(entry));\n    return sections.filter(Boolean).length?sections.filter(Boolean).join('')+seriesRelationsMarkup(entry):'<div class="hk-series-credits-empty">'+(loading?'Finding the AniList series profile and creator credits…':'No author, artist or character credits are available for this title yet.')+'</div>';
   }
   async function hydrateSeriesCredits(kind,entry){
     const key=seriesProfileKey(kind,entry);
     if(!key)return;
-    if(entry.characters||entry.staff||entry.authors&&entry.authors.length||entry.artists&&entry.artists.length){
+    if(entry.seriesProfileLoaded===true){
       const target=document.getElementById(kind==='anime'?'animeSeriesCredits':'mangaSeriesCredits');
       if(target&&target.dataset.seriesCreditKey===key)target.innerHTML=kind==='anime'?animeSeriesCreditsMarkup(entry):mangaSeriesCreditsMarkup(entry);
-      if((entry.characters&&entry.characters.length)||(entry.staff&&entry.staff.length))return;
+      return;
     }
     let task=seriesProfilePending.get(key);
     if(!task&&!seriesProfileCache.has(key)){
@@ -3400,9 +3414,10 @@ function showProfileTab(tab){activeProfileTab=tab;$$('#profileTabs button').forE
           const existing=Array.isArray(entry[field])?entry[field]:[];
           entry[field]=Array.isArray(data[field])&&data[field].length===0&&existing.length?existing:data[field];
         }
+        entry.seriesProfileLoaded=true;
         if(kind==='anime'&&Array.isArray(localAnime)&&localAnime.some(item=>String(item.id)===String(entry.id))){
           const saved=localAnime.find(item=>String(item.id)===String(entry.id));
-          if(saved){Object.assign(saved,{anilistId:entry.anilistId,authors:entry.authors,artists:entry.artists,characters:entry.characters,staff:entry.staff,relations:entry.relations});write(key.anime,localAnime);}
+          if(saved){Object.assign(saved,{anilistId:entry.anilistId,authors:entry.authors,artists:entry.artists,characters:entry.characters,staff:entry.staff,relations:entry.relations,seriesProfileLoaded:true});write(key.anime,localAnime);}
         }
       }
       const target=document.getElementById(kind==='anime'?'animeSeriesCredits':'mangaSeriesCredits');
