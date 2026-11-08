@@ -1543,7 +1543,6 @@ async function getMediaDetail(id, expectedKind) {
   if (!raw || raw.isAdult || (expectedKind && String(raw.type).toLowerCase() !== expectedKind)) return null;
   const media = packMedia(raw);
   if (media) {
-    await enrichAnimeWithJikanVoiceCast(media);
     mediaDetailCache.set(key,{value:media,expiresAt:Date.now()+60*60*1000});
     if (mediaDetailCache.size > 300) mediaDetailCache.delete(mediaDetailCache.keys().next().value);
   }
