@@ -110,3 +110,30 @@ test('Hekomi-chan can perch on an anime profile cover', async ({ page }) => {
   expect(result.target).not.toBeNull();
   expect(result.perched).toBe(true);
 });
+
+
+test('Hekomi-chan can change outfits with matching hair and makeup presets', async ({ page }) => {
+  await openHekomiWithAiringFixture(page);
+  const wardrobe = page.locator('#hekomiCompanion .hekomi-wardrobe-toggle');
+  await expect(wardrobe).toBeVisible();
+  await wardrobe.click();
+  await expect(page.getByRole('dialog', { name: 'A change of look?' })).toBeVisible();
+  for (const outfit of ['school', 'formal', 'lazy', 'swimsuit', 'date']) {
+    await page.locator('[data-hekomi-outfit="' + outfit + '"]').click();
+    await expect.poll(() => page.evaluate(() => window.hekomiChan.outfit)).toBe(outfit);
+    await expect(page.locator('.hekomi-wardrobe-backdrop')).toBeHidden();
+    if (outfit !== 'date') await wardrobe.click();
+  }
+  await expect.poll(() => page.evaluate(() => localStorage.getItem('hekomi_wardrobe_v1'))).toBe('date');
+  await page.reload();
+  await expect.poll(() => page.evaluate(() => Boolean(window.hekomiChan))).toBe(true);
+  await expect.poll(() => page.evaluate(() => window.hekomiChan.outfit)).toBe('date');
+});
+
+test('Hekomi-chan wardrobe can be dismissed with Escape', async ({ page }) => {
+  await openHekomiWithAiringFixture(page);
+  await page.locator('#hekomiCompanion .hekomi-wardrobe-toggle').click();
+  await expect(page.locator('.hekomi-wardrobe-backdrop')).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(page.locator('.hekomi-wardrobe-backdrop')).toBeHidden();
+});
