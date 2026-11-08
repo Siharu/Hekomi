@@ -581,30 +581,71 @@
   }
 
     function boot(){
-    const canvas=document.getElementById('hekomiChanCanvas');
-    if(!canvas||canvas.dataset.hekomiReady)return;
-    canvas.dataset.hekomiReady='true';
-    const visual=canvas.closest('.home-visual');
-    const bubble=visual&&visual.querySelector('.home-mascot-bubble');
-    const root=document.createElement('div');
-    root.id='hekomiCompanion';root.className='hekomi-companion';
-    root.setAttribute('aria-label','Hekomi-chan, your wandering pixel companion');
-    if(bubble){
-      const recommendation=document.createElement('a');
-      recommendation.className='hekomi-recommend-link';recommendation.hidden=true;
-      recommendation.setAttribute('aria-label','Open Hekomi-chan’s airing recommendation');
-      bubble.appendChild(recommendation);
-      root.appendChild(bubble);bubble.classList.remove('is-visible');
+    if(document.getElementById('hekomiCompanion'))return;
+    // Older layouts supplied this canvas in .home-visual. Create a mount when
+    // that legacy element is absent so Hekomi never disappears with a redesign.
+    let canvas=document.getElementById('hekomiChanCanvas');
+    const visual=canvas&&canvas.closest('.home-visual');
+    let bubble=(visual&&visual.querySelector('.home-mascot-bubble'))||document.querySelector('.home-mascot-bubble');
+    let message=document.getElementById('hekomiChanMessage');
+
+    if(!canvas){
+      canvas=document.createElement('canvas');
+      canvas.id='hekomiChanCanvas';
+      canvas.className='home-mascot';
+      canvas.width=W;
+      canvas.height=H;
+      canvas.textContent='Hekomi-chan';
     }
+    if(canvas.dataset.hekomiReady)return;
+    canvas.dataset.hekomiReady='true';
+
+    if(!bubble){
+      bubble=document.createElement('div');
+      bubble.className='home-mascot-bubble';
+    }
+    if(!bubble.querySelector('span')){
+      const label=document.createElement('span');
+      label.textContent='HEKOMI-CHAN / ONLINE';
+      bubble.appendChild(label);
+    }
+    if(!message){
+      message=document.createElement('strong');
+      message.id='hekomiChanMessage';
+      message.setAttribute('aria-live','polite');
+      message.textContent='I saved you a little company.';
+    }
+    if(!bubble.contains(message))bubble.appendChild(message);
+
+    const root=document.createElement('div');
+    root.id='hekomiCompanion';
+    root.className='hekomi-companion';
+    root.setAttribute('aria-label','Hekomi-chan, your wandering pixel companion');
+    root.appendChild(bubble);
+    bubble.classList.remove('is-visible');
+
     const bed=document.createElement('div');
-    bed.className='hekomi-bed';bed.setAttribute('aria-hidden','true');
+    bed.className='hekomi-bed';
+    bed.setAttribute('aria-hidden','true');
     bed.innerHTML='<span class="hekomi-bed-frame"></span><span class="hekomi-bed-mattress"></span><span class="hekomi-bed-pillow"></span><span class="hekomi-bed-blanket"></span>';
-    const snack=document.createElement('span');snack.className='hekomi-snack';snack.setAttribute('aria-hidden','true');
-    const zzz=document.createElement('span');zzz.className='hekomi-zzz';zzz.textContent='Z z z';zzz.setAttribute('aria-hidden','true');
-    root.appendChild(bed);root.appendChild(snack);root.appendChild(zzz);root.appendChild(canvas);document.body.appendChild(root);
+    const snack=document.createElement('span');
+    snack.className='hekomi-snack';
+    snack.setAttribute('aria-hidden','true');
+    const zzz=document.createElement('span');
+    zzz.className='hekomi-zzz';
+    zzz.textContent='Z z z';
+    zzz.setAttribute('aria-hidden','true');
+
+    root.appendChild(bed);
+    root.appendChild(snack);
+    root.appendChild(zzz);
+    root.appendChild(canvas);
+    document.body.appendChild(root);
     if(visual)visual.remove();
-    const companion=new HekomiWanderer(canvas,document.getElementById('hekomiChanMessage'),root,bubble);
-    window.hekomiChan=companion;window.HekomiChan=HekomiWanderer;
+
+    const companion=new HekomiWanderer(canvas,message,root,bubble);
+    window.hekomiChan=companion;
+    window.HekomiChan=HekomiWanderer;
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
 })();
