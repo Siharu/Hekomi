@@ -148,6 +148,41 @@ test('signed-in MAL watching entry supplies a poster when no local copy exists',
   await expect(frieren.locator('.hk-week-watch-tag')).toContainText('IN YOUR WATCHLIST');
 });
 
+test('calendar follows a Monday-first timetable with selectable days and useful filters', async ({ page }) => {
+  await page.addInitScript(({ cover }) => {
+    localStorage.setItem('folio_local_anime_v1', JSON.stringify([{
+      id: 'anilist-1001', title: 'Sousou no Frieren',
+      titleEnglish: 'Frieren: Beyond Journey’s End', status: 'watching', cover
+    }]));
+  }, { cover: localCover });
+  await mockCalendar(page);
+  await page.route(url => url.pathname === '/api/mal/list', route =>
+    route.fulfill({ status: 401, contentType: 'application/json', body: '{}' })
+  );
+
+  await openCalendar(page);
+  const days = page.locator('#hkCalDayNav [data-calendar-day]');
+  await expect(days).toHaveCount(7);
+  await expect(days.first()).toContainText('Mon');
+  await expect(days.last()).toContainText('Sun');
+  await expect(days.filter({ has: page.locator('strong', { hasText: /./ }) }).first()).toBeVisible();
+  await expect(page.locator('#hkCalGrid .hk-week-event')).toHaveCount(2);
+
+  await page.locator('#hkCalFilters [data-calendar-filter="watching"]').click();
+  await expect(page.locator('#hkCalGrid .hk-week-event')).toHaveCount(1);
+  await expect(page.locator('#hkCalGrid .hk-week-event')).toContainText(watchedTitle);
+
+  await page.locator('#hkCalFilters [data-calendar-filter="all"]').click();
+  await page.locator('#hkCalImages').click();
+  await expect(page.locator('#hkCalendar')).toHaveAttribute('data-images', 'hidden');
+  await expect(page.locator('#hkCalGrid .hk-week-event-poster')).toHaveCount(0);
+
+  const nextDay = days.nth(1);
+  await nextDay.click();
+  await expect(nextDay).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.locator('#hkCalGrid .hk-week-day-card')).toHaveAttribute('data-date', await nextDay.getAttribute('data-calendar-day'));
+});
+
 test('calendar omits Japanese-only and posterless broadcast rows', async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem('folio_local_anime_v1', '[]'));
   await mockCalendar(page);
