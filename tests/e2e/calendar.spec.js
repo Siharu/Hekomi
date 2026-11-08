@@ -150,6 +150,7 @@ test('signed-in MAL watching entry supplies a poster when no local copy exists',
 
 test('calendar omits Japanese-only and posterless broadcast rows', async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem('folio_local_anime_v1', '[]'));
+  await mockCalendar(page);
   await page.route(url => url.pathname === '/api/calendar', route => {
     const fixture = scheduleFixture();
     fixture.rawProgramCount = 3;
@@ -163,7 +164,6 @@ test('calendar omits Japanese-only and posterless broadcast rows', async ({ page
   await page.route(url => url.pathname === '/api/mal/list', route =>
     route.fulfill({ status: 401, contentType: 'application/json', body: '{}' })
   );
-  await mockCalendar(page);
   await openCalendar(page);
   await expect(page.locator('.hk-week-event')).toHaveCount(2);
   await expect(page.locator('.hk-week-event').filter({ hasText: '薬屋のひとりごと' })).toHaveCount(0);
