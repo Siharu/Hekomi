@@ -74,7 +74,7 @@ jobs:
           for (const required of ['class HekomiWanderer', "root.id='hekomiCompanion'", 'drawSprite', 'drawWalkLegs', 'drawSleepArms', 'findSpot()', 'sleep(now)', 'dialogueForPage()', 'setInteractable()', 'requestAnimationFrame', 'prefers-reduced-motion']) {
             if (!mascotJs.includes(required)) throw new Error('Hekomi-chan roaming behavior is missing: ' + required);
           }
-          for (const required of ['detail-art-backdrop', 'data-detail-genre', 'detailVisualStyles']) {
+          for (const required of ['detail-art-backdrop', 'data-detail-genre', 'detailVisualStyles', 'MEDIA_PROFILE_FIELDS', 'MEDIA_PROFILE_SEARCH_QUERY', 'creditsHtml', 'authors,artists,characters,staff,relations', '/api/catalog/profile-search']) {
             if (!server.includes(required)) throw new Error('Required Hekomi detail-page hook is missing: ' + required);
           }
           const lines = html.split('\n').map(line => line.trimStart());
@@ -99,6 +99,8 @@ jobs:
           curl -fsS http://127.0.0.1:4173/api/mal/auth/status | grep -q '"configured":false'
           curl -fsS http://127.0.0.1:4173/ >/tmp/hekomi-home.html
           grep -q 'Hekomi' /tmp/hekomi-home.html
+          curl -fsS 'http://127.0.0.1:4173/api/catalog/profile-search?title=One%20Piece&kind=manga' >/tmp/hekomi-profile-search.json
+          grep -q '"results"' /tmp/hekomi-profile-search.json
           curl -fsS http://127.0.0.1:4173/calendar >/tmp/hekomi-calendar.html
           grep -q 'Weekly airing schedule' /tmp/hekomi-calendar.html
           curl -fsS http://127.0.0.1:4173/assets/hekomi-chan.js >/tmp/hekomi-chan.js
