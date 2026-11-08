@@ -2778,7 +2778,7 @@ body[data-page="home"] #animeShowcase::before{
   if(themeSystemQuery.addEventListener) themeSystemQuery.addEventListener('change',syncDeviceTheme);
   else if(themeSystemQuery.addListener) themeSystemQuery.addListener(syncDeviceTheme);
 
-  let localAnime=read(key.anime), mangaLibrary=read(key.manga), sources=read(key.sources); let malConnected=false, malUsername='', malConfigured=true; let malRemote=[]; let lastInspection=null; let activeMalStatus='all', activeLocalAnimeStatus='all', activeMangaType='all', activeMangaStatus='all'; let remoteReady=false; let toastTimer;
+  let localAnime=read(key.anime), mangaLibrary=read(key.manga), sources=read(key.sources); let malConnected=false, malUsername='', malConfigured=true; let malRemote=[]; let lastInspection=null; let activeMalStatus='all', activeLocalAnimeStatus='all', activeMangaType='all', activeMangaStatus='all'; let activeAnimeListSort='default', activeMangaListSort='default'; let remoteReady=false; let toastTimer;
   let profileData=(()=>{try{return {displayName:'Hekomi reader',handle:'reader',bio:'A little corner for the stories that stay with me.',avatarUrl:'',...JSON.parse(localStorage.getItem('hekomi_profile_v1')||'{}')};}catch{return {displayName:'Hekomi reader',handle:'reader',bio:'A little corner for the stories that stay with me.',avatarUrl:''};}})();
   let mangaPreferences=(()=>{try{return {defaultFeed:'trending',defaultProvider:'mangahook',compactCards:false,enabledExtensions:['mangahook','batoto','mangabuddy','mangakakalot','gomanga','mangadex'],...JSON.parse(localStorage.getItem('hekomi_preferences_v1')||'{}')};}catch{return {defaultFeed:'trending',defaultProvider:'mangahook',compactCards:false,enabledExtensions:['mangahook','batoto','mangabuddy','mangakakalot','gomanga','mangadex']};}})();
   if(!Array.isArray(mangaPreferences.enabledExtensions))mangaPreferences.enabledExtensions=['batoto','mangabuddy','mangakakalot','mangahook','gomanga','mangadex'];
@@ -3235,6 +3235,125 @@ function showProfileTab(tab){activeProfileTab=tab;$$('#profileTabs button').forE
   }
   function renderWeebStats(){const remote=remoteReady&&malRemote.length>0;const items=remote?malRemote.map(x=>({title:x.node&&x.node.title||'',status:String(x.list_status&&x.list_status.status||''),episodes:Number(x.list_status&&x.list_status.num_episodes_watched)||0,total:Number(x.node&&x.node.num_episodes)||0,score:Number(x.list_status&&x.list_status.score)||0,genres:[...(x.node&&Array.isArray(x.node.genres)?x.node.genres:[])]})):localAnime.map(x=>({title:x.title||'',status:String(x.status||''),episodes:Number(x.episodes)||0,total:Number(x.totalEpisodes||x.total_episodes)||0,score:Number(x.score)||0,genres:Array.isArray(x.genres)?x.genres:[]}));const totalEpisodes=items.reduce((n,x)=>n+x.episodes,0),completed=items.filter(x=>x.status==='completed').length,scored=items.filter(x=>x.score>0),mean=scored.length?scored.reduce((n,x)=>n+x.score,0)/scored.length:0,days=totalEpisodes*24/60/24;$('#weebEpisodes').textContent=totalEpisodes.toLocaleString();$('#weebDays').textContent=days<10?days.toFixed(1):Math.round(days).toLocaleString();$('#weebCompleted').textContent=completed.toLocaleString();$('#weebScore').textContent=mean?mean.toFixed(1)+'/10':'—';$('#weebTimeFoot').textContent='About '+Math.round(totalEpisodes*24).toLocaleString()+' minutes of runtime.';$('#weebStatsSubtitle').textContent=remote?'Based on '+items.length.toLocaleString()+' entries from your synced MAL list.':'Based on '+items.length.toLocaleString()+' local entries on this device.';const ratio=(a,b)=>b?Math.max(0,Math.min(1,a/b)):0;const finishedRatio=ratio(completed,items.length),episodeRatio=ratio(totalEpisodes,Math.max(1,items.length*24)),scoreRatio=ratio(mean,10),planRatio=ratio(items.filter(x=>x.status==='plan_to_watch').length,items.length),varietyRatio=ratio(new Set(items.map(x=>x.status)).size,5),completionRatio=ratio(items.filter(x=>x.status==='watching').length,items.length);const vals=[episodeRatio,finishedRatio,scoreRatio,planRatio,varietyRatio,completionRatio];let archetype='The Unclassified Weeb',roast='Sync a list or add a few local titles to reveal your anime energy.';if(items.length){if(totalEpisodes>=5000) {archetype='The Episode Devourer';roast='Time is a construct. The next episode is inevitable.';}else if(planRatio>.55){archetype='The Eternal Queue Keeper';roast='Your plan-to-watch list has its own gravitational field.';}else if(finishedRatio>.65){archetype='The Completionist';roast='You finish what you start. The rarest power of all.';}else if(mean>=8.5&&scored.length>=5){archetype='The Generous Sensei';roast='You hand out 9s like emotional support.';}else if(totalEpisodes<100&&items.length<8){archetype='The Freshly Awakened';roast='The rabbit hole has only just opened.';}else{archetype='The Seasonal Wanderer';roast='New show, new obsession, same sleep schedule casualties.';}}$('#weebType').textContent=archetype;$('#weebRoast').textContent=roast;const labels=['Episodes','Completion','Scores','Backlog','Variety','Currently watching'];const cx=130,cy=118,r=83,point=(v,i)=>{const a=(-Math.PI/2+i*Math.PI/3),rr=r*v;return (cx+Math.cos(a)*rr).toFixed(1)+','+(cy+Math.sin(a)*rr).toFixed(1)};let svg='<svg viewBox="0 0 260 246" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Six-axis anime habit radar chart">';for(let ring=1;ring<=4;ring++)svg+='<polygon points="'+labels.map((_,i)=>point(ring/4,i)).join(' ')+'" fill="none" stroke="#464153" stroke-width="1"/>';labels.forEach((label,i)=>{const a=-Math.PI/2+i*Math.PI/3,x=cx+Math.cos(a)*r,y=cy+Math.sin(a)*r;svg+='<line x1="'+cx+'" y1="'+cy+'" x2="'+x.toFixed(1)+'" y2="'+y.toFixed(1)+'" stroke="#393644"/>';const lx=cx+Math.cos(a)*(r+18),ly=cy+Math.sin(a)*(r+18);svg+='<text x="'+lx.toFixed(1)+'" y="'+ly.toFixed(1)+'" fill="#a9a2bc" font-size="9" text-anchor="middle" dominant-baseline="middle">'+label+'</text>';});svg+='<polygon points="'+vals.map((v,i)=>point(v,i)).join(' ')+'" fill="#9f87ff" fill-opacity=".27" stroke="#b9a7ff" stroke-width="2.5" stroke-linejoin="round">';svg+='</polygon></svg>';$('#weebRadar').innerHTML=svg;const genres={};items.forEach(x=>x.genres.forEach(g=>{const name=typeof g==='string'?g:g&&g.name;if(name)genres[name]=(genres[name]||0)+1;}));const ranked=Object.entries(genres).sort((a,b)=>b[1]-a[1]).slice(0,5);$('#weebGenreBadge').textContent=ranked.length?'Top '+ranked.length+' genres':'No genre data';$('#weebGenreBars').innerHTML=ranked.length?ranked.map(([name,count])=>'<div class="weeb-genre-row"><span>'+esc(name)+'</span><div class="weeb-genre-track"><div class="weeb-genre-fill" style="width:'+Math.round(count/ranked[0][1]*100)+'%"></div></div><strong>'+count+'</strong></div>').join():'<p class="muted small">Your current MAL list does not include genre metadata, so Hekomi won’t guess your favorite genre. Genre breakdown will appear for entries with genre data.</p>';}
   $('#refreshWeebStats').addEventListener('click',renderWeebStats);
+
+  const animeSortOptions=[
+    ['default','Default order'],
+    ['air-oldest','Oldest by airing date'],
+    ['ptw-oldest','Oldest by added PTW list'],
+    ['completed-recent','Recently completed list'],
+    ['finished-recent','Recently finished airing list'],
+    ['mal-added-recent','Recently added to MAL list'],
+    ['updated-recent','Last updated by you list']
+  ];
+  const mangaSortOptions=[
+    ['default','Default order'],
+    ['air-oldest','Oldest by release date'],
+    ['ptw-oldest','Oldest added to Plan to Read'],
+    ['completed-recent','Recently completed'],
+    ['finished-recent','Recently finished publishing'],
+    ['mal-added-recent','Recently added to library'],
+    ['updated-recent','Last updated by you']
+  ];
+  function listTimestamp(...values){
+    for(const value of values){
+      if(value===null||value===undefined||value==='')continue;
+      const time=Date.parse(String(value));
+      if(Number.isFinite(time))return time;
+    }
+    return 0;
+  }
+  function compareListDates(a,b,getDate,direction){
+    const left=getDate(a)||0,right=getDate(b)||0;
+    if(!left&&!right)return 0;
+    if(!left)return 1;
+    if(!right)return -1;
+    return direction*(left-right);
+  }
+  function animeSortControl(){
+    const selected=animeSortOptions.find(option=>option[0]===activeAnimeListSort)||animeSortOptions[0];
+    return '<details class="hk-list-sort"><summary aria-label="Sort anime list">↕ <span>'+esc(selected[1])+'</span></summary><div class="hk-list-sort-menu" role="group" aria-label="Anime list sorting">'+
+      animeSortOptions.map(([value,label])=>'<button type="button" data-anime-list-sort="'+value+'" aria-pressed="'+String(activeAnimeListSort===value)+'">'+esc(label)+'</button>').join('')+
+      '</div></details>';
+  }
+  function mangaSortControl(){
+    const selected=mangaSortOptions.find(option=>option[0]===activeMangaListSort)||mangaSortOptions[0];
+    return '<details class="hk-list-sort"><summary aria-label="Sort manga library">↕ <span>'+esc(selected[1])+'</span></summary><div class="hk-list-sort-menu" role="group" aria-label="Manga library sorting">'+
+      mangaSortOptions.map(([value,label])=>'<button type="button" data-manga-list-sort="'+value+'" aria-pressed="'+String(activeMangaListSort===value)+'">'+esc(label)+'</button>').join('')+
+      '</div></details>';
+  }
+  function sortAnimeRows(rows,source){
+    const isMal=source==='mal';
+    const status=item=>String(isMal?item.list_status&&item.list_status.status:item.status||'plan_to_watch');
+    const node=item=>isMal?item.node||{}:item;
+    const list=item=>isMal?item.list_status||{}:item;
+    let result=rows.slice();
+    const airStart=item=>listTimestamp(node(item).start_date,node(item).startDate,item.startDate,item.airedStart);
+    const airEnd=item=>listTimestamp(node(item).end_date,node(item).endDate,item.endDate,item.airedEnd);
+    const added=item=>isMal
+      ?listTimestamp(list(item).created_at,list(item).updated_at)
+      :listTimestamp(item.addedAt,item.createdAt,item.created_at,item.updatedAt);
+    const updated=item=>isMal
+      ?listTimestamp(list(item).updated_at)
+      :listTimestamp(item.updatedAt,item.lastUpdatedAt,item.updated_at,item.addedAt);
+    switch(activeAnimeListSort){
+      case 'air-oldest':
+        result.sort((a,b)=>compareListDates(a,b,airStart,1));
+        break;
+      case 'ptw-oldest':
+        result=result.filter(item=>status(item)==='plan_to_watch');
+        result.sort((a,b)=>compareListDates(a,b,added,1));
+        break;
+      case 'completed-recent':
+        result=result.filter(item=>status(item)==='completed');
+        result.sort((a,b)=>compareListDates(a,b,item=>isMal
+          ?listTimestamp(list(item).finish_date,list(item).updated_at)
+          :listTimestamp(item.finishDate,item.completedAt,item.updatedAt),-1));
+        break;
+      case 'finished-recent':
+        result=result.filter(item=>airEnd(item)>0||String(node(item).status||item.airingStatus||'').toLowerCase()==='finished_airing');
+        result.sort((a,b)=>compareListDates(a,b,item=>airEnd(item)||updated(item),-1));
+        break;
+      case 'mal-added-recent':
+        result.sort((a,b)=>compareListDates(a,b,added,-1));
+        break;
+      case 'updated-recent':
+        result.sort((a,b)=>compareListDates(a,b,updated,-1));
+        break;
+    }
+    return result;
+  }
+  function sortMangaRows(rows){
+    let result=rows.slice();
+    const start=item=>listTimestamp(item.startDate,item.start_date,item.firstPublished,item.publishedAt,item.addedAt);
+    const end=item=>listTimestamp(item.endDate,item.end_date,item.finishedAt,item.lastUpdate,item.updatedAt);
+    const added=item=>listTimestamp(item.addedAt,item.createdAt,item.updatedAt);
+    const updated=item=>listTimestamp(item.updatedAt,item.lastReadAt,item.lastUpdate,item.addedAt);
+    switch(activeMangaListSort){
+      case 'air-oldest':
+        result.sort((a,b)=>compareListDates(a,b,start,1));
+        break;
+      case 'ptw-oldest':
+        result=result.filter(item=>String(item.status||'plan_to_read')==='plan_to_read');
+        result.sort((a,b)=>compareListDates(a,b,added,1));
+        break;
+      case 'completed-recent':
+        result=result.filter(item=>String(item.status||'plan_to_read')==='completed');
+        result.sort((a,b)=>compareListDates(a,b,updated,-1));
+        break;
+      case 'finished-recent':
+        result=result.filter(item=>end(item)>0||/finished|completed/i.test(String(item.releaseStatus||'')));
+        result.sort((a,b)=>compareListDates(a,b,end,-1));
+        break;
+      case 'mal-added-recent':
+        result.sort((a,b)=>compareListDates(a,b,added,-1));
+        break;
+      case 'updated-recent':
+        result.sort((a,b)=>compareListDates(a,b,updated,-1));
+        break;
+    }
+    return result;
+  }
+
   function animeListCardMarkup(data){
     const title=String(data.title||'Untitled anime'),cover=safeImageUrl(data.cover||'');
     const watched=Math.max(0,Number(data.watched)||0),total=Math.max(0,Number(data.total)||0);
@@ -3257,10 +3376,11 @@ function showProfileTab(tab){activeProfileTab=tab;$$('#profileTabs button').forE
     });
     $$('[data-status-count]').forEach(node=>{node.textContent=String(statusCounts[node.dataset.statusCount]??0);});
     const term=($('#malListSearch').value||'').toLowerCase();
-    const recentRemote=(!term&&activeMalStatus==='all')?malRemote.slice().filter(item=>item.list_status&&item.list_status.updated_at).sort((a,b)=>Date.parse(b.list_status.updated_at)-Date.parse(a.list_status.updated_at)).slice(0,6):[];
+    const recentRemote=(activeAnimeListSort==='default'&&!term&&activeMalStatus==='all')?malRemote.slice().filter(item=>item.list_status&&item.list_status.updated_at).sort((a,b)=>Date.parse(b.list_status.updated_at)-Date.parse(a.list_status.updated_at)).slice(0,6):[];
     let items=malRemote.filter(item=>String(item.node&&item.node.title||'').toLowerCase().includes(term));
     if(activeMalStatus!=='all')items=items.filter(item=>(item.list_status&&item.list_status.status||'')===activeMalStatus);
-    $('#malRemoteList').innerHTML=(recentRemote.length?'<section class="recently-updated"><div class="panel-head"><div><h3>Recently updated</h3><p class="muted small">Your latest MAL list changes.</p></div><span class="pill-label">'+recentRemote.length+' recent</span></div><div class="catalog-grid anime-list-grid">'+recentRemote.map(item=>{const n=item.node||{},s=item.list_status||{},id=Number(n.id)||0;return animeListCardMarkup({title:n.title||'Untitled anime',cover:animeCover(n),status:s.status||'plan_to_watch',score:s.score,watched:s.num_episodes_watched,total:n.num_episodes,malId:id,actions:'<button type="button" class="mini-btn" data-remote-details="'+id+'">Details</button><button type="button" class="mini-btn" data-remote-edit="'+id+'">Edit</button><a class="mini-btn" href="https://myanimelist.net/anime/'+id+'" target="_blank" rel="noopener noreferrer">MAL ↗</a>'});}).join('')+'</div></section>':'')+(items.length?'<div class="catalog-grid anime-list-grid">'+items.map(item=>{
+    items=sortAnimeRows(items,'mal');
+    $('#malRemoteList').innerHTML=animeSortControl()+(recentRemote.length?'<section class="recently-updated"><div class="panel-head"><div><h3>Recently updated</h3><p class="muted small">Your latest MAL list changes.</p></div><span class="pill-label">'+recentRemote.length+' recent</span></div><div class="catalog-grid anime-list-grid">'+recentRemote.map(item=>{const n=item.node||{},s=item.list_status||{},id=Number(n.id)||0;return animeListCardMarkup({title:n.title||'Untitled anime',cover:animeCover(n),status:s.status||'plan_to_watch',score:s.score,watched:s.num_episodes_watched,total:n.num_episodes,malId:id,actions:'<button type="button" class="mini-btn" data-remote-details="'+id+'">Details</button><button type="button" class="mini-btn" data-remote-edit="'+id+'">Edit</button><a class="mini-btn" href="https://myanimelist.net/anime/'+id+'" target="_blank" rel="noopener noreferrer">MAL ↗</a>'});}).join('')+'</div></section>':'')+(items.length?'<div class="catalog-grid anime-list-grid">'+items.map(item=>{
       const n=item.node||{},s=item.list_status||{},id=Number(n.id)||0;
       const release=humanizeAnimeValue(n.status||'');
       const date=[metadataDate(n.start_date),metadataDate(n.end_date)].filter(Boolean).join(' → ');
@@ -3399,14 +3519,14 @@ function showProfileTab(tab){activeProfileTab=tab;$$('#profileTabs button').forE
     if(existing){
       const previous={...existing};
       const keep={id:existing.id,title:existing.title||title,status:existing.status||'plan_to_watch',score:Number(existing.score||0),episodes:Number(existing.episodes||0)};
-      Object.assign(existing,a,keep,{updatedAt:new Date().toISOString()});
+      Object.assign(existing,a,keep,{addedAt:existing.addedAt||existing.createdAt||new Date().toISOString(),updatedAt:new Date().toISOString()});
       
       if(!write(key.anime,localAnime)){Object.assign(existing,previous);notify('Could not save this entry. Check your browser storage settings.');renderLocalAnime();return;}
       renderLocalAnime();notify('Anime already saved — refreshed its details.');
       void hydrateLocalAnimeEntry(existing.id);
       return;
     }
-    const entry={...a,title,id:a.id||'local-'+Date.now(),status:a.status||'plan_to_watch',score:Number(a.score||0),episodes:Number(a.episodes||0),updatedAt:new Date().toISOString()};
+    const now=new Date().toISOString();const entry={...a,title,id:a.id||'local-'+Date.now(),status:a.status||'plan_to_watch',score:Number(a.score||0),episodes:Number(a.episodes||0),addedAt:a.addedAt||now,updatedAt:now};
     localAnime.unshift(entry);
     if(!write(key.anime,localAnime)){localAnime.shift();renderLocalAnime();notify('Could not save this anime. Your browser may be blocking site storage.');return;}
     renderLocalAnime();notify('Added to your local anime list.');
@@ -3517,7 +3637,7 @@ function showProfileTab(tab){activeProfileTab=tab;$$('#profileTabs button').forE
         record.episodes=Number(st.num_episodes_watched)||0;
         record.score=Number(st.score)||0;
         record.totalEpisodes=Number(n.num_episodes)||record.totalEpisodes||null;
-        record.updatedAt=st.updated_at||n.updated_at||'';
+        record.updatedAt=st.updated_at||n.updated_at||'';record.addedAt=record.addedAt||st.updated_at||new Date().toISOString();record.finishDate=st.finish_date||record.finishDate||'';
         const existing=localAnime.find(x=>(record.malId&&Number(x.malId)===record.malId)||String(x.title||'').trim().toLowerCase()===record.title.trim().toLowerCase());
         if(existing){Object.assign(existing,{...record,id:existing.id||record.id});updated++;}
         else{localAnime.push(record);added++;}
@@ -3539,8 +3659,9 @@ function showProfileTab(tab){activeProfileTab=tab;$$('#profileTabs button').forE
     const counts={all:localAnime.length,watching:0,completed:0,on_hold:0,dropped:0,plan_to_watch:0};
     localAnime.forEach(item=>{const status=String(item.status||'plan_to_watch');if(Object.prototype.hasOwnProperty.call(counts,status))counts[status]++;});
     const term=String($('#malListSearch')?.value||'').trim().toLowerCase();
-    const items=localAnime.filter(item=>(activeLocalAnimeStatus==='all'||String(item.status||'plan_to_watch')===activeLocalAnimeStatus)&&(!term||String(item.title||'').toLowerCase().includes(term)));
-    const filters='<nav class="local-anime-filters" aria-label="Filter local anime">'+[['all','All'],['watching','Watching'],['completed','Finished'],['on_hold','On hold'],['dropped','Dropped'],['plan_to_watch','Plan to watch']].map(([key,label])=>'<button type="button" data-local-status="'+key+'" class="'+(activeLocalAnimeStatus===key?'active':'')+'">'+label+' <span>'+counts[key]+'</span></button>').join('')+'</nav>';
+    let items=localAnime.filter(item=>(activeLocalAnimeStatus==='all'||String(item.status||'plan_to_watch')===activeLocalAnimeStatus)&&(!term||String(item.title||'').toLowerCase().includes(term)));
+    items=sortAnimeRows(items,'local');
+    const filters='<div class="hk-anime-library-controls">'+animeSortControl()+'</div><nav class="local-anime-filters" aria-label="Filter local anime">'+[['all','All'],['watching','Watching'],['completed','Finished'],['on_hold','On hold'],['dropped','Dropped'],['plan_to_watch','Plan to watch']].map(([key,label])=>'<button type="button" data-local-status="'+key+'" class="'+(activeLocalAnimeStatus===key?'active':'')+'">'+label+' <span>'+counts[key]+'</span></button>').join('')+'</nav>';
     const grid=items.length?'<div class="catalog-grid anime-list-grid">'+items.map(localAnimeMarkup).join('')+'</div>':'<div class="empty"><strong>'+(localAnime.length?'No local titles in this section':'Your local anime list is empty')+'</strong>'+(localAnime.length?'Try another status or search term.':'Add titles manually or save results from MAL search.')+'</div>';
     const recent=localAnime.slice().sort((a,b)=>Date.parse(b.updatedAt||b.lastUpdatedAt||'')-Date.parse(a.updatedAt||a.lastUpdatedAt||'')).filter(a=>Number.isFinite(Date.parse(a.updatedAt||a.lastUpdatedAt||''))).slice(0,6);
     const recentHtml='<section class="recently-updated"><div class="panel-head"><div><h3>Recently updated</h3><p class="muted small">The anime you added or changed most recently.</p></div><span class="pill-label">'+recent.length+' recent</span></div>'+(recent.length?'<div class="catalog-grid anime-list-grid">'+recent.map(a=>localAnimeMarkup(a)).join('')+'</div>':'<p class="muted small">Your latest additions and progress updates will appear here.</p>')+'</section>';
@@ -4039,7 +4160,7 @@ function mangaFeedCardMarkup(item,index){
     const clean={
       id,title:a.title||'Untitled manga',url:a.url||'',cover:a.cover||'',description:a.description||'',
       type:a.type||'Manga',source:a.source||'',chapters:Array.isArray(a.chapters)?a.chapters:[],
-      addedAt:new Date().toISOString(),lastRead:0,status:'plan_to_read',
+      addedAt:new Date().toISOString(),updatedAt:new Date().toISOString(),lastRead:0,status:'plan_to_read',
       adapterProvider:a.adapterProvider||'',adapterProviderLabel:a.adapterProviderLabel||'',
       providerId:a.providerId||'',sourceKind:a.sourceKind||'',
       authors:Array.isArray(a.authors)?a.authors:[],artists:Array.isArray(a.artists)?a.artists:[],
@@ -4050,6 +4171,30 @@ function mangaFeedCardMarkup(item,index){
   }
   function saveSource(url,title,cover){const origin=new URL(url).origin;if(sources.some(s=>s.origin===origin)){notify('That website is already saved.');return;}sources.unshift({id:'source-'+Date.now(),origin,url,title:title||new URL(url).hostname,cover:cover||'',addedAt:new Date().toISOString(),lastChecked:new Date().toISOString()});write(key.sources,sources);renderSources();notify('Website saved.');}
   function renderSources(){const root=$('#sourceList');if(!sources.length){root.innerHTML='<div class="empty"><strong>No saved websites yet</strong>Inspect a permitted website, then save it as a source.</div>';return;}root.innerHTML=sources.map(s=>`<div class="source-card"><div class="source-row"><div class="source-favicon">⌘</div><div style="min-width:0;flex:1"><h3>${esc(s.title||new URL(s.origin).hostname)}</h3><div class="source-url">${esc(s.origin)}</div><div class="small muted" style="margin-top:6px">Saved ${new Date(s.addedAt).toLocaleDateString()}</div></div></div><div class="source-tools"><button class="mini-btn" data-inspect-source="${esc(s.url)}">Inspect again</button><button class="mini-btn" data-remove-source="${esc(s.id)}">Remove</button><a class="mini-btn" target="_blank" rel="noreferrer" href="${esc(s.origin)}">Open ↗</a></div></div>`).join('');$$('[data-inspect-source]').forEach(b=>b.onclick=()=>{showMangaTab('discover');$('#crawlUrl').value=b.dataset.inspectSource;runInspection();});$$('[data-remove-source]').forEach(b=>b.onclick=()=>{sources=sources.filter(s=>s.id!==b.dataset.removeSource);write(key.sources,sources);renderSources();notify('Website removed.');});}
+
+  document.addEventListener('click',event=>{
+    const animeButton=event.target.closest('[data-anime-list-sort]');
+    if(animeButton){
+      activeAnimeListSort=animeButton.dataset.animeListSort||'default';
+      if(activeAnimeListSort==='ptw-oldest'){activeMalStatus='plan_to_watch';activeLocalAnimeStatus='plan_to_watch';}
+      else if(activeAnimeListSort==='completed-recent'){activeMalStatus='completed';activeLocalAnimeStatus='completed';}
+      else{activeMalStatus='all';activeLocalAnimeStatus='all';}
+      document.querySelectorAll('#malStatusFilters [data-status]').forEach(button=>button.classList.toggle('active',button.dataset.status===activeMalStatus));
+      renderRemoteList();
+      renderLocalAnime();
+      return;
+    }
+    const mangaButton=event.target.closest('[data-manga-list-sort]');
+    if(mangaButton){
+      activeMangaListSort=mangaButton.dataset.mangaListSort||'default';
+      if(activeMangaListSort==='ptw-oldest')activeMangaStatus='plan_to_read';
+      else if(activeMangaListSort==='completed-recent')activeMangaStatus='completed';
+      else activeMangaStatus='all';
+      renderMangaLibrary();
+      return;
+    }
+  });
+
   $('#mangaTypeFilters').addEventListener('click',e=>{const b=e.target.closest('[data-type]');if(!b)return;activeMangaType=b.dataset.type;$$('#mangaTypeFilters button').forEach(x=>x.classList.toggle('active',x===b));renderMangaLibrary();});$('#mangaSearchInput').addEventListener('input',renderMangaLibrary);
   function renderMangaLibrary(){
     const term=String($('#mangaSearchInput').value||'').toLowerCase();
@@ -4058,7 +4203,8 @@ function mangaFeedCardMarkup(item,index){
     let rows=mangaLibrary.filter(m=>(String(m.title||'')+' '+String(m.description||'')+' '+String(m.source||'')).toLowerCase().includes(term));
     if(activeMangaType!=='all')rows=rows.filter(m=>m.type===activeMangaType);
     if(activeMangaStatus!=='all')rows=rows.filter(m=>String(m.status||'plan_to_read')===activeMangaStatus);
-    const filters='<nav class="manga-status-filters" aria-label="Filter manga library">'+[['all','All'],['reading','Reading'],['completed','Finished'],['on_hold','On hold'],['dropped','Dropped'],['plan_to_read','Plan to read']].map(([key,label])=>'<button type="button" data-manga-list-status="'+key+'" class="'+(activeMangaStatus===key?'active':'')+'">'+label+' <span>'+counts[key]+'</span></button>').join('')+'</nav>';
+    rows=sortMangaRows(rows);
+    const filters='<div class="hk-manga-library-controls">'+mangaSortControl()+'</div><nav class="manga-status-filters" aria-label="Filter manga library">'+[['all','All'],['reading','Reading'],['completed','Finished'],['on_hold','On hold'],['dropped','Dropped'],['plan_to_read','Plan to read']].map(([key,label])=>'<button type="button" data-manga-list-status="'+key+'" class="'+(activeMangaStatus===key?'active':'')+'">'+label+' <span>'+counts[key]+'</span></button>').join('')+'</nav>';
     const cards=rows.map(m=>{
       const chapters=Array.isArray(m.chapters)?m.chapters:[];
       const last=m.lastReadChapter||null;
@@ -4073,7 +4219,7 @@ function mangaFeedCardMarkup(item,index){
     $$('[data-manga-list-status]').forEach(b=>b.onclick=()=>{activeMangaStatus=b.dataset.mangaListStatus;renderMangaLibrary();});
     $$('[data-manga-detail]').forEach(b=>b.onclick=()=>showMangaDetail(b.dataset.mangaDetail));
     $$('[data-manga-edit]').forEach(b=>b.onclick=()=>editManga(b.dataset.mangaEdit));
-    $$('[data-manga-status-select]').forEach(select=>select.onchange=()=>{const m=mangaLibrary.find(x=>String(x.id)===select.dataset.mangaStatusSelect);if(!m)return;m.status=select.value;write(key.manga,mangaLibrary);renderMangaLibrary();notify('Reading status updated.');});
+    $$('[data-manga-status-select]').forEach(select=>select.onchange=()=>{const m=mangaLibrary.find(x=>String(x.id)===select.dataset.mangaStatusSelect);if(!m)return;m.status=select.value;m.updatedAt=new Date().toISOString();write(key.manga,mangaLibrary);renderMangaLibrary();notify('Reading status updated.');});
     $$('[data-manga-continue]').forEach(b=>b.onclick=()=>{const m=mangaLibrary.find(x=>String(x.id)===b.dataset.mangaContinue);if(m&&m.lastReadChapter){const ch=m.lastReadChapter;const opts=['mangahook','gomanga','batoto','mangabuddy','mangakakalot','mangadex'].includes(ch.readerProvider)?{provider:ch.readerProvider,mangaId:ch.readerMangaId,chapterId:ch.readerChapterId,sourceKind:ch.readerSourceKind||'',readerGroup:ch.readerGroup||''}:{};readChapter(ch.url,ch.title||'Continue reading',m.title,opts);}});
     $$('[data-manga-remove]').forEach(b=>b.onclick=()=>{mangaLibrary=mangaLibrary.filter(m=>String(m.id)!==b.dataset.mangaRemove);write(key.manga,mangaLibrary);renderMangaLibrary();notify('Removed from library.');});
   }
@@ -4121,7 +4267,7 @@ function mangaFeedCardMarkup(item,index){
       if(status)status.innerHTML=esc(e.message||'In-app reading is unavailable for this chapter.')+' <a class="link" href="'+esc(chapterUrl.href)+'" target="_blank" rel="noopener noreferrer">Open chapter on source ↗</a>';
     }
   }
-  function editManga(id){const m=mangaLibrary.find(x=>String(x.id)===String(id));if(!m)return;openModal(`<div class="modal-top"><div><h2>Edit manga details</h2><p class="muted small">Change your library metadata.</p></div><button class="close" data-close>×</button></div><div class="formstack"><label><span class="small-label">Title</span><input class="input" id="edTitle" value="${esc(m.title)}"></label><label><span class="small-label">Cover image URL</span><input class="input" id="edCover" value="${esc(m.cover||'')}"></label><label><span class="small-label">Type</span><select id="edType" class="input"><option>Manga</option><option>Manhwa</option><option>Manhua</option></select></label><label><span class="small-label">Reading status</span><select class="input" id="edMangaStatus"><option value="plan_to_read">Plan to read</option><option value="reading">Reading</option><option value="completed">Finished</option><option value="on_hold">On hold</option><option value="dropped">Dropped</option></select></label><label><span class="small-label">Description</span><textarea class="input" id="edDesc" rows="3">${esc(m.description||'')}</textarea></label><button class="btn-mint" id="saveEditManga">Save changes</button></div>`);$('#edType').value=m.type||'Manga';$('#edMangaStatus').value=m.status||'plan_to_read';$('#saveEditManga').onclick=()=>{const title=$('#edTitle').value.trim();if(!title){notify('Title cannot be empty.');return;}m.title=title;m.cover=$('#edCover').value.trim();m.type=$('#edType').value;m.status=$('#edMangaStatus').value;m.description=$('#edDesc').value.trim();write(key.manga,mangaLibrary);closeModal();renderMangaLibrary();notify('Manga details saved.');};}
+  function editManga(id){const m=mangaLibrary.find(x=>String(x.id)===String(id));if(!m)return;openModal(`<div class="modal-top"><div><h2>Edit manga details</h2><p class="muted small">Change your library metadata.</p></div><button class="close" data-close>×</button></div><div class="formstack"><label><span class="small-label">Title</span><input class="input" id="edTitle" value="${esc(m.title)}"></label><label><span class="small-label">Cover image URL</span><input class="input" id="edCover" value="${esc(m.cover||'')}"></label><label><span class="small-label">Type</span><select id="edType" class="input"><option>Manga</option><option>Manhwa</option><option>Manhua</option></select></label><label><span class="small-label">Reading status</span><select class="input" id="edMangaStatus"><option value="plan_to_read">Plan to read</option><option value="reading">Reading</option><option value="completed">Finished</option><option value="on_hold">On hold</option><option value="dropped">Dropped</option></select></label><label><span class="small-label">Description</span><textarea class="input" id="edDesc" rows="3">${esc(m.description||'')}</textarea></label><button class="btn-mint" id="saveEditManga">Save changes</button></div>`);$('#edType').value=m.type||'Manga';$('#edMangaStatus').value=m.status||'plan_to_read';$('#saveEditManga').onclick=()=>{const title=$('#edTitle').value.trim();if(!title){notify('Title cannot be empty.');return;}m.title=title;m.cover=$('#edCover').value.trim();m.type=$('#edType').value;m.status=$('#edMangaStatus').value;m.description=$('#edDesc').value.trim();m.updatedAt=new Date().toISOString();write(key.manga,mangaLibrary);closeModal();renderMangaLibrary();notify('Manga details saved.');};}
 
   $('#malSearchResults').addEventListener('click',()=>{});
 
