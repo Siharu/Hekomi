@@ -812,8 +812,8 @@
         }else{
           const nextDirection=this.directionForVector(dx,dy);
           if(nextDirection!==this.direction)this.setDirection(nextDirection);
-          const brakingSpeed=Math.sqrt(Math.max(0,2*250*dist));
-          const wantedSpeed=Math.min(68,brakingSpeed);
+          const brakingSpeed=Math.sqrt(Math.max(0,2*110*dist));
+          const wantedSpeed=Math.min(64,brakingSpeed);
           this.walkSpeed+=(wantedSpeed-this.walkSpeed)*Math.min(1,dt*8);
           const step=Math.min(dist,Math.max(5,this.walkSpeed)*dt);
           this.x+=dx/dist*step;this.y+=dy/dist*step;
@@ -845,7 +845,6 @@
       this.lastPaint=time;
       const walking=this.state==='walk',sleeping=this.state==='sleep';
       const makingBed=this.state==='make-bed',eating=this.state==='eat',sitting=this.state==='perch';
-      const frame=Math.floor(time/120);
       const gaitStep=walking?Math.floor(this.walkPhase*4)%4:Math.floor(time/300)%4;
       const blink=sleeping||time<this.blinkUntil;
       const expression=sleeping?'sleepy':eating?'eating':this.state==='greet'?'happy':this.state==='wake'?'surprised':this.activity==='curious'?'surprised':this.activity==='annoyed'?'annoyed':'normal';
