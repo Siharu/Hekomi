@@ -40,6 +40,13 @@ async function openHekomiWithAiringFixture(page) {
   await expect(page.locator('#hekomiCompanion canvas.home-mascot')).toBeVisible();
 }
 
+test('Hekomi-chan mounts herself when the page has no prebuilt mascot canvas', async ({ page }) => {
+  await page.goto('/');
+  await expect.poll(() => page.evaluate(() => Boolean(window.hekomiChan))).toBe(true);
+  await expect(page.locator('#hekomiCompanion canvas#hekomiChanCanvas')).toBeVisible();
+  await expect(page.locator('#hekomiCompanion .home-mascot-bubble')).toBeVisible();
+});
+
 test('scrolling no longer rapidly replaces Hekomi-chan dialogue', async ({ page }) => {
   await openHekomiWithAiringFixture(page);
 
