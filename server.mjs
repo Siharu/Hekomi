@@ -1086,7 +1086,7 @@ async function malRequest(req, res, pathname, query) {
 
 const ANILIST_ENDPOINT = 'https://graphql.anilist.co';
 const MEDIA_CATALOG_FIELDS = 'id idMal type title { romaji english native } coverImage { color extraLarge large medium } bannerImage description(asHtml:false) genres averageScore popularity favourites status episodes chapters volumes season seasonYear format countryOfOrigin source duration startDate { year month day } endDate { year month day } studios(isMain:true) { nodes { name } } nextAiringEpisode { airingAt timeUntilAiring episode } trailer { id site thumbnail } siteUrl updatedAt isLicensed isAdult';
-const MEDIA_PROFILE_FIELDS = 'characters(page:1,perPage:18,sort:[ROLE]) { edges { role node { id name { full native } image { large } siteUrl } japaneseVoiceActors: voiceActors(language:JAPANESE,sort:[RELEVANCE]) { id name { full native } image { large } siteUrl language } englishVoiceActors: voiceActors(language:ENGLISH,sort:[RELEVANCE]) { id name { full native } image { large } siteUrl language } } } staff(page:1,perPage:30,sort:[RELEVANCE]) { edges { role node { id name { full native } image { large } siteUrl } } } relations { edges { relationType node { id type title { english romaji native } coverImage { large medium } siteUrl } } }';
+const MEDIA_PROFILE_FIELDS = 'characters(page:1,perPage:18,sort:[ROLE]) { edges { role node { id name { full native } image { large } siteUrl } japaneseVoiceActors: voiceActors(language:JAPANESE,sort:[RELEVANCE]) { id name { full native } image { large } siteUrl language languageV2 } englishVoiceActors: voiceActors(language:ENGLISH,sort:[RELEVANCE]) { id name { full native } image { large } siteUrl language languageV2 } } } staff(page:1,perPage:30,sort:[RELEVANCE]) { edges { role node { id name { full native } image { large } siteUrl } } } relations { edges { relationType node { id type title { english romaji native } coverImage { large medium } siteUrl } } }';
 const HOME_CATALOG_QUERY = 'query HekomiHomeCatalog { anime: Page(page:1,perPage:10) { media(type:ANIME,sort:[TRENDING_DESC,POPULARITY_DESC],isAdult:false) { ' + MEDIA_CATALOG_FIELDS + ' } } manga: Page(page:1,perPage:10) { media(type:MANGA,sort:[TRENDING_DESC,POPULARITY_DESC],isAdult:false) { ' + MEDIA_CATALOG_FIELDS + ' } } }';
 function currentAnimeSeason(date=new Date()) { const month=date.getUTCMonth()+1; return month<=3?'WINTER':month<=6?'SPRING':month<=9?'SUMMER':'FALL'; }
 const FULL_ANIME_COLLECTION_QUERY = 'query HekomiFullAnimeCollection($page:Int!,$season:MediaSeason,$seasonYear:Int) { results: Page(page:$page,perPage:50) { pageInfo { currentPage hasNextPage total } media(type:ANIME,season:$season,seasonYear:$seasonYear,status:RELEASING,sort:[POPULARITY_DESC],isAdult:false) { ' + MEDIA_CATALOG_FIELDS + ' } } }';
@@ -1149,7 +1149,7 @@ function packMedia(item) {
     nativeName:String(person.name && person.name.native || '').trim(),
     image:String(person.image && person.image.large || ''),
     siteUrl:String(person.siteUrl || ''),
-    language:String(person.language || '')
+    language:String(person.languageV2 || person.language || '')
   } : null;
   const characters = item.characters && Array.isArray(item.characters.edges)
     ? item.characters.edges.map(edge => {
