@@ -3382,7 +3382,9 @@ function showProfileTab(tab){activeProfileTab=tab;$$('#profileTabs button').forE
     if(artists.length)sections.push('<section class="hk-series-credit-section"><header><h3>Artists &amp; illustration</h3><span>'+artists.length+'</span></header><div class="hk-series-people-grid">'+artistCards+'</div></section>');
     if(characters.length)sections.push('<section class="hk-series-credit-section"><header><h3>Characters</h3><span>'+characters.length+'</span></header><div class="hk-series-people-grid">'+characterCards+'</div></section>');
     if(!sections.length&&staff.length)sections.push('<section class="hk-series-credit-section"><header><h3>Creators &amp; staff</h3><span>'+staff.length+'</span></header><div class="hk-series-people-grid">'+staff.map(person=>seriesCreditPersonCard(person,person.role||'')).join('')+'</div></section>');
-    if(sections.length)sections.push(seriesRelationsMarkup(entry));\n    return sections.filter(Boolean).length?sections.filter(Boolean).join('')+seriesRelationsMarkup(entry):'<div class="hk-series-credits-empty">'+(loading?'Finding the AniList series profile and creator credits…':'No author, artist or character credits are available for this title yet.')+'</div>';
+    const related=seriesRelationsMarkup(entry);
+    if(related)sections.push(related);
+    return sections.filter(Boolean).length?sections.filter(Boolean).join(''):'<div class="hk-series-credits-empty">'+(loading?'Finding the AniList series profile and creator credits…':'No author, artist or character credits are available for this title yet.')+'</div>';
   }
   async function hydrateSeriesCredits(kind,entry){
     const key=seriesProfileKey(kind,entry);
