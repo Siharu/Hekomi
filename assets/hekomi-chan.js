@@ -311,18 +311,15 @@
 
   function drawWalkLegsVertical(ctx,step,dy,direction){
     const lead=[0,1,3,1][step%4],trail=[3,1,0,1][step%4];
-    const back=direction==='north';
+    const leftY=65+lead,rightY=65+trail;
     blocks(ctx,[
       [20,61,25,6,'ink'],
-      [21,65+lead,9,Math.max(4,10-lead),'pant0'],
-      [35,65+trail,9,Math.max(4,10-trail),'pant0'],
+      [21,leftY,9,Math.max(4,10-lead),'pant0'],
+      [35,rightY,9,Math.max(4,10-trail),'pant0'],
       [22,68+lead,7,3,'pant1'],[36,68+trail,7,3,'pant1'],
-      [20,74+lead*.35,12,3,'ink'],[35,74+trail*.35,12,3,'ink'],
-      [22,75+lead*.35,8,1,back?'pant2':'shoe1'],
-      [36,75+trail*.35,8,1,back?'pant2':'shoe1']
+      [24,66+lead,2,4,'pant2'],[37,66+trail,2,4,'pant2']
     ],dy);
   }
-
   function drawWalkArmsVertical(ctx,step,dy){
     const swing=[-2,0,2,0][step%4];
     blocks(ctx,[
@@ -344,14 +341,27 @@
     ],dy);
   }
 
-  function drawShoes(ctx,step,walking,dy){
-    const shift=walking?[0,1,2,1][step%4]:0;
-    blocks(ctx,[
-      [19,75+shift,12,3,'ink'],[34,75+(3-shift),12,3,'ink'],
-      [21,75+shift,8,1,'shoe1'],[36,75+(3-shift),8,1,'shoe1']
-    ],dy);
+  function drawShoes(ctx,step,walking,direction,dy){
+    let feet;
+    if(walking&&(direction==='east'||direction==='west')){
+      const side=[
+        [[17,74,14,4],[36,74,13,4]],
+        [[14,74,14,4],[38,72,12,4]],
+        [[23,73,12,4],[33,74,14,4]],
+        [[12,72,14,4],[37,74,13,4]]
+      ];
+      feet=side[step%4];
+    }else if(walking){
+      const lead=[0,1,3,1][step%4],trail=[3,1,0,1][step%4];
+      feet=[[19,74+lead,13,4],[34,74+trail,13,4]];
+    }else{
+      feet=[[19,74,13,4],[33,74,13,4]];
+    }
+    const back=direction==='north';
+    for(const [x,y,w,h] of feet){
+      blocks(ctx,[[x,y,w,h,'ink'],[x+2,y,w-4,1,back?'pant2':'shoe1']],dy);
+    }
   }
-
   function drawSprite(ctx,frame){
     ctx.clearRect(0,0,W,H);
     const dy=Math.round(frame.bob||0);
@@ -404,11 +414,13 @@
       drawEatingArm(ctx,frame.chewFrame||0,dy);
       blocks(ctx,[[42,34,5,4,'white'],[41,35,2,3,'skin1'],[43,37,4,1,'mint0'],[44,34,1,1,'skin3']],dy);
     }
-    if(!frame.sleeping)drawShoes(ctx,step,walking,dy);
-    blocks(ctx,[
-      [43,22,3,1,'mint1'],[44,21,1,3,'mint1'],[46,22,2,1,'accent'],
-      [17,18,2,1,'hair4'],[48,35,1,3,'hair3'],[13,44,1,4,'hair3']
-    ],dy);
+    if(!frame.sleeping)drawShoes(ctx,step,walking,direction,dy);
+    if(!rear){
+      blocks(ctx,[
+        [43,22,3,1,'mint1'],[44,21,1,3,'mint1'],[46,22,2,1,'accent'],
+        [17,18,2,1,'hair4'],[48,35,1,3,'hair3'],[13,44,1,4,'hair3']
+      ],dy);
+    }
   }
   function drawWalkLegs(ctx,step,dy){
     const poses=[
@@ -441,7 +453,7 @@
     constructor(canvas,message,root,bubble){
       this.canvas=canvas;this.ctx=canvas.getContext('2d',{alpha:true});this.message=message;
       this.root=root;this.bubble=bubble;this.state='idle';this.target=null;this.face=1;
-      this.direction='south';this.walkSpeed=0;this.walkPhase=0;
+      this.direction='south';this.walkSpeed=0;this.walkPhase=0;this.route=[];
       this.x=12;this.y=12;this.last=0;this.lastSpeech=0;this.speechUntil=0;this.lastObstacleCheck=0;
       this.stateUntil=0;this.walkFrame=0;this.stops=0;this.sleepCount=0;this.hiddenPause=false;
       this.nextBlink=performance.now()+1800+Math.random()*2600;this.blinkUntil=0;this.gazeX=0;this.gazeY=0;this.nextGlance=performance.now()+2200+Math.random()*3800;this.activity='idle';
@@ -452,6 +464,7 @@
       this.reduced=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
       this.canvas.width=W;this.canvas.height=H;this.ctx.imageSmoothingEnabled=false;
       this.mountWardrobe();
+      this.setDirection('south');
       this.canvas.style.imageRendering='pixelated';this.canvas.setAttribute('role','button');
       this.canvas.setAttribute('tabindex','0');this.canvas.setAttribute('aria-label','Hekomi-chan, wandering around Hekomi. Activate to say hello.');
       this.canvas.title='Say hi to Hekomi-chan';
@@ -591,6 +604,7 @@
       if(!['north','south','east','west'].includes(direction))return;
       this.direction=direction;
       this.face=direction==='west'?-1:1;
+      this.canvas.dataset.direction=direction;
       this.root.classList.toggle('face-left',direction==='west');
       this.canvas.style.transform=direction==='west'?'scaleX(-1)':'none';
     }
@@ -599,12 +613,22 @@
       const perch=this.findPerchTarget();
       const goPerch=Boolean(perch)&&Math.random()<.38;
       const next=goPerch?perch:this.findSpot();
-      const distance=Math.hypot(next.x-this.x,next.y-this.y);
-      if(distance<50){if(goPerch){this.nextPose='perch';this.arrive();}else this.arrive();return;}
+      const dx=next.x-this.x,dy=next.y-this.y;
+      const distance=Math.hypot(dx,dy);
+      if(distance<26){if(goPerch){this.nextPose='perch';this.arrive();}else this.arrive();return;}
       this.nextPose=goPerch?'perch':'';
-      this.target=next;this.state='walk';this.activity='idle';
+      this.route=[];
+      if(Math.abs(dx)>18&&Math.abs(dy)>18){
+        const options=Math.random()<.5
+          ?[{x:next.x,y:this.y},{x:this.x,y:next.y}]
+          :[{x:this.x,y:next.y},{x:next.x,y:this.y}];
+        const waypoint=options.find(point=>Math.hypot(point.x-this.x,point.y-this.y)>8&&Math.hypot(next.x-point.x,next.y-point.y)>8&&!this.blocked(point.x,point.y));
+        if(waypoint)this.route.push(waypoint,next);
+      }
+      this.target=this.route.length?this.route.shift():next;
+      this.state='walk';this.activity='idle';
       this.walkSpeed=0;this.walkPhase=0;
-      this.setDirection(this.directionForVector(next.x-this.x,next.y-this.y));
+      this.setDirection(this.directionForVector(this.target.x-this.x,this.target.y-this.y));
       this.root.classList.remove('is-sleeping','is-making-bed','is-waking-up','is-eating','is-perching');
       this.canvas.style.pointerEvents='none';this.hideSpeech();
     }
@@ -612,7 +636,7 @@
       this.canvas.style.pointerEvents=this.blocked(this.x,this.y)?'none':'auto';
     }
     arrive(){
-      this.target=null;this.stops++;this.setInteractable();
+      this.target=null;this.route=[];this.walkSpeed=0;this.stops++;this.setInteractable();
       const now=performance.now();
       if(this.nextPose==='perch'){
         this.nextPose='';this.state='perch';this.activity='content';
@@ -779,8 +803,13 @@
       }
       if(this.state==='walk'&&this.target){
         const dx=this.target.x-this.x,dy=this.target.y-this.y,dist=Math.hypot(dx,dy);
-        if(dist<2.2){this.x=this.target.x;this.y=this.target.y;this.walkSpeed=0;this.arrive();}
-        else{
+        if(dist<2.2){
+          this.x=this.target.x;this.y=this.target.y;this.walkSpeed=0;
+          if(this.route.length){
+            this.target=this.route.shift();
+            this.setDirection(this.directionForVector(this.target.x-this.x,this.target.y-this.y));
+          }else this.arrive();
+        }else{
           const nextDirection=this.directionForVector(dx,dy);
           if(nextDirection!==this.direction)this.setDirection(nextDirection);
           const brakingSpeed=Math.sqrt(Math.max(0,2*250*dist));
