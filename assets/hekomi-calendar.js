@@ -23,7 +23,12 @@
   const weekLabel=el('hkCalWeekLabel');
   const weekRange=el('hkCalWeekRange');
   const weekTotal=el('hkCalWeekTotal');
-  const state={weekStart:'',programs:[],loading:false,error:'',request:0};
+  const dayNav=el('hkCalDayNav');
+  const filters=el('hkCalFilters');
+  const imagesToggle=el('hkCalImages');
+  const selectedDayTitle=el('hkCalSelectedDayTitle');
+  const selectedDayCount=el('hkCalSelectedDayCount');
+  const state={weekStart:'',activeDay:'',filter:'all',imagesVisible:true,programs:[],loading:false,error:'',request:0};
   const todayParts=new Intl.DateTimeFormat('en-CA',{
     timeZone:'Asia/Tokyo',year:'numeric',month:'2-digit',day:'2-digit'
   }).formatToParts(new Date());
@@ -43,7 +48,7 @@
   };
   const startOfWeek=key=>{
     const date=dateFromKey(key);
-    date.setUTCDate(date.getUTCDate()-date.getUTCDay());
+    date.setUTCDate(date.getUTCDate()-((date.getUTCDay()+6)%7));
     return keyFor(date);
   };
   const escape=value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
@@ -138,17 +143,35 @@
     return Array.from({length:7},(_,index)=>{
       const key=addDays(state.weekStart,index);
       const date=dateFromKey(key);
-      return {key,date,weekday:fmtWeekday.format(date),shortDate:fmtShortDate.format(date)};
+      return {key,date,weekday:fmtWeekday.format(date),weekdayShort:new Intl.DateTimeFormat('en-US',{timeZone:'UTC',weekday:'short'}).format(date),shortDate:fmtShortDate.format(date)};
     });
   }
-  function setWeek(key){
+  function setWeek(key,selectKey=false){
+    const chosenDate=dateFromKey(key);
+    const oldOffset=state.activeDay?((dateFromKey(state.activeDay).getUTCDay()+6)%7):((chosenDate.getUTCDay()+6)%7);
     state.weekStart=startOfWeek(key);
+    state.activeDay=addDays(state.weekStart,selectKey?((chosenDate.getUTCDay()+6)%7):oldOffset);
     loadWeek();
   }
   function selectedItemsForDay(key){
     return state.programs
       .filter(item=>item.date===key&&isRenderableProgram(item))
+      .filter(item=>{
+        if(state.filter==='watching')return !!findWatchedMatch(item);
+        if(state.filter==='upcoming')return item.status==='upcoming';
+        return true;
+      })
       .sort((a,b)=>String(a.airingAt||a.time||'').localeCompare(String(b.airingAt||b.time||'')));
+  }
+  function renderDayNav(days){
+    return days.map(day=>{
+      const count=state.programs.filter(item=>item.date===day.key&&isRenderableProgram(item)).length;
+      const active=day.key===state.activeDay;
+      return '<button type="button" class="hk-calendar-day-tab'+(active?' is-active':'')+(day.key===today?' is-today':'')+'" data-calendar-day="'+day.key+'" aria-pressed="'+String(active)+'">'+
+        '<span class="hk-calendar-day-short">'+escape(day.weekdayShort)+'</span>'+
+        '<strong>'+escape(day.shortDate)+'</strong>'+
+        '<small>'+count+' '+(count===1?'EP':'EPS')+'</small></button>';
+    }).join('');
   }
   function renderEpisode(item,index){
     const watched=findWatchedMatch(item);
@@ -161,7 +184,7 @@
     const href=/^https:\/\//i.test(String(item.url||''))?item.url:'https://cal.syoboi.jp/';
     const poster='<a class="hk-week-event-poster" href="'+escape(href)+'" target="_blank" rel="noopener noreferrer" aria-label="View '+escape(title)+'">'+
       '<img class="hk-week-event-cover" src="'+escape(cover)+'" alt="'+escape(title)+' poster" loading="lazy" decoding="async" referrerpolicy="no-referrer"></a>';
-    return '<article class="hk-week-event" data-state="'+escape(item.status)+'"'+(watched?' data-watching="true"':'')+' style="--hk-episode-index:'+index+'">'+
+    return '<article class="hk-week-event hk-agenda-event" data-state="'+escape(item.status)+'"'+(watched?' data-watching="true"':'')+' style="--hk-episode-index:'+index+'">'+
       '<div class="hk-week-event-time">'+escape(item.time||'TBA')+'<small>JST</small></div>'+
       poster+
       '<div class="hk-week-event-copy"><div class="hk-week-event-meta"><span class="hk-week-event-kind">'+escape(listingType)+'</span><span class="hk-week-event-state">'+stateLabel+'</span></div>'+
@@ -175,20 +198,42 @@
     let body='';
     if(state.loading)body='<div class="hk-week-empty">Loading episodes…</div>';
     else if(state.error)body='<div class="hk-week-empty">'+escape(state.error)+'</div>';
-    else if(!items.length)body='<div class="hk-week-empty">No matched English-title episodes with poster art today.</div>';
+    else if(!items.length)body='<div class="hk-week-empty">No episodes match this day and filter.</div>';
     else body='<div class="hk-week-events">'+items.map(renderEpisode).join('')+'</div>';
-    return '<section class="hk-week-day-card'+(isToday?' is-today':'')+'" data-date="'+day.key+'" aria-label="'+escape(day.weekday)+' episode schedule">'+
-      '<header class="hk-week-day-heading"><div><span class="hk-week-day-name">'+escape(day.weekday)+'</span><span class="hk-week-day-date">'+escape(day.shortDate)+'</span></div>'+
-      '<div class="hk-week-day-count">'+(state.loading?'…':items.length+' '+(items.length===1?'EP':'EPS'))+'</div></header>'+body+'</section>';
+    return '<section class="hk-week-day-card hk-calendar-day-panel'+(isToday?' is-today':'')+'" data-date="'+day.key+'" aria-label="'+escape(day.weekday)+' episode schedule">'+
+      '<header class="hk-week-day-heading"><div><span class="hk-week-day-name">'+escape(day.weekday)+'</span><span class="hk-week-day-date">'+escape(fmtFullDate.format(day.date))+'</span>'+(isToday?'<span class="hk-calendar-today-tag">TODAY</span>':'')+'</div>'+
+      '<div class="hk-week-day-count">'+(state.loading?'…':items.length+' '+(items.length===1?'EPISODE':'EPISODES'))+'</div></header>'+body+'</section>';
   }
   function renderWeek(){
     const days=weekDays();
     const startDate=days[0].date,endDate=days[6].date;
     const label=fmtShortDate.format(startDate)+' — '+fmtFullDate.format(endDate);
-    weekLabel.textContent='WEEK OF '+fmtShortDate.format(startDate).toUpperCase();
+    if(!days.some(day=>day.key===state.activeDay))state.activeDay=days[0].key;
+    weekLabel.textContent=label.toUpperCase();
     weekRange.textContent=label;
-    weekTotal.textContent=state.loading?'UPDATING…':state.error?'SOURCE UNAVAILABLE':state.programs.length+' EPISODES THIS WEEK';
-    grid.innerHTML=days.map(renderDay).join('');
+    const visibleCount=state.programs.filter(item=>{
+      if(!isRenderableProgram(item))return false;
+      if(state.filter==='watching')return !!findWatchedMatch(item);
+      if(state.filter==='upcoming')return item.status==='upcoming';
+      return true;
+    }).length;
+    weekTotal.textContent=state.loading?'UPDATING…':state.error?'SOURCE UNAVAILABLE':visibleCount+' EPISODES THIS WEEK';
+    dayNav.innerHTML=renderDayNav(days);
+    const activeFilter=filters&&filters.querySelector('[data-calendar-filter="'+state.filter+'"]');
+    if(filters)filters.querySelectorAll('[data-calendar-filter]').forEach(button=>{
+      const active=button===activeFilter;
+      button.classList.toggle('is-active',active);
+      button.setAttribute('aria-pressed',String(active));
+    });
+    if(imagesToggle){
+      imagesToggle.textContent=state.imagesVisible?'Images: On':'Images: Off';
+      imagesToggle.setAttribute('aria-pressed',String(state.imagesVisible));
+    }
+    root.dataset.images=state.imagesVisible?'shown':'hidden';
+    const day=days.find(item=>item.key===state.activeDay)||days[0];
+    if(selectedDayTitle)selectedDayTitle.textContent=day.weekday+', '+fmtFullDate.format(day.date);
+    if(selectedDayCount)selectedDayCount.textContent=state.loading?'…':selectedItemsForDay(day.key).length+' EPISODES';
+    grid.innerHTML=renderDay(day);
     grid.classList.remove('is-changing');
     if(!window.matchMedia('(prefers-reduced-motion: reduce)').matches){
       void grid.offsetWidth;
@@ -227,7 +272,23 @@
 
   el('hkCalPrev').addEventListener('click',()=>setWeek(addDays(state.weekStart,-7)));
   el('hkCalNext').addEventListener('click',()=>setWeek(addDays(state.weekStart,7)));
-  el('hkCalToday').addEventListener('click',()=>setWeek(today));
+  el('hkCalToday').addEventListener('click',()=>setWeek(today,true));
+  dayNav.addEventListener('click',event=>{
+    const button=event.target.closest('[data-calendar-day]');
+    if(!button)return;
+    state.activeDay=button.dataset.calendarDay;
+    renderWeek();
+  });
+  filters.addEventListener('click',event=>{
+    const button=event.target.closest('[data-calendar-filter]');
+    if(!button)return;
+    state.filter=button.dataset.calendarFilter;
+    renderWeek();
+  });
+  imagesToggle.addEventListener('click',()=>{
+    state.imagesVisible=!state.imagesVisible;
+    renderWeek();
+  });
   const collapseButton=el('hkCalCollapse');
   if(collapseButton){
     const setCollapsed=collapsed=>{
@@ -247,6 +308,6 @@
   document.addEventListener('visibilitychange',()=>{
     if(!document.hidden){void refreshRemoteWatchlist();renderWeek();}
   });
-  setWeek(today);
+  setWeek(today,true);
   void refreshRemoteWatchlist();
 })();
