@@ -1713,7 +1713,7 @@ body[data-detail-genre="drama"] .detail-art-backdrop{--detail-accent:#b2a1d8}
     '<main><article class="detail-article"><section class="detail-hero"><div>'+coverHtml+'</div><div><div class="detail-type">'+label+' / '+htmlEscape(media.format||'SERIES')+'</div><h1 class="detail-title">'+htmlEscape(media.title)+'</h1><div class="detail-score">★ '+score+'</div><div class="detail-genres">'+genreTags+'</div>'+descriptionHtml+'<div class="detail-actions"><a class="detail-primary" href="/">Explore Hekomi ↗</a><a class="detail-secondary" href="https://anilist.co/'+kind+'/'+Number(media.id)+'/" target="_blank" rel="noreferrer">Source details ↗</a>'+malLink+'</div></div></section>',
     trailerHtml,
     trailerPlayerScript,
-    '<dl class="detail-info">'+infoRows+'</dl></article></main>',
+    '<dl class="detail-info">'+infoRows+'</dl>'+creditsHtml+'</article></main>',
     '<footer class="detail-credit">Catalog metadata supplied by <a href="https://anilist.co/" target="_blank" rel="noreferrer">AniList</a>. Cover artwork belongs to its respective rights holders. Hekomi is an independent project and is not affiliated with AniList, MyAnimeList, studios, or publishers.</footer></div>',
     '<div class="home-visual hekomi-profile-companion" aria-label="Hekomi-chan, your wandering pixel companion"><div class="home-mascot-bubble"><span>HEKOMI-CHAN / ONLINE</span><strong id="hekomiChanMessage" aria-live="polite">I’m keeping an eye on this series.</strong></div><canvas class="home-mascot" id="hekomiChanCanvas" width="64" height="80" role="img" aria-label="Hekomi-chan, the pixel-art Hekomi mascot.">Hekomi-chan</canvas></div>',
     '<script defer src="/assets/hekomi-chan.js?v=20261102-activities-2"></script></body></html>'
