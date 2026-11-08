@@ -2,7 +2,7 @@
 (function(){
   'use strict';
   const root=document.getElementById('hkCalendar');
-  if(!root)return;
+  if(!root||document.body?.dataset.page!=='calendar')return;
   const el=id=>document.getElementById(id);
   (function loadCalendarWallpaper(){
     const endpoint='https://imgapi.lie.moe/random?sort=pc&type=json&thumbnail=large';
