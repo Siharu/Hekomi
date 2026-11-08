@@ -175,7 +175,7 @@
     let body='';
     if(state.loading)body='<div class="hk-week-empty">Loading episodes…</div>';
     else if(state.error)body='<div class="hk-week-empty">'+escape(state.error)+'</div>';
-    else if(!items.length)body='<div class="hk-week-empty">No listed episodes</div>';
+    else if(!items.length)body='<div class="hk-week-empty">No matched English-title episodes with poster art today.</div>'+'';
     else body='<div class="hk-week-events">'+items.map(renderEpisode).join('')+'</div>';
     return '<section class="hk-week-day-card'+(isToday?' is-today':'')+'" data-date="'+day.key+'" aria-label="'+escape(day.weekday)+' episode schedule">'+
       '<header class="hk-week-day-heading"><div><span class="hk-week-day-name">'+escape(day.weekday)+'</span><span class="hk-week-day-date">'+escape(day.shortDate)+'</span></div>'+
