@@ -115,9 +115,9 @@ test('signed-in MAL watching entry supplies a poster when no local copy exists',
 
   await page.goto('/');
   await page.waitForResponse(response => response.url().includes('/api/calendar'));
-  const frieren = page.locator('.hk-cal-event').filter({ hasText: watchedTitle });
+  const frieren = page.locator('.hk-week-event').filter({ hasText: watchedTitle });
   await expect(frieren).toHaveAttribute('data-watching', 'true');
-  await expect(frieren.locator('.hk-cal-event-cover')).toHaveAttribute('src', malCover);
+  await expect(frieren.locator('.hk-week-event-cover')).toHaveAttribute('src', malCover);
   await expect(frieren.locator('.hk-week-watch-tag')).toContainText('IN YOUR WATCHLIST');
 });
 
@@ -177,7 +177,7 @@ test('AniList ID fallback displays a watched series title and cover when source 
   );
 
   await openCalendar(page);
-  const entry = page.locator('.hk-cal-event').filter({ hasText: 'My personal series alias' });
+  const entry = page.locator('.hk-week-event').filter({ hasText: 'My personal series alias' });
   await expect(entry).toHaveAttribute('data-watching', 'true');
-  await expect(entry.locator('.hk-cal-event-cover')).toHaveAttribute('src', localCover);
+  await expect(entry.locator('.hk-week-event-cover')).toHaveAttribute('src', localCover);
 });
