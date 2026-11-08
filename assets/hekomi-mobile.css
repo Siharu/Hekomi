@@ -573,3 +573,17 @@
   .catalog-action-menu>summary,.hk-search-action-menu>summary{width:31px;height:32px;min-height:32px}
   .catalog-action-popover,.hk-list-action-popover{min-width:150px}
 }
+
+
+/* Keep three-dot menus visible above compact horizontal catalog rails. */
+.catalog-card:has(.catalog-action-menu[open]){
+  overflow:visible!important;z-index:120!important;
+}
+.catalog-row.catalog-grid:has(.catalog-action-menu[open]){
+  overflow:visible!important;
+}
+.catalog-row.catalog-grid:has(.catalog-action-menu[open]) .catalog-card{
+  overflow:visible!important;
+}
+.catalog-action-menu[open]{z-index:140}
+.catalog-action-popover{z-index:150}
