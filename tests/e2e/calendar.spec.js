@@ -84,6 +84,64 @@ test('weekly schedule has its own Calendar page and does not load on Home', asyn
   await expect(page.locator('#hkCalWeekTotal')).not.toContainText('UPDATING');
 });
 
+test('loading a previous week displays that week’s own English-title episodes', async ({ page }) => {
+  const previousWeekStart = await page.evaluate(() => {
+    const now = new Date();
+    const parts = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'Asia/Tokyo', year: 'numeric', month: '2-digit', day: '2-digit'
+    }).formatToParts(now);
+    const part = type => parts.find(item => item.type === type)?.value || '01';
+    const key = part('year') + '-' + part('month') + '-' + part('day');
+    const date = new Date(key + 'T00:00:00Z');
+    date.setUTCDate(date.getUTCDate() - ((date.getUTCDay() + 6) % 7) - 7);
+    return date.getUTCFullYear() + '-' +
+      String(date.getUTCMonth() + 1).padStart(2, '0') + '-' +
+      String(date.getUTCDate()).padStart(2, '0');
+  });
+  await page.addInitScript(() => localStorage.setItem('folio_local_anime_v1', '[]'));
+  await page.route(url => url.pathname === '/api/calendar', route => {
+    const start = new URL(route.request().url()).searchParams.get('start');
+    if (start === previousWeekStart) {
+      const fixture = scheduleFixture();
+      fixture.start = previousWeekStart;
+      fixture.days = 7;
+      fixture.rawProgramCount = 1;
+      fixture.programs = [{
+        id: 'pid-historical', tid: 902, anilistId: 777, malId: 888,
+        title: 'Frieren: Beyond Journey’s End',
+        shortTitle: 'Sousou no Frieren',
+        cover: 'https://cdn.example.test/frieren-history.webp',
+        date: previousWeekStart, time: '20:00',
+        airingAt: previousWeekStart + 'T11:00:00.000Z',
+        episode: 18, status: 'aired', listingType: 'TV',
+        url: 'https://anilist.co/anime/777'
+      }];
+      return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(fixture) });
+    }
+    return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(scheduleFixture()) });
+  });
+  await page.route(url => url.hostname === 'cdn.example.test', route =>
+    route.fulfill({ status: 200, contentType: 'image/gif', body: Buffer.from('R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=', 'base64') })
+  );
+  await page.route(url => url.pathname === '/api/mal/list', route =>
+    route.fulfill({ status: 401, contentType: 'application/json', body: '{}' })
+  );
+
+  await openCalendar(page);
+  const previousResponse = page.waitForResponse(response => {
+    const url = new URL(response.url());
+    return url.pathname === '/api/calendar' && url.searchParams.get('start') === previousWeekStart;
+  });
+  await page.locator('#hkCalPrev').click();
+  await previousResponse;
+  await page.locator('#hkCalDayNav [data-calendar-day="' + previousWeekStart + '"]').click();
+
+  const historical = page.locator('#hkCalGrid .hk-week-event').filter({ hasText: 'Frieren: Beyond Journey’s End' });
+  await expect(historical).toHaveCount(1);
+  await expect(historical.locator('.hk-week-event-cover')).toHaveAttribute('src', 'https://cdn.example.test/frieren-history.webp');
+  await expect(page.locator('#hkCalGrid .hk-week-event')).toContainText('Episode 18');
+});
+
 test('local AniList-backed watching entry overrides only its matching calendar poster', async ({ page }) => {
   await page.addInitScript(({ cover }) => {
     localStorage.setItem('folio_local_anime_v1', JSON.stringify([
