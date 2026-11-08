@@ -86,7 +86,7 @@
       else blocks(ctx,[[8,5,13,11,'ink'],[10,3,10,10,'hair0'],[12,4,7,6,'hair1'],[43,5,13,11,'ink'],[45,3,10,10,'hair0'],[47,4,7,6,'hair1'],[13,16,5,29,'hair0'],[46,16,5,29,'hair0'],[15,42,4,11,'hair1'],[44,42,4,11,'hair1']],dy);
       return;
     }
-    drawBackHair(ctx,frame.hair||'long',dy);
+    blocks(ctx,BACK_HAIR,dy);
     if(style==='school-ponytail')blocks(ctx,[[42,10,11,9,'ink'],[47,16,10,9,'ink'],[51,23,8,16,'ink'],[53,37,7,12,'ink'],[51,47,7,9,'hair0'],[48,53,6,8,'hair1'],[44,13,7,5,'hair1'],[50,21,5,5,'hair2']],dy);
     else if(style==='messy-bun')blocks(ctx,[[19,3,25,9,'ink'],[21,1,21,9,'hair0'],[23,3,15,5,'hair1'],[14,7,8,7,'hair0'],[43,5,7,7,'hair0'],[18,10,5,4,'hair3'],[47,8,5,4,'hair3']],dy);
     else if(style==='date-half-up')blocks(ctx,[[20,5,24,8,'ink'],[22,3,20,8,'hair0'],[25,4,13,4,'hair1'],[16,11,7,5,'hair0'],[41,11,7,5,'hair0']],dy);
@@ -221,7 +221,7 @@
   function drawSprite(ctx,frame){
     ctx.clearRect(0,0,W,H);
     const dy=frame.bob;
-    blocks(ctx,BACK_HAIR,dy);
+    drawBackHair(ctx,frame.hair||'long',dy);
     if(frame.sitting)drawPerchLegs(ctx,frame.step,dy);
     else if(frame.walking)drawWalkLegs(ctx,frame.step,dy);
     else blocks(ctx,LEGS,dy);
@@ -253,8 +253,7 @@
     }
     blocks(ctx,[
       [43,22,3,1,'mint1'],[44,21,1,3,'mint1'],[46,22,2,1,'accent'],
-      [17,18,2,1,'hair4'],[48,35,1,3,'hair3'],[13,44,1,4,'hair3'],
-      [26,49,2,1,'shirt3'],[37,56,2,1,'shirt3'],[23,66,2,1,'pant2'],[37,66,2,1,'pant2']
+      [17,18,2,1,'hair4'],[48,35,1,3,'hair3'],[13,44,1,4,'hair3']
     ],dy);
   }
 
