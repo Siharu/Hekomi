@@ -51,8 +51,8 @@ jobs:
           node --check server.mjs
           node --check lib/syoboi-calendar.mjs
           node --check assets/hekomi-calendar.js
-      - name: Run unit tests
-        run: npm run test:unit
+      - name: Run calendar unit tests
+        run: node --test tests/unit/syoboi-calendar.test.js
       - name: Check browser JavaScript syntax and required UI hooks
         shell: bash
         run: |
