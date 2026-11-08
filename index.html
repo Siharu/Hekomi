@@ -2208,7 +2208,27 @@ body[data-page="home"] #animeShowcase::before{
 }
 </style>
 
-</head>
+<style id="hk-series-profile-styles">
+.hk-series-credit-area{display:grid;gap:12px;margin:16px 0 4px}
+.hk-series-credit-section{min-width:0;padding:13px;border:1px solid #30334b;border-radius:13px;background:linear-gradient(135deg,#15172a,#111321)}
+.hk-series-credit-section>header{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 10px}
+.hk-series-credit-section>header h3{margin:0;font-size:13px;letter-spacing:-.015em}
+.hk-series-credit-section>header span{display:inline-grid;place-items:center;min-width:23px;height:21px;padding:0 6px;border-radius:6px;border:1px solid #423957;color:#c6b7ff;background:#211b32;font:750 9px "IBM Plex Mono",monospace}
+.hk-series-people-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:7px}
+.hk-series-character-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(205px,1fr));gap:7px}
+.hk-series-person,.hk-series-character{display:flex;align-items:center;gap:9px;min-width:0;padding:7px;border:1px solid #292e43;border-radius:9px;background:#0e1120}
+.hk-series-person>img,.hk-series-character>img,.hk-series-person-placeholder{width:40px;height:48px;flex:0 0 auto;object-fit:cover;border-radius:6px;background:#25213b}
+.hk-series-character>img{width:48px;height:58px}
+.hk-series-person-placeholder{display:grid;place-items:center;color:#c2b3ff;font-size:14px;font-weight:800}
+.hk-series-person-copy{display:flex;min-width:0;flex-direction:column;gap:3px}
+.hk-series-person-copy a,.hk-series-person-copy strong{font-size:11px;line-height:1.35;font-weight:750;color:#f0edfb;overflow-wrap:anywhere;text-decoration:none}
+.hk-series-person-copy a:hover{color:#b9a6ff}
+.hk-series-person-copy small{font-size:9px;line-height:1.35;color:#9ca4c4}
+.hk-series-voice{display:flex;flex-direction:column;gap:2px;margin-top:2px}
+.hk-series-voice span{font-size:9px;line-height:1.3;color:#99dfd0}
+.hk-series-credits-empty{padding:13px;border:1px dashed #34344a;border-radius:10px;color:#9ca4c4;background:#101222;font-size:11px;line-height:1.5}
+@media(max-width:600px){.hk-series-credit-area{gap:9px}.hk-series-credit-section{padding:10px}.hk-series-people-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.hk-series-character-grid{grid-template-columns:minmax(0,1fr)}.hk-series-person,.hk-series-character{gap:7px;padding:6px}.hk-series-person>img,.hk-series-person-placeholder{width:32px;height:40px}.hk-series-character>img{width:42px;height:52px}.hk-series-person-copy a,.hk-series-person-copy strong{font-size:10px}}
+</style></head>
 <body data-page="__HEKOMI_PAGE__">
 <div class="app-scroll-progress" aria-hidden="true"><span id="appScrollProgressBar"></span></div>
 <button class="back-top" id="backToTop" type="button" aria-label="Back to top" title="Back to top"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 14 6-6 6 6"/><path d="M12 8v12"/></svg></button>
@@ -3247,6 +3267,11 @@ function showProfileTab(tab){activeProfileTab=tab;$$('#profileTabs button').forE
     entry.duration=Number(media.duration)||entry.duration||null;
     entry.sourceMaterial=media.source||entry.sourceMaterial||'';
     entry.studios=Array.isArray(media.studios)?media.studios.slice():entry.studios||[];
+    entry.authors=Array.isArray(media.authors)?media.authors.slice():entry.authors||[];
+    entry.artists=Array.isArray(media.artists)?media.artists.slice():entry.artists||[];
+    entry.characters=Array.isArray(media.characters)?media.characters.slice():entry.characters||[];
+    entry.staff=Array.isArray(media.staff)?media.staff.slice():entry.staff||[];
+    entry.relations=Array.isArray(media.relations)?media.relations.slice():entry.relations||[];
     entry.nextAiringEpisode=media.nextAiringEpisode||entry.nextAiringEpisode||null;
     entry.trailer=media.trailer||entry.trailer||null;
     entry.anilistAverageScore=Number(media.averageScore)||entry.anilistAverageScore||0;
@@ -3256,6 +3281,140 @@ function showProfileTab(tab){activeProfileTab=tab;$$('#profileTabs button').forE
     entry.externalUrl=media.siteUrl||('https://anilist.co/anime/'+Number(media.id));
     return entry;
   }
+  const seriesProfileCache=new Map();
+  const seriesProfilePending=new Map();
+  const seriesTitleKey=value=>String(value||'').normalize('NFKC').toLocaleLowerCase().replace(/[\\p{P}\\p{S}\\p{Z}\\s]+/gu,'').trim();
+  function seriesTitleScore(a,b){
+    const left=seriesTitleKey(a),right=seriesTitleKey(b);
+    if(!left||!right)return 0;
+    if(left===right)return 1;
+    if(left.includes(right)||right.includes(left))return Math.min(left.length,right.length)/Math.max(left.length,right.length);
+    const leftWords=new Set(String(a||'').toLocaleLowerCase().split(/[^\\p{L}\\p{N}]+/u).filter(word=>word.length>1));
+    const rightWords=new Set(String(b||'').toLocaleLowerCase().split(/[^\\p{L}\\p{N}]+/u).filter(word=>word.length>1));
+    if(!leftWords.size||!rightWords.size)return 0;
+    let overlap=0;for(const word of leftWords)if(rightWords.has(word))overlap++;
+    return overlap/Math.max(leftWords.size,rightWords.size);
+  }
+  function bestSeriesSearchResult(entry,results){
+    const sourceTitles=[entry.title,entry.titleEnglish,entry.titleRomaji,entry.titleNative].filter(Boolean);
+    let best=null,bestScore=0;
+    for(const candidate of Array.isArray(results)?results:[]){
+      const candidateTitles=[candidate.title,candidate.titleEnglish,candidate.titleRomaji,candidate.titleNative].filter(Boolean);
+      let score=0;
+      for(const left of sourceTitles)for(const right of candidateTitles)score=Math.max(score,seriesTitleScore(left,right));
+      if(score>bestScore){best=candidate;bestScore=score;}
+    }
+    return bestScore>=.72?best:null;
+  }
+  function seriesProfileKey(kind,entry){
+    if(Number(entry.anilistId||entry.catalogId)>0)return kind+':anilist:'+Number(entry.anilistId||entry.catalogId);
+    if(kind==='anime'&&Number(entry.malId)>0)return 'anime:mal:'+Number(entry.malId);
+    return kind+':title:'+seriesTitleKey(entry.title);
+  }
+  async function fetchSeriesProfile(kind,entry){
+    const anilistId=Number(entry.anilistId||entry.catalogId);
+    if(anilistId>0)return api('/api/catalog/detail?id='+encodeURIComponent(anilistId)+'&kind='+kind);
+    if(kind==='anime'&&Number(entry.malId)>0){
+      try{return await api('/api/catalog/mal-detail?id='+encodeURIComponent(entry.malId));}
+      catch{return api('/api/catalog/profile-search?kind=anime&title='+encodeURIComponent(entry.title||''));}
+    }
+    const search=await api('/api/catalog/profile-search?kind='+kind+'&title='+encodeURIComponent(entry.title||''));
+    const match=bestSeriesSearchResult(entry,search.results||[]);
+    if(!match||!Number(match.id))throw new Error('No sufficiently close AniList title match was found.');
+    return api('/api/catalog/detail?id='+encodeURIComponent(match.id)+'&kind='+kind);
+  }
+  function seriesCreditPersonCard(person,subtitle=''){
+    if(!person||!person.name)return '';
+    const image=person.image
+      ?'<img src="'+esc(person.image)+'" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.style.display=\'none\'">'
+      :'<span class="hk-series-person-placeholder">'+esc(String(person.name).trim().slice(0,1).toUpperCase()||'✦')+'</span>';
+    const name=person.siteUrl&&/^https:\/\//i.test(person.siteUrl)
+      ?'<a href="'+esc(person.siteUrl)+'" target="_blank" rel="noopener noreferrer">'+esc(person.name)+'</a>'
+      :'<strong>'+esc(person.name)+'</strong>';
+    return '<article class="hk-series-person">'+image+'<div class="hk-series-person-copy">'+name+(subtitle?'<small>'+esc(subtitle)+'</small>':'')+'</div></article>';
+  }
+  function animeSeriesCreditsMarkup(entry,loading=false){
+    const characters=Array.isArray(entry.characters)?entry.characters:[];
+    const staff=Array.isArray(entry.staff)?entry.staff:[];
+    const characterCards=characters.map(character=>{
+      const image=character.image
+        ?'<img src="'+esc(character.image)+'" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.style.display=\'none\'">'
+        :'<span class="hk-series-person-placeholder">✦</span>';
+      const name=character.siteUrl&&/^https:\/\//i.test(character.siteUrl)
+        ?'<a href="'+esc(character.siteUrl)+'" target="_blank" rel="noopener noreferrer">'+esc(character.name||'Character')+'</a>'
+        :'<strong>'+esc(character.name||'Character')+'</strong>';
+      const jp=(character.japaneseVoiceActors||[])[0],en=(character.englishVoiceActors||[])[0];
+      const voices=[jp?'JP · '+jp.name:'',en?'EN · '+en.name:''].filter(Boolean);
+      return '<article class="hk-series-character">'+image+'<div class="hk-series-person-copy">'+name+'<small>'+esc(character.role||'Character')+'</small>'+(voices.length?'<div class="hk-series-voice">'+voices.map(v=>'<span>'+esc(v)+'</span>').join('')+'</div>':'')+'</div></article>';
+    }).join('');
+    const staffCards=staff.map(person=>seriesCreditPersonCard(person,person.role||'Production staff')).join('');
+    if(!characters.length&&!staff.length){
+      return '<div class="hk-series-credits-empty">'+(loading?'Loading characters, voice cast and production staff…':'No character or staff credits are listed for this title yet.')+'</div>';
+    }
+    return (characters.length?'<section class="hk-series-credit-section"><header><h3>Characters &amp; voice cast</h3><span>'+characters.length+'</span></header><div class="hk-series-character-grid">'+characterCards+'</div></section>':'')+
+      (staff.length?'<section class="hk-series-credit-section"><header><h3>Production staff</h3><span>'+staff.length+'</span></header><div class="hk-series-people-grid">'+staffCards+'</div></section>':'');
+  }
+  function mangaSeriesCreditsMarkup(entry,loading=false){
+    const normalize=list=>(Array.isArray(list)?list:[]).map(item=>typeof item==='string'?{name:item}:item).filter(item=>item&&item.name);
+    const authors=normalize(entry.authors&&entry.authors.length?entry.authors:entry.author? [entry.author]:[]);
+    const artists=normalize(entry.artists&&entry.artists.length?entry.artists:entry.artist? [entry.artist]:[]);
+    const characters=Array.isArray(entry.characters)?entry.characters:[];
+    const staff=Array.isArray(entry.staff)?entry.staff:[];
+    const authorCards=authors.map(person=>seriesCreditPersonCard(person,person.role||'Author / story')).join('');
+    const artistCards=artists.map(person=>seriesCreditPersonCard(person,person.role||'Artist / illustration')).join('');
+    const characterCards=characters.map(person=>seriesCreditPersonCard(person,person.role||'Character')).join('');
+    const sections=[];
+    if(authors.length)sections.push('<section class="hk-series-credit-section"><header><h3>Authors &amp; story</h3><span>'+authors.length+'</span></header><div class="hk-series-people-grid">'+authorCards+'</div></section>');
+    if(artists.length)sections.push('<section class="hk-series-credit-section"><header><h3>Artists &amp; illustration</h3><span>'+artists.length+'</span></header><div class="hk-series-people-grid">'+artistCards+'</div></section>');
+    if(characters.length)sections.push('<section class="hk-series-credit-section"><header><h3>Characters</h3><span>'+characters.length+'</span></header><div class="hk-series-people-grid">'+characterCards+'</div></section>');
+    if(!sections.length&&staff.length)sections.push('<section class="hk-series-credit-section"><header><h3>Creators &amp; staff</h3><span>'+staff.length+'</span></header><div class="hk-series-people-grid">'+staff.map(person=>seriesCreditPersonCard(person,person.role||'')).join('')+'</div></section>');
+    return sections.length?sections.join(''):'<div class="hk-series-credits-empty">'+(loading?'Finding the AniList series profile and creator credits…':'No author, artist or character credits are available for this title yet.')+'</div>';
+  }
+  async function hydrateSeriesCredits(kind,entry){
+    const key=seriesProfileKey(kind,entry);
+    if(!key||key.endsWith(':title:'))return;
+    if(entry.characters||entry.staff||entry.authors&&entry.authors.length||entry.artists&&entry.artists.length){
+      const target=document.getElementById(kind==='anime'?'animeSeriesCredits':'mangaSeriesCredits');
+      if(target&&target.dataset.seriesCreditKey===key)target.innerHTML=kind==='anime'?animeSeriesCreditsMarkup(entry):mangaSeriesCreditsMarkup(entry);
+      if((entry.characters&&entry.characters.length)||(entry.staff&&entry.staff.length))return;
+    }
+    let task=seriesProfilePending.get(key);
+    if(!task&&!seriesProfileCache.has(key)){
+      task=(async()=>{
+        try{
+          const data=await fetchSeriesProfile(kind,entry);
+          seriesProfileCache.set(key,data||null);
+          return data||null;
+        }catch(error){
+          seriesProfileCache.set(key,null);
+          throw error;
+        }finally{seriesProfilePending.delete(key);}
+      })();
+      seriesProfilePending.set(key,task);
+    }
+    try{
+      const data=seriesProfileCache.has(key)?seriesProfileCache.get(key):await task;
+      if(data){
+        for(const field of ['anilistId','malId','authors','artists','characters','staff','relations']){
+          if(data[field]!==undefined)entry[field]=data[field];
+        }
+        if(kind==='anime'&&Array.isArray(localAnime)&&localAnime.some(item=>String(item.id)===String(entry.id))){
+          const saved=localAnime.find(item=>String(item.id)===String(entry.id));
+          if(saved){Object.assign(saved,{anilistId:entry.anilistId,authors:entry.authors,artists:entry.artists,characters:entry.characters,staff:entry.staff,relations:entry.relations});write(key.anime,localAnime);}
+        }
+      }
+      const target=document.getElementById(kind==='anime'?'animeSeriesCredits':'mangaSeriesCredits');
+      if(target&&target.dataset.seriesCreditKey===key){
+        target.innerHTML=data?(kind==='anime'?animeSeriesCreditsMarkup(entry):mangaSeriesCreditsMarkup(entry)):
+          '<div class="hk-series-credits-empty">'+(kind==='anime'?'No character or staff credits were found for this series.':'No matching AniList creator profile was found for this manga.')+'</div>';
+      }
+    }catch(error){
+      const target=document.getElementById(kind==='anime'?'animeSeriesCredits':'mangaSeriesCredits');
+      if(target&&target.dataset.seriesCreditKey===key)target.innerHTML='<div class="hk-series-credits-empty">Could not load extra credits right now. The rest of the series details are still available.</div>';
+      console.warn('Hekomi series credits unavailable:',error);
+    }
+  }
+
   function animeInfoMarkup(entry,variant='local'){
     const total=Number(entry.totalEpisodes||entry.num_episodes||entry.episodesTotal)||0;
     const watched=Number(entry.episodes)||0;
@@ -3296,10 +3455,13 @@ function showProfileTab(tab){activeProfileTab=tab;$$('#profileTabs button').forE
     const rows=details.map(([label,value])=>'<div class="anime-info-cell"><dt>'+esc(label)+'</dt><dd>'+esc(String(value))+'</dd></div>').join('');
     const sourceUrl=entry.externalUrl||(entry.malId?'https://myanimelist.net/anime/'+Number(entry.malId):entry.anilistId?'https://anilist.co/anime/'+Number(entry.anilistId):'');
     const coverHtml=cover?'<img class="anime-info-cover" src="'+esc(cover)+'" alt="Cover artwork for '+esc(entry.title)+'" loading="lazy" decoding="async" referrerpolicy="no-referrer">':'<div class="anime-info-cover anime-info-cover-empty" aria-hidden="true">H</div>';
+    const profileKey=seriesProfileKey('anime',entry);
     openModal('<div class="modal-top"><div><h2>'+esc(entry.title||'Anime details')+'</h2><p class="muted small">Full series information · '+esc(entry.metadataProvider||'Hekomi local entry')+'</p></div><button class="close" data-close>×</button></div>'+
       '<div id="animeInfoBody"><div class="anime-info-hero">'+coverHtml+'<div><div class="anime-info-genres">'+genresHtml+'</div><p class="anime-info-synopsis">'+(synopsis?esc(synopsis).replace(/\n/g,'<br><br>'):'No synopsis is saved for this entry yet.')+'</p>'+(alternatives.length?'<p class="muted small"><strong>Alternative titles:</strong> '+esc(alternatives.join(' · '))+'</p>':'')+'</div></div>'+
       '<dl class="anime-info-grid">'+rows+'</dl>'+(entry.nextAiringEpisode&&entry.nextAiringEpisode.airingAt?'<p class="notice"><strong>Next broadcast:</strong> Episode '+esc(String(entry.nextAiringEpisode.episode||'?'))+' · '+esc(new Date(Number(entry.nextAiringEpisode.airingAt)*1000).toLocaleString())+'<span class="small muted" style="display:block;margin-top:4px">This is the series’ upcoming broadcast number, not your watch progress.</span></p>':'')+
+      '<section id="animeSeriesCredits" class="hk-series-credit-area" data-series-credit-key="'+esc(profileKey)+'">'+animeSeriesCreditsMarkup(entry,true)+'</section>'+
       '<div class="detail-actions">'+(sourceUrl?'<a class="btn-secondary" href="'+esc(sourceUrl)+'" target="_blank" rel="noreferrer">Open source ↗</a>':'')+'</div></div>');
+    void hydrateSeriesCredits('anime',entry);
   }
   async function openLocalAnimeDetails(id){
     const entry=localAnime.find(item=>String(item.id)===String(id));
