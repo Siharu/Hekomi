@@ -1217,7 +1217,7 @@ async function searchSyoboiAniListTitles(programs) {
   const now = Date.now();
   const missing = [];
   for (const term of terms) {
-    const key = term.normalize('NFKC').toLocaleLowerCase().replace(/[\\p{P}\\p{S}\\p{Z}\\s]+/gu, '').trim();
+    const key = term.normalize('NFKC').toLocaleLowerCase();
     if (!key) continue;
     const cached = syoboiAniListTitleSearchCache.get(key);
     if (cached && now < cached.expiresAt) continue;
@@ -1233,7 +1233,7 @@ async function searchSyoboiAniListTitles(programs) {
     const fields = batch.map((_, index) =>
       'match' + index + ':Media(search:$term' + index + ',type:ANIME,sort:[SEARCH_MATCH],isAdult:false){' +
       SYOBOI_ANILIST_SEARCH_FIELDS + '}'
-    ).join('\\n');
+    ).join(' ');
     const variables = Object.fromEntries(batch.map((item, index) => ['term' + index, item.term]));
     try {
       const payload = await requestAniList(
@@ -1260,7 +1260,7 @@ async function searchSyoboiAniListTitles(programs) {
 
   const matches = new Map();
   for (const term of terms) {
-    const key = term.normalize('NFKC').toLocaleLowerCase().replace(/[\\p{P}\\p{S}\\p{Z}\\s]+/gu, '').trim();
+    const key = term.normalize('NFKC').toLocaleLowerCase();
     const cached = syoboiAniListTitleSearchCache.get(key);
     for (const media of cached && Array.isArray(cached.data) ? cached.data : []) {
       if (media && media.id) matches.set(Number(media.id), media);
