@@ -1616,10 +1616,10 @@ function renderMediaPage(req,kind,media) {
 
   const profilePersonCard = (person, roleLabel = '') => {
     if (!person || !person.name) return '';
-    const image = person.image && /^https:\\/\\//i.test(person.image)
+    const image = person.image && /^https:\/\//i.test(person.image)
       ? '<img src="' + htmlEscape(person.image) + '" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer">'
       : '<span class="detail-person-placeholder">' + htmlEscape(person.name.slice(0,1).toUpperCase()) + '</span>';
-    const name = person.siteUrl && /^https:\\/\\//i.test(person.siteUrl)
+    const name = person.siteUrl && /^https:\/\//i.test(person.siteUrl)
       ? '<a href="' + htmlEscape(person.siteUrl) + '" target="_blank" rel="noreferrer">' + htmlEscape(person.name) + '</a>'
       : '<strong>' + htmlEscape(person.name) + '</strong>';
     return '<article class="detail-person-card">' + image + '<div class="detail-person-copy">' + name +
@@ -1646,10 +1646,10 @@ function renderMediaPage(req,kind,media) {
       mainVoice ? '<span>JP · ' + htmlEscape(mainVoice.name) + '</span>' : '',
       englishVoice ? '<span>EN · ' + htmlEscape(englishVoice.name) + '</span>' : ''
     ].filter(Boolean).join('');
-    const image = character.image && /^https:\\/\\//i.test(character.image)
+    const image = character.image && /^https:\/\//i.test(character.image)
       ? '<img src="' + htmlEscape(character.image) + '" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer">'
       : '<span class="detail-person-placeholder">✦</span>';
-    const name = character.siteUrl && /^https:\\/\\//i.test(character.siteUrl)
+    const name = character.siteUrl && /^https:\/\//i.test(character.siteUrl)
       ? '<a href="' + htmlEscape(character.siteUrl) + '" target="_blank" rel="noreferrer">' + htmlEscape(character.name) + '</a>'
       : '<strong>' + htmlEscape(character.name) + '</strong>';
     return '<article class="detail-character-card">' + image + '<div class="detail-person-copy">' + name +
