@@ -9,7 +9,14 @@
     eye0:'#2a2039',eye1:'#5a3c7c',eye2:'#9871cc',eye3:'#c8a8f0',white:'#fff0e8',
     shirt0:'#40364f',shirt1:'#65577f',shirt2:'#8875a9',shirt3:'#ad9acb',
     mint0:'#4d9f91',mint1:'#8be1cf',pant0:'#1d2232',pant1:'#2c3145',pant2:'#41465c',
-    shoe0:'#171925',shoe1:'#77718d',accent:'#c5b5ff'
+    shoe0:'#171925',shoe1:'#77718d',accent:'#c5b5ff',
+    uniform0:'#26344e',uniform1:'#455b78',uniform2:'#edf0ec',uniform3:'#c7d8da',
+    formal0:'#35283f',formal1:'#624b68',formal2:'#b39bbf',formal3:'#f3e8ef',
+    lazy0:'#31564f',lazy1:'#4d7b70',lazy2:'#9acbbb',lazy3:'#deebe1',
+    swim0:'#246b78',swim1:'#4da9a8',swim2:'#b5e7df',swim3:'#f1c3c6',
+    date0:'#713d5b',date1:'#b65f82',date2:'#efa5bb',date3:'#ffe1e9',
+    makeupShadow:'#a87592',makeupRose:'#d28ba1',makeupCoral:'#e8a08e',
+    makeupLip:'#bd647e',makeupGold:'#f0d39a'
   };
   const BACK_HAIR=[
     [15,7,34,7,'ink'],[12,11,40,12,'ink'],[10,20,44,22,'ink'],
@@ -64,6 +71,53 @@
     [43,13,4,2,'hair3'],[15,24,2,5,'hair3'],[47,25,2,5,'hair3'],
     [18,34,2,7,'hair2'],[45,35,2,8,'hair2']
   ];
+
+  const WARDROBE_PRESETS=Object.freeze({
+    school:{name:'School dress',detail:'Sailor collar · side ponytail',hair:'school-ponytail',makeup:'fresh',emoji:'🎒',line:'Uniform on! I even remembered my ribbon today.'},
+    formal:{name:'Formal dress',detail:'Tailored jacket · neat updo',hair:'formal-bun',makeup:'elegant',emoji:'✦',line:'A little polished, a little elegant. How do I look?'},
+    lazy:{name:'Lazy dress',detail:'Oversized hoodie · messy bun',hair:'messy-bun',makeup:'soft',emoji:'☁',line:'Comfy clothes, messy hair… this is my natural habitat.'},
+    swimsuit:{name:'Swimsuit dress',detail:'Sporty one-piece · twin buns',hair:'twin-buns',makeup:'sun-kissed',emoji:'🌊',line:'Beach day! I packed sunscreen. You did too, right?'},
+    date:{name:'Going on a date',detail:'Rose dress · half-up waves',hair:'date-half-up',makeup:'rosy',emoji:'♡',line:'Wait, is this outfit too much? No? Okay… let’s go.'}
+  });
+  function drawBackHair(ctx,style,dy){
+    if(style==='formal-bun'||style==='twin-buns'){
+      blocks(ctx,BACK_HAIR.filter(([,y,,h])=>y<48||(y<56&&h<=5)),dy);
+      if(style==='formal-bun')blocks(ctx,[[18,3,28,10,'ink'],[20,1,24,10,'hair0'],[23,2,18,7,'hair1'],[17,8,30,7,'hair0'],[21,5,5,2,'hair3'],[36,4,5,2,'hair3'],[13,46,5,10,'hair0'],[45,46,5,10,'hair0']],dy);
+      else blocks(ctx,[[8,5,13,11,'ink'],[10,3,10,10,'hair0'],[12,4,7,6,'hair1'],[43,5,13,11,'ink'],[45,3,10,10,'hair0'],[47,4,7,6,'hair1'],[13,16,5,29,'hair0'],[46,16,5,29,'hair0'],[15,42,4,11,'hair1'],[44,42,4,11,'hair1']],dy);
+      return;
+    }
+    drawBackHair(ctx,frame.hair||'long',dy);
+    if(style==='school-ponytail')blocks(ctx,[[42,10,11,9,'ink'],[47,16,10,9,'ink'],[51,23,8,16,'ink'],[53,37,7,12,'ink'],[51,47,7,9,'hair0'],[48,53,6,8,'hair1'],[44,13,7,5,'hair1'],[50,21,5,5,'hair2']],dy);
+    else if(style==='messy-bun')blocks(ctx,[[19,3,25,9,'ink'],[21,1,21,9,'hair0'],[23,3,15,5,'hair1'],[14,7,8,7,'hair0'],[43,5,7,7,'hair0'],[18,10,5,4,'hair3'],[47,8,5,4,'hair3']],dy);
+    else if(style==='date-half-up')blocks(ctx,[[20,5,24,8,'ink'],[22,3,20,8,'hair0'],[25,4,13,4,'hair1'],[16,11,7,5,'hair0'],[41,11,7,5,'hair0']],dy);
+  }
+  function drawHairAccessories(ctx,style,dy){
+    if(style==='school-ponytail')blocks(ctx,[[47,19,5,4,'date1'],[49,16,3,5,'date2'],[45,20,4,3,'uniform2'],[52,20,4,2,'date2']],dy);
+    else if(style==='formal-bun')blocks(ctx,[[39,7,6,2,'makeupGold'],[41,5,2,6,'makeupGold'],[36,9,3,2,'makeupGold']],dy);
+    else if(style==='messy-bun')blocks(ctx,[[17,15,5,2,'lazy2'],[18,13,2,5,'lazy3'],[13,17,3,2,'lazy1']],dy);
+    else if(style==='twin-buns')blocks(ctx,[[9,13,5,3,'swim2'],[10,11,3,6,'swim3'],[7,15,4,2,'swim1'],[49,13,5,3,'swim2'],[50,11,3,6,'swim3'],[52,15,4,2,'swim1']],dy);
+    else if(style==='date-half-up')blocks(ctx,[[40,12,6,3,'date2'],[42,10,3,7,'date1'],[38,13,4,2,'date3'],[45,13,3,2,'date3']],dy);
+  }
+  function drawWardrobeOutfit(ctx,outfit,dy){
+    if(outfit==='school')blocks(ctx,[[17,47,30,15,'ink'],[19,48,26,12,'uniform2'],[15,48,8,10,'ink'],[41,48,8,10,'ink'],[16,49,6,7,'uniform0'],[42,49,6,7,'uniform0'],[23,47,18,6,'uniform2'],[25,48,5,5,'uniform3'],[34,48,5,5,'uniform3'],[29,50,6,8,'uniform0'],[30,52,4,4,'date1'],[27,59,10,3,'uniform1'],[18,61,28,12,'ink'],[19,62,26,10,'uniform0'],[20,64,24,2,'uniform1'],[24,63,2,7,'uniform1'],[31,63,2,8,'uniform1'],[38,63,2,7,'uniform1'],[20,70,8,4,'uniform2'],[36,70,8,4,'uniform2'],[22,71,4,2,'uniform3'],[38,71,4,2,'uniform3']],dy);
+    else if(outfit==='formal')blocks(ctx,[[17,47,30,15,'ink'],[19,48,26,12,'formal3'],[15,48,8,10,'ink'],[41,48,8,10,'ink'],[16,49,6,8,'formal0'],[42,49,6,8,'formal0'],[20,48,8,11,'formal1'],[36,48,8,11,'formal1'],[25,48,14,9,'formal3'],[27,49,10,7,'formal2'],[29,49,6,8,'formal0'],[30,51,4,5,'makeupGold'],[27,59,10,3,'formal1'],[19,61,26,13,'ink'],[21,62,22,10,'formal0'],[22,64,20,2,'formal1'],[27,63,2,8,'formal1'],[35,63,2,8,'formal1'],[22,71,7,3,'formal3'],[37,71,7,3,'formal3']],dy);
+    else if(outfit==='lazy')blocks(ctx,[[17,47,30,16,'ink'],[19,48,26,13,'lazy0'],[14,48,9,11,'ink'],[41,48,9,11,'ink'],[16,49,6,9,'lazy1'],[42,49,6,9,'lazy1'],[20,49,24,7,'lazy1'],[19,55,26,7,'lazy0'],[24,56,16,5,'lazy1'],[26,57,12,4,'lazy0'],[27,54,2,7,'lazy3'],[35,54,2,7,'lazy3'],[24,60,16,3,'lazy0'],[25,61,14,2,'lazy1'],[27,62,2,2,'lazy2'],[36,62,2,2,'lazy2']],dy);
+    else if(outfit==='swimsuit')blocks(ctx,[[16,48,7,9,'skin0'],[42,48,7,9,'skin0'],[17,48,5,7,'skin1'],[43,48,5,7,'skin1'],[21,47,22,15,'ink'],[23,48,18,12,'swim0'],[24,48,4,4,'swim2'],[36,48,4,4,'swim2'],[27,49,10,8,'swim1'],[29,50,6,7,'swim0'],[30,52,4,4,'swim3'],[22,57,20,5,'swim1'],[27,60,10,3,'swim2'],[19,62,26,9,'ink'],[21,63,22,7,'swim0'],[22,64,20,2,'swim1'],[24,63,2,6,'swim2'],[38,63,2,6,'swim2'],[22,70,7,3,'swim2'],[36,70,7,3,'swim2']],dy);
+    else if(outfit==='date')blocks(ctx,[[17,47,30,15,'ink'],[19,48,26,12,'date2'],[14,48,9,10,'ink'],[41,48,9,10,'ink'],[16,49,6,8,'date1'],[42,49,6,8,'date1'],[20,48,8,8,'date2'],[36,48,8,8,'date2'],[25,48,14,10,'date3'],[27,51,10,7,'date2'],[29,49,6,10,'date1'],[30,52,4,4,'makeupGold'],[27,59,10,3,'date1'],[18,61,28,14,'ink'],[20,62,24,11,'date1'],[21,63,22,3,'date2'],[23,66,18,2,'date2'],[26,69,12,2,'date2'],[29,60,6,4,'date3'],[30,61,4,2,'date1']],dy);
+  }
+  function drawEyeMakeup(ctx,style){
+    if(style==='soft')return;
+    const shadow=style==='sun-kissed'?'makeupCoral':style==='fresh'?'makeupRose':'makeupShadow';
+    blocks(ctx,[[21,27,10,2,shadow],[35,27,10,2,shadow],[22,29,8,1,'eye0'],[36,29,8,1,'eye0']]);
+  }
+  function drawMakeupDetails(ctx,style){
+    if(style==='soft')return;
+    if(style==='fresh')blocks(ctx,[[21,28,2,1,'eye0'],[43,28,2,1,'eye0'],[29,41,6,1,'makeupCoral']]);
+    else if(style==='elegant')blocks(ctx,[[20,29,3,1,'eye0'],[43,29,3,1,'eye0'],[20,37,6,2,'makeupRose'],[38,37,6,2,'makeupRose'],[29,41,6,2,'makeupLip']]);
+    else if(style==='sun-kissed')blocks(ctx,[[19,37,7,3,'makeupCoral'],[38,37,7,3,'makeupCoral'],[22,40,1,1,'makeupGold'],[26,41,1,1,'makeupGold'],[38,41,1,1,'makeupGold'],[42,40,1,1,'makeupGold'],[29,41,6,2,'makeupCoral']]);
+    else if(style==='rosy')blocks(ctx,[[20,29,3,1,'eye0'],[43,29,3,1,'eye0'],[19,37,7,3,'makeupRose'],[38,37,7,3,'makeupRose'],[29,41,6,2,'makeupLip']]);
+  }
+
   function blocks(ctx,list,dy=0){
     for(const [x,y,w,h,color] of list){ctx.fillStyle=P[color];ctx.fillRect(x,y+dy,w,h);}
   }
@@ -180,12 +234,16 @@
     else {drawLeftArm(ctx,dy);drawWaveArm(ctx,frame.wave,dy);}
     blocks(ctx,FACE,dy);
     blocks(ctx,FRINGE,dy);
+    drawHairAccessories(ctx,frame.hair||'long',dy);
     blocks(ctx,[
       [13,45,5,12,'hair0'],[14,54,4,7,'hair1'],[45,46,5,12,'hair0'],
       [46,54,4,8,'hair1'],[17,58,3,5,'hair0'],[44,60,3,5,'hair1']
     ],dy);
+    drawEyeMakeup(ctx,frame.makeup||'soft');
     drawEyes(ctx,frame.expression,frame.blink,frame.gazeX||0,frame.gazeY||0);
     drawFaceDetails(ctx,frame.expression,frame.chewFrame||0);
+    drawMakeupDetails(ctx,frame.makeup||'soft');
+    drawWardrobeOutfit(ctx,frame.outfit||'lazy',dy);
     if(frame.action==='eating'){
       drawEatingArm(ctx,frame.chewFrame||0,dy);
       blocks(ctx,[
@@ -240,6 +298,7 @@
       this.recommendLink=bubble&&bubble.querySelector('.hekomi-recommend-link');
       this.reduced=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
       this.canvas.width=W;this.canvas.height=H;this.ctx.imageSmoothingEnabled=false;
+      this.mountWardrobe();
       this.canvas.style.imageRendering='pixelated';this.canvas.setAttribute('role','button');
       this.canvas.setAttribute('tabindex','0');this.canvas.setAttribute('aria-label','Hekomi-chan, wandering around Hekomi. Activate to say hello.');
       this.canvas.title='Say hi to Hekomi-chan';
@@ -266,6 +325,27 @@
       this.paint(now,true);
       if(!this.reduced){if(!startsPerched)this.stateUntil=now+3600;requestAnimationFrame(time=>this.tick(time));}
     }
+
+
+    mountWardrobe(){
+      let saved='lazy';
+      try{const value=localStorage.getItem('hekomi_wardrobe_v1');if(value&&WARDROBE_PRESETS[value])saved=value;}catch{}
+      this.outfit=saved;
+      const toggle=document.createElement('button');toggle.type='button';toggle.className='hekomi-wardrobe-toggle';
+      toggle.setAttribute('aria-label',"Open Hekomi-chan's wardrobe");toggle.setAttribute('aria-haspopup','dialog');toggle.setAttribute('aria-expanded','false');toggle.title="Choose Hekomi-chan's outfit";
+      toggle.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5a2.5 2.5 0 1 0-2.5-2.5"/><path d="M12 7 3 13v1h18v-1L12 7Z"/><path d="M5 16h14v4H5z"/></svg>';
+      toggle.addEventListener('click',event=>{event.stopPropagation();this.openWardrobe();});this.root.appendChild(toggle);this.wardrobeToggle=toggle;
+      const overlay=document.createElement('div');overlay.className='hekomi-wardrobe-backdrop';overlay.hidden=true;overlay.setAttribute('aria-hidden','true');
+      const cards=Object.entries(WARDROBE_PRESETS).map(([key,preset])=>'<button type="button" class="hekomi-wardrobe-card" data-hekomi-outfit="'+key+'" aria-pressed="'+(key===this.outfit?'true':'false')+'"><span class="hekomi-wardrobe-swatch" data-look="'+key+'" aria-hidden="true">'+preset.emoji+'</span><span class="hekomi-wardrobe-card-copy"><strong>'+preset.name+'</strong><small>'+preset.detail+'</small></span><span class="hekomi-wardrobe-check" aria-hidden="true">✓</span></button>').join('');
+      overlay.innerHTML='<section class="hekomi-wardrobe" role="dialog" aria-modal="true" aria-labelledby="hekomiWardrobeTitle"><header class="hekomi-wardrobe-head"><div><span class="hekomi-wardrobe-kicker">HEKOMI-CHAN / CLOSET</span><h2 id="hekomiWardrobeTitle">A change of look?</h2><p>Every outfit comes with its own hair and makeup.</p></div><button type="button" class="hekomi-wardrobe-close" data-hekomi-wardrobe-close aria-label="Close wardrobe">×</button></header><div class="hekomi-wardrobe-grid">'+cards+'</div><footer class="hekomi-wardrobe-foot"><span>✧</span> Your current look is saved on this device.</footer></section>';
+      overlay.addEventListener('click',event=>{const choice=event.target.closest('[data-hekomi-outfit]');if(choice){this.setOutfit(choice.dataset.hekomiOutfit);return;}if(event.target===overlay||event.target.closest('[data-hekomi-wardrobe-close]'))this.closeWardrobe();});
+      document.addEventListener('keydown',event=>{if(event.key==='Escape'&&this.wardrobeOverlay&&!this.wardrobeOverlay.hidden)this.closeWardrobe();});
+      document.body.appendChild(overlay);this.wardrobeOverlay=overlay;this.updateWardrobeSelection();
+    }
+    updateWardrobeSelection(){if(!this.wardrobeOverlay)return;this.wardrobeOverlay.querySelectorAll('[data-hekomi-outfit]').forEach(card=>{const selected=card.dataset.hekomiOutfit===this.outfit;card.classList.toggle('is-selected',selected);card.setAttribute('aria-pressed',selected?'true':'false');});}
+    openWardrobe(){if(!this.wardrobeOverlay)return;this.wardrobeOverlay.hidden=false;this.wardrobeOverlay.setAttribute('aria-hidden','false');this.wardrobeToggle.setAttribute('aria-expanded','true');const selected=this.wardrobeOverlay.querySelector('[data-hekomi-outfit="'+this.outfit+'"]');if(selected)selected.focus();}
+    closeWardrobe(){if(!this.wardrobeOverlay)return;this.wardrobeOverlay.hidden=true;this.wardrobeOverlay.setAttribute('aria-hidden','true');this.wardrobeToggle.setAttribute('aria-expanded','false');this.wardrobeToggle.focus();}
+    setOutfit(name){if(!WARDROBE_PRESETS[name])return;this.outfit=name;try{localStorage.setItem('hekomi_wardrobe_v1',name);}catch{}this.updateWardrobeSelection();this.paint(performance.now(),true);this.closeWardrobe();this.say(WARDROBE_PRESETS[name].line,6800,true);}
 
     dialogueForPage(){
       const path=location.pathname.toLowerCase();
@@ -575,7 +655,8 @@
         expression,blink,walking,sleeping,sitting,
         action:makingBed?'making-bed':eating?'eating':'',
         step:frame%6,wave:Math.floor(time/420)%6,chewFrame:Math.floor(time/480)%2,
-        bob:bob+sway,gazeX:this.gazeX,gazeY:this.gazeY
+        bob:bob+sway,gazeX:this.gazeX,gazeY:this.gazeY,
+        outfit:this.outfit,hair:WARDROBE_PRESETS[this.outfit].hair,makeup:WARDROBE_PRESETS[this.outfit].makeup
       });
     }
   }
