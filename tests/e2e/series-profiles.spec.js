@@ -92,7 +92,7 @@ const mangaProfile = {
 };
 
 test('anime detail modal shows characters, Japanese and English voice actors, and staff', async ({ page }) => {
-  await page.addInitScript(() => {
+  await page.addInitScript(({ cover }) => {
     localStorage.setItem('folio_local_anime_v1', JSON.stringify([{
       id: 'local-cowboy-profile',
       anilistId: 1,
@@ -101,10 +101,10 @@ test('anime detail modal shows characters, Japanese and English voice actors, an
       status: 'plan_to_watch',
       episodes: 0,
       score: 0,
-      cover: animeProfileCover,
+      cover,
       metadataComplete: true
     }]));
-  }, { animeProfileCover: animeProfile.cover });
+  }, { cover: animeProfile.cover });
 
   await stubMalAuth(page);
   await page.route(url => url.pathname === '/api/catalog/detail', route =>
