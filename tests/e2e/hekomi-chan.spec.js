@@ -139,6 +139,35 @@ test('Hekomi-chan wardrobe can be dismissed with Escape', async ({ page }) => {
 });
 
 
+test('Hekomi-chan rear view has layered hair and outfit-specific back details', async ({ page }) => {
+  await openHekomiWithAiringFixture(page);
+  const result = await page.evaluate(() => {
+    const companion = window.hekomiChan;
+    companion.setDirection('north');
+    companion.setOutfit('lazy');
+    companion.paint(performance.now(), true);
+    const lazy = companion.canvas.toDataURL();
+    const pixels = companion.ctx.getImageData(0, 0, 64, 80).data;
+    const alphaAt = (x, y) => pixels[(y * 64 + x) * 4 + 3];
+    const hair = [alphaAt(12, 52), alphaAt(51, 52)];
+    companion.setOutfit('date');
+    companion.paint(performance.now(), true);
+    return {
+      width: companion.canvas.width,
+      height: companion.canvas.height,
+      lazy,
+      date: companion.canvas.toDataURL(),
+      sideHairVisible: hair.every(alpha => alpha > 0),
+      direction: companion.direction
+    };
+  });
+  expect(result.width).toBe(64);
+  expect(result.height).toBe(80);
+  expect(result.direction).toBe('north');
+  expect(result.sideHairVisible).toBe(true);
+  expect(result.lazy).not.toBe(result.date);
+});
+
 test('Hekomi-chan has distinct front, back and side-facing sprite views', async ({ page }) => {
   await openHekomiWithAiringFixture(page);
 
