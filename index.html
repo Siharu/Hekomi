@@ -1572,7 +1572,7 @@ body[data-page="home"] .home-hero .hero-copy{max-width:780px}
 <link rel="stylesheet" href="/assets/hekomi-calendar.css?v=20261108-weekly-episode-grid">
 <link rel="stylesheet" href="/assets/hekomi-meme.css?v=20261108-anime-game-memes">
 <link rel="stylesheet" href="/assets/hekomi-chan.css?v=20261108-wardrobe">
-<script defer src="/assets/hekomi-chan.js?v=20261108-cardinal-gait"></script>
+<script defer src="/assets/hekomi-chan.js?v=20261109-mobile-dock"></script>
 <script defer src="/assets/hekomi-calendar.js?v=20261108-weekly-episode-grid"></script>
 <script defer src="/assets/hekomi-meme.js?v=20261108-anime-game-memes"></script>
 <style>body[data-page="discover"] #catalogTitle{margin:9px 0 8px;font-size:clamp(32px,4vw,46px);line-height:1.06;letter-spacing:-.065em;text-wrap:balance}@media(max-width:760px){body[data-page="discover"] #catalogTitle{font-size:34px}}</style>
@@ -2209,6 +2209,156 @@ body[data-page="home"] #animeShowcase::before{
 </style>
 
 <link rel="stylesheet" href="/assets/hekomi-themes.css?v=20261108-glass-corners">
+
+<style id="hekomi-mobile-ux-rework">
+/* One authoritative mobile pass: restore discovery and give the page a clear hierarchy. */
+@media (max-width:760px) {
+  body[data-page="home"] #landing {
+    display:flex!important;
+    flex-direction:column!important;
+    align-items:stretch!important;
+    gap:0!important;
+    padding-top:8px!important;
+  }
+  body[data-page="home"] #landing > #animeShowcase {
+    order:1!important;
+    width:100%!important;
+    margin:0 0 16px!important;
+  }
+  body[data-page="home"] #landing > #discoverCatalog {
+    display:block!important;
+    order:2!important;
+    width:100%!important;
+    min-width:0!important;
+    margin:0 0 22px!important;
+    padding:8px 0 0!important;
+  }
+  body[data-page="home"] #landing > #hkMemeCorner {
+    order:3!important;
+    width:100%!important;
+    margin:0 0 20px!important;
+  }
+  body[data-page="home"] #discoverCatalog .catalog-heading {
+    display:grid!important;
+    grid-template-columns:minmax(0,1fr)!important;
+    gap:9px!important;
+    margin:0 0 12px!important;
+    padding:0 0 10px!important;
+  }
+  body[data-page="home"] #discoverCatalog .catalog-heading h2 {
+    margin:4px 0 0!important;
+    font-size:clamp(23px,6.5vw,27px)!important;
+    line-height:1.08!important;
+  }
+  body[data-page="home"] #discoverCatalog .catalog-heading p { display:none!important; }
+  body[data-page="home"] #discoverCatalog .catalog-search {
+    display:grid!important;
+    grid-template-columns:minmax(0,1fr) auto!important;
+    gap:7px!important;
+    margin:0 0 12px!important;
+  }
+  body[data-page="home"] #discoverCatalog .catalog-search input,
+  body[data-page="home"] #discoverCatalog .catalog-search button {
+    min-width:0!important;
+    min-height:42px!important;
+    height:42px!important;
+    font-size:11px!important;
+  }
+  body[data-page="home"] #discoverCatalog .advanced-search {
+    margin:8px 0 17px!important;
+  }
+  body[data-page="home"] #discoverCatalog .advanced-toggle {
+    min-height:50px!important;
+    padding:9px 11px!important;
+  }
+  body[data-page="home"] #discoverCatalog .catalog-shelf {
+    margin-top:16px!important;
+  }
+  body[data-page="home"] #discoverCatalog .catalog-shelf-head {
+    gap:8px!important;
+    align-items:flex-end!important;
+  }
+  body[data-page="home"] #discoverCatalog .catalog-shelf-head h3 {
+    font-size:17px!important;
+    line-height:1.15!important;
+  }
+  body[data-page="home"] #discoverCatalog .catalog-row {
+    gap:8px!important;
+    padding:2px 1px 10px!important;
+  }
+  body[data-page="home"] #discoverCatalog .catalog-row .catalog-card {
+    flex:0 0 clamp(96px,27vw,108px)!important;
+    width:clamp(96px,27vw,108px)!important;
+    min-width:0!important;
+    border-radius:11px!important;
+  }
+  body[data-page="home"] #discoverCatalog .catalog-row .catalog-card-body {
+    padding:7px!important;
+    gap:4px!important;
+  }
+  body[data-page="home"] #discoverCatalog .catalog-row .catalog-card h4 {
+    font-size:10px!important;
+    line-height:1.25!important;
+  }
+  body[data-page="home"] #discoverCatalog .catalog-row .catalog-card-meta {
+    font-size:8px!important;
+  }
+
+  /* Meme Corner is a bonus card, not a second hero competing with discovery. */
+  body[data-page="home"] #hkMemeCorner {
+    padding:11px!important;
+    border-radius:15px!important;
+  }
+  body[data-page="home"] #hkMemeCorner .hk-meme-heading {
+    align-items:center!important;
+    gap:8px!important;
+    margin-bottom:9px!important;
+  }
+  body[data-page="home"] #hkMemeCorner .hk-meme-heading h2 {
+    font-size:17px!important;
+    line-height:1.12!important;
+  }
+  body[data-page="home"] #hkMemeCorner .hk-meme-heading p { display:none!important; }
+  body[data-page="home"] #hkMemeCorner .hk-meme-next {
+    min-height:35px!important;
+    padding:0 10px!important;
+    font-size:10px!important;
+  }
+  body[data-page="home"] #hkMemeCorner .hk-meme-media {
+    min-height:112px!important;
+    max-height:112px!important;
+  }
+  body[data-page="home"] #hkMemeCorner .hk-meme-image {
+    max-height:112px!important;
+  }
+  body[data-page="home"] #hkMemeCorner .hk-meme-copy {
+    gap:6px!important;
+    padding:9px 10px!important;
+  }
+  body[data-page="home"] #hkMemeCorner .hk-meme-copy h3 {
+    font-size:13px!important;
+    line-height:1.25!important;
+  }
+  body[data-page="home"] #hkMemeCorner .hk-meme-foot {
+    gap:5px!important;
+    margin-top:5px!important;
+    font-size:8px!important;
+  }
+}
+@media (max-width:390px) {
+  body[data-page="home"] #discoverCatalog .catalog-row .catalog-card {
+    flex-basis:96px!important;
+    width:96px!important;
+  }
+  body[data-page="home"] #hkMemeCorner { padding:10px!important; }
+  body[data-page="home"] #hkMemeCorner .hk-meme-media,
+  body[data-page="home"] #hkMemeCorner .hk-meme-image {
+    min-height:104px!important;
+    max-height:104px!important;
+  }
+}
+</style>
+
 </head>
 <body data-page="__HEKOMI_PAGE__">
 <div class="app-scroll-progress" aria-hidden="true"><span id="appScrollProgressBar"></span></div>

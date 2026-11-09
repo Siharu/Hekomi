@@ -525,6 +525,14 @@
       const w=this.root.offsetWidth||176,h=this.root.offsetHeight||194;
       const mobile=window.matchMedia('(max-width:760px)').matches;
       const visibleHeight=mobile?(window.visualViewport?.height||innerHeight):innerHeight;
+      const detailPage=location.pathname.toLowerCase().startsWith('/series/anime/');
+      // Keep the companion animated but out of the reading/tap area on phones.
+      // Series pages retain the wider stage so her existing cover-perch behavior works.
+      if(mobile&&!detailPage){
+        const dockY=Math.max(74,visibleHeight-h-92);
+        const dockMaxX=Math.max(8,Math.min(90,innerWidth-w-8));
+        return {minX:8,maxX:dockMaxX,minY:dockY,maxY:dockY,w,h};
+      }
       const bottomReserve=mobile?92:10;
       return {minX:8,maxX:Math.max(8,innerWidth-w-8),minY:74,maxY:Math.max(74,visibleHeight-h-bottomReserve),w,h};
     }
