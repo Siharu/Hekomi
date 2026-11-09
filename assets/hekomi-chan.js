@@ -1,77 +1,6 @@
-/* Hekomi-chan — handcrafted pixel companion.
-   64×80 logical canvas. All drawing is aligned to an integer pixel grid. */
+/* Hekomi-chan — high-resolution 2D anime canvas with a shared head-and-hair rig. */
 (() => {
   'use strict';
-  const W=64,H=80;
-  const P={
-    ink:'#171522',hair0:'#211b30',hair1:'#30253f',hair2:'#49365d',hair3:'#654b7d',hair4:'#8b6a9e',
-    skin0:'#ce8e88',skin1:'#e9b3a4',skin2:'#f7cbbb',skin3:'#ffe0cf',blush:'#e99b9e',
-    eye0:'#2a2039',eye1:'#5a3c7c',eye2:'#9871cc',eye3:'#c8a8f0',white:'#fff0e8',
-    shirt0:'#40364f',shirt1:'#65577f',shirt2:'#8875a9',shirt3:'#ad9acb',
-    mint0:'#4d9f91',mint1:'#8be1cf',pant0:'#1d2232',pant1:'#2c3145',pant2:'#41465c',
-    shoe0:'#171925',shoe1:'#77718d',accent:'#c5b5ff',
-    uniform0:'#26344e',uniform1:'#455b78',uniform2:'#edf0ec',uniform3:'#c7d8da',
-    formal0:'#35283f',formal1:'#624b68',formal2:'#b39bbf',formal3:'#f3e8ef',
-    lazy0:'#31564f',lazy1:'#4d7b70',lazy2:'#9acbbb',lazy3:'#deebe1',
-    swim0:'#246b78',swim1:'#4da9a8',swim2:'#b5e7df',swim3:'#f1c3c6',
-    date0:'#713d5b',date1:'#b65f82',date2:'#efa5bb',date3:'#ffe1e9',
-    makeupShadow:'#a87592',makeupRose:'#d28ba1',makeupCoral:'#e8a08e',
-    makeupLip:'#bd647e',makeupGold:'#f0d39a'
-  };
-  const BACK_HAIR=[
-    [15,7,34,7,'ink'],[12,11,40,12,'ink'],[10,20,44,22,'ink'],
-    [10,37,9,17,'ink'],[11,50,9,11,'ink'],[15,57,7,8,'ink'],
-    [43,38,10,18,'ink'],[45,51,8,12,'ink'],[43,60,8,6,'ink'],[17,61,7,5,'ink'],[40,64,8,4,'ink'],
-    [15,10,34,7,'hair0'],[13,15,38,12,'hair0'],[12,27,7,26,'hair0'],
-    [13,49,7,11,'hair0'],[17,57,5,7,'hair0'],[46,27,6,27,'hair0'],
-    [46,50,6,12,'hair0'],[43,58,7,7,'hair0'],[20,61,5,4,'hair0'],
-    [17,14,4,16,'hair1'],[13,29,4,17,'hair1'],[15,47,4,12,'hair1'],
-    [45,29,4,17,'hair1'],[47,45,3,12,'hair1'],[43,58,4,6,'hair1'],
-    [20,9,8,3,'hair2'],[30,8,8,3,'hair2'],[39,11,7,3,'hair2'],
-    [14,22,3,7,'hair2'],[47,23,3,8,'hair2'],[17,17,3,8,'hair3'],
-    [19,12,7,2,'hair3'],[33,10,6,2,'hair3'],[42,15,4,3,'hair3'],
-    [14,42,2,6,'hair3'],[48,40,2,7,'hair3'],[17,54,2,5,'hair2'],[46,54,2,5,'hair2']
-  ];
-  const LEGS=[
-    [20,61,25,15,'ink'],[21,62,10,14,'pant0'],[34,62,10,14,'pant0'],
-    [23,63,7,10,'pant1'],[35,63,7,10,'pant1'],[30,64,4,12,'ink'],
-    [21,70,8,3,'pant2'],[36,69,7,3,'pant2'],[22,74,10,3,'shoe0'],
-    [34,74,11,3,'shoe0'],[19,76,13,3,'ink'],[33,76,13,3,'ink'],
-    [21,74,9,2,'shoe1'],[35,74,8,2,'shoe1'],[24,67,2,5,'pant2'],[39,65,2,5,'pant2'],
-    [28,63,2,3,'pant1'],[33,63,2,3,'pant1']
-  ];
-  const TORSO=[
-    [27,39,10,9,'skin0'],[28,39,8,6,'skin2'],[29,42,6,4,'skin1'],
-    [17,46,30,19,'ink'],[15,48,34,15,'ink'],[17,47,30,17,'shirt0'],
-    [15,49,6,10,'shirt0'],[43,49,6,10,'shirt0'],[18,48,28,13,'shirt1'],
-    [17,53,30,9,'shirt1'],[20,48,24,3,'shirt2'],[17,50,4,7,'shirt2'],
-    [41,50,4,7,'shirt2'],[22,52,3,7,'shirt2'],[38,52,3,7,'shirt2'],
-    [21,58,23,3,'shirt0'],[19,62,26,3,'ink'],[25,47,4,3,'shirt3'],
-    [35,47,4,3,'shirt3'],[29,48,6,3,'mint0'],[30,49,4,2,'mint1'],
-    [34,53,2,2,'accent'],[36,55,2,2,'accent'],[34,57,2,2,'accent'],
-    [31,55,2,2,'accent'],[32,53,2,2,'accent'],[19,59,5,2,'shirt2'],[39,59,4,2,'shirt2']
-  ];
-  const FACE=[
-    [17,17,31,26,'ink'],[19,18,27,25,'skin1'],[22,17,21,27,'skin2'],
-    [19,21,3,17,'skin0'],[43,21,3,17,'skin0'],[21,19,22,3,'skin3'],
-    [24,22,16,2,'skin3'],[22,39,21,3,'skin1'],[25,42,14,2,'skin0'],
-    [16,27,4,6,'skin0'],[45,27,4,6,'skin0'],[18,29,2,3,'skin2'],
-    [45,29,2,3,'skin2'],[21,36,3,2,'blush'],[41,36,3,2,'blush']
-  ];
-  const FRINGE=[
-    [13,9,37,9,'ink'],[11,13,41,8,'ink'],[13,20,36,7,'ink'],
-    [15,12,34,6,'hair0'],[13,17,38,6,'hair0'],[15,22,34,4,'hair0'],
-    [17,9,9,5,'hair1'],[28,8,9,4,'hair1'],[39,10,8,4,'hair1'],
-    [13,15,5,9,'hair1'],[46,15,5,10,'hair1'],[19,16,6,7,'hair2'],
-    [30,13,6,7,'hair2'],[40,15,6,6,'hair2'],[17,21,5,8,'hair0'],
-    [23,19,5,8,'hair1'],[29,18,6,8,'hair0'],[36,19,5,7,'hair1'],
-    [42,21,5,7,'hair0'],[15,28,4,16,'hair0'],[13,37,4,15,'hair1'],
-    [16,47,4,8,'hair0'],[44,28,4,16,'hair0'],[47,36,4,16,'hair1'],
-    [44,47,4,10,'hair0'],[18,13,5,2,'hair3'],[32,11,5,2,'hair3'],
-    [43,13,4,2,'hair3'],[15,24,2,5,'hair3'],[47,25,2,5,'hair3'],
-    [18,34,2,7,'hair2'],[45,35,2,8,'hair2']
-  ];
-
   const WARDROBE_PRESETS=Object.freeze({
     school:{name:'School dress',detail:'Sailor collar · side ponytail',hair:'school-ponytail',makeup:'fresh',emoji:'🎒',line:'Uniform on! I even remembered my ribbon today.'},
     formal:{name:'Formal dress',detail:'Tailored jacket · neat updo',hair:'formal-bun',makeup:'elegant',emoji:'✦',line:'A little polished, a little elegant. How do I look?'},
@@ -325,7 +254,7 @@
     }
   }
   function drawAnimeFace(ctx,frame,direction){
-    const side=direction==='east';
+    const side=direction==='east'||direction==='west';
     if(direction==='north'){
       animeShape(ctx,()=>{
         ctx.moveTo(79,95);ctx.quadraticCurveTo(75,42,128,37);
@@ -382,7 +311,7 @@
       animeShape(ctx,()=>{ctx.moveTo(76,98);ctx.bezierCurveTo(68,58,88,27,128,25);ctx.bezierCurveTo(170,24,190,60,180,98);ctx.bezierCurveTo(152,82,105,82,76,98);},g,'#171323',2.8);
       return;
     }
-    if(direction==='east'){
+    if(direction==='east'||direction==='west'){
       animeShape(ctx,()=>{
         ctx.moveTo(77,97);ctx.bezierCurveTo(72,47,103,26,143,31);
         ctx.bezierCurveTo(179,38,190,68,178,105);
