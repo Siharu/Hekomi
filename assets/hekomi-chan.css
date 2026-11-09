@@ -8,7 +8,7 @@
 #hekomiCompanion canvas.home-mascot{
   position:absolute;left:24px;top:6px;z-index:2;display:block;
   width:128px;height:160px;max-width:none;object-fit:fill;
-  image-rendering:pixelated;image-rendering:crisp-edges;cursor:pointer;
+  image-rendering:auto;cursor:pointer;
   pointer-events:auto;transform-origin:50% 50%;outline-offset:5px;
   filter:drop-shadow(0 5px 7px #08091666);
 }
@@ -141,7 +141,7 @@
  #hekomiCompanion.is-sleeping .hekomi-bed-blanket{left:17px;bottom:6px;width:51px;height:14px}
 }
 
-/* Hekomi-chan's dress-up closet — compact pixel-art wardrobe studio. */
+/* Hekomi-chan's dress-up closet — wardrobe studio for the 2D anime canvas. */
 #hekomiCompanion .hekomi-wardrobe-toggle{position:absolute;right:0;top:83px;z-index:7;width:32px;height:32px;padding:7px;display:grid;place-items:center;border:1px solid color-mix(in srgb,var(--violet,#c5b5ff) 48%,var(--line,#34304b));border-radius:11px 11px 11px 4px;color:var(--text,#f1edf9);background:color-mix(in srgb,var(--panel,#171522) 78%,transparent);-webkit-backdrop-filter:blur(12px) saturate(145%);backdrop-filter:blur(12px) saturate(145%);box-shadow:0 5px 16px #08091655;cursor:pointer;pointer-events:auto;transition:transform .18s ease,border-color .18s ease,background .18s ease}
 #hekomiCompanion .hekomi-wardrobe-toggle:hover{transform:translateY(-2px);border-color:var(--mint,#8be1cf);background:color-mix(in srgb,var(--panel,#171522) 90%,var(--violet,#c5b5ff))}
 #hekomiCompanion .hekomi-wardrobe-toggle:focus-visible{outline:2px solid var(--mint,#8be1cf);outline-offset:3px}
