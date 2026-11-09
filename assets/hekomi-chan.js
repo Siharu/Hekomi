@@ -219,50 +219,59 @@
     }else blocks(ctx,[[30,40,5,1,'eye0'],[34,41,2,1,'eye0']]);
   }
   function drawRearHead(ctx,style,dy){
-    const longHair=[
-      [16,10,32,9,'ink'],[13,16,38,16,'ink'],[11,27,8,24,'ink'],[45,27,8,24,'ink'],
-      [15,16,34,14,'hair0'],[14,29,8,20,'hair0'],[42,29,8,20,'hair0'],
-      [18,21,28,18,'hair1'],[20,35,6,15,'hair0'],[38,35,6,15,'hair0'],
-      [21,45,6,11,'hair1'],[37,45,6,11,'hair1'],[25,50,14,5,'hair0'],
-      [18,22,3,13,'hair2'],[43,25,3,12,'hair2'],[20,39,2,10,'hair2'],[42,40,2,10,'hair2'],
-      [25,22,4,2,'hair3'],[34,25,5,2,'hair3'],[17,34,2,5,'hair3'],[45,36,2,5,'hair3']
-    ];
-    if(style==='formal-bun'){
-      blocks(ctx,[
-        [20,2,25,12,'ink'],[22,1,21,10,'hair0'],[25,3,15,6,'hair1'],
-        [16,10,32,10,'ink'],[16,16,32,17,'hair0'],[18,21,28,17,'hair1'],
-        [15,29,7,18,'hair0'],[42,29,7,18,'hair0'],[19,38,5,9,'hair2'],[40,38,5,9,'hair2'],
-        [27,12,10,2,'formal2']
-      ],dy);
-    }else if(style==='twin-buns'){
-      blocks(ctx,[
-        [7,4,14,12,'ink'],[9,3,11,10,'hair0'],[12,5,6,5,'hair1'],
-        [43,4,14,12,'ink'],[45,3,11,10,'hair0'],[48,5,6,5,'hair1'],
-        [13,15,38,12,'ink'],[14,20,8,28,'hair0'],[42,20,8,28,'hair0'],
-        [18,22,28,19,'hair1'],[17,38,6,13,'hair0'],[41,38,6,13,'hair0'],
-        [20,47,5,7,'hair1'],[39,47,5,7,'hair1'],[21,24,3,8,'hair2'],[40,28,3,8,'hair2']
-      ],dy);
-    }else if(style==='messy-bun'){
-      blocks(ctx,[
-        [18,3,29,11,'ink'],[21,1,23,10,'hair0'],[24,3,15,6,'hair1'],
-        [15,12,34,14,'ink'],[16,18,9,29,'hair0'],[40,18,9,29,'hair0'],
-        [20,20,24,18,'hair1'],[18,36,7,12,'hair0'],[39,36,7,12,'hair0'],
-        [22,44,6,8,'hair1'],[37,44,6,8,'hair1'],[14,13,5,4,'hair2'],[45,13,5,4,'hair2']
-      ],dy);
-    }else{
-      blocks(ctx,longHair,dy);
-      if(style==='school-ponytail')blocks(ctx,[
-        [47,13,9,9,'ink'],[51,20,9,10,'ink'],[54,29,7,15,'ink'],
-        [52,42,7,10,'hair0'],[49,49,6,9,'hair1'],[50,22,4,4,'hair2'],[55,35,3,5,'hair2']
-      ],dy);
-      if(style==='date-half-up')blocks(ctx,[
-        [21,7,23,8,'ink'],[23,5,19,7,'hair0'],[26,7,13,4,'hair1'],
-        [18,13,7,6,'hair0'],[41,13,7,6,'hair0'],[22,15,3,3,'hair3']
-      ],dy);
-    }
-    if(style==='formal-bun')blocks(ctx,[[39,4,6,2,'makeupGold'],[40,3,2,5,'makeupGold']],dy);
-    if(style==='twin-buns')blocks(ctx,[[10,11,4,2,'swim2'],[49,11,4,2,'swim2']],dy);
-    if(style==='messy-bun')blocks(ctx,[[18,10,5,2,'lazy2'],[43,8,4,2,'lazy3']],dy);
+    // A rounded crown replaces the old solid rectangle. Each stepped row keeps
+    // the crisp pixel-art silhouette while giving the back of her head volume.
+    if(style==='formal-bun')blocks(ctx,[
+      [20,2,24,9,'ink'],[22,1,20,8,'hair0'],[25,2,14,5,'hair1'],
+      [27,5,10,3,'hair2'],[24,8,16,3,'hair0']
+    ],dy);
+    else if(style==='messy-bun')blocks(ctx,[
+      [18,3,28,9,'ink'],[20,1,24,9,'hair0'],[24,3,16,5,'hair1'],
+      [17,7,6,4,'hair0'],[42,6,6,4,'hair0'],[22,8,4,2,'hair3'],[39,7,4,2,'hair3']
+    ],dy);
+    else if(style==='twin-buns')blocks(ctx,[
+      [7,5,14,11,'ink'],[9,3,10,10,'hair0'],[12,5,5,5,'hair1'],
+      [43,5,14,11,'ink'],[45,3,10,10,'hair0'],[48,5,5,5,'hair1']
+    ],dy);
+
+    blocks(ctx,[
+      [21,6,22,3,'ink'],[17,9,30,4,'ink'],[14,13,36,5,'ink'],
+      [12,18,40,7,'ink'],[12,25,40,7,'ink'],[14,32,36,6,'ink'],[19,38,26,3,'ink'],
+      [21,8,22,3,'hair0'],[18,12,28,4,'hair0'],[15,17,34,5,'hair1'],
+      [14,23,36,6,'hair0'],[17,30,30,6,'hair1'],[21,36,22,3,'hair0'],
+      [18,15,7,2,'hair2'],[28,11,8,2,'hair2'],[39,16,6,2,'hair2'],
+      [15,22,3,7,'hair2'],[46,23,3,7,'hair2'],
+      [18,30,2,7,'hair3'],[44,31,2,7,'hair3'],
+      [22,34,3,3,'hair2'],[39,34,3,3,'hair2'],
+      [30,14,2,11,'hair2'],[31,17,1,8,'hair3'],[32,26,2,7,'hair2']
+    ],dy);
+
+    // A narrow nape and two loose locks stop the hair from swallowing her neck.
+    blocks(ctx,[
+      [27,38,10,8,'ink'],[29,39,6,6,'skin0'],[30,39,4,5,'skin1'],[30,43,4,2,'skin0'],
+      [12,28,5,11,'hair0'],[13,37,5,9,'hair1'],[15,45,4,7,'hair0'],
+      [47,28,5,11,'hair0'],[46,37,5,9,'hair1'],[45,45,4,7,'hair0'],
+      [14,31,2,7,'hair3'],[48,32,2,7,'hair3'],
+      [17,43,2,5,'hair2'],[45,43,2,5,'hair2']
+    ],dy);
+
+    if(style==='school-ponytail')blocks(ctx,[
+      [49,17,7,5,'date1'],[51,15,3,8,'date2'],[48,20,5,3,'uniform2'],
+      [53,22,5,2,'date2'],[50,25,3,3,'hair3']
+    ],dy);
+    else if(style==='formal-bun')blocks(ctx,[
+      [38,4,7,2,'makeupGold'],[40,3,2,6,'makeupGold'],[36,7,3,2,'formal2'],
+      [29,10,6,2,'formal2']
+    ],dy);
+    else if(style==='twin-buns')blocks(ctx,[
+      [10,11,4,2,'swim2'],[49,11,4,2,'swim2'],[8,14,4,2,'swim3'],[52,14,4,2,'swim3']
+    ],dy);
+    else if(style==='messy-bun')blocks(ctx,[
+      [18,11,5,2,'lazy2'],[43,9,4,2,'lazy3'],[24,7,3,2,'hair3']
+    ],dy);
+    else if(style==='date-half-up')blocks(ctx,[
+      [40,13,7,3,'date2'],[42,11,3,7,'date1'],[38,15,4,2,'date3'],[46,15,3,2,'date3']
+    ],dy);
   }
 
   function drawSideFace(ctx,frame,dy){
@@ -299,14 +308,63 @@
   }
 
   function drawRearOutfit(ctx,outfit,dy){
-    const back={
-      school:'uniform0',formal:'formal0',lazy:'lazy0',swimsuit:'swim0',date:'date1'
-    }[outfit]||'shirt0';
+    const back={school:'uniform0',formal:'formal0',lazy:'lazy0',swimsuit:'swim0',date:'date1'}[outfit]||'shirt0';
+    const shade={school:'uniform1',formal:'formal1',lazy:'lazy1',swimsuit:'swim1',date:'date0'}[outfit]||'shirt1';
+    // Rebuild the back as a proper shoulder-to-waist silhouette rather than
+    // leaving the tiny generic stripe that used to sit between her shoulders.
     blocks(ctx,[
-      [24,48,16,9,'ink'],[25,49,14,7,back],
-      [31,50,2,7,outfit==='formal'?'formal2':outfit==='date'?'date2':'shirt2'],
-      [28,54,8,1,outfit==='formal'?'makeupGold':'shirt3']
+      [17,46,30,17,'ink'],[18,47,28,14,back],[20,48,24,10,shade],
+      [19,57,26,5,back],[18,60,28,3,'ink'],[20,60,24,1,shade]
     ],dy);
+
+    if(outfit==='lazy'){
+      // Hood seam, shoulder folds and the lower hoodie ribbing.
+      blocks(ctx,[
+        [22,46,20,3,'ink'],[24,47,16,2,'lazy2'],[26,48,12,3,'lazy0'],
+        [28,50,8,5,'lazy1'],[30,51,4,5,'lazy0'],
+        [22,50,3,2,'lazy2'],[39,50,3,2,'lazy2'],
+        [20,54,3,2,'lazy2'],[41,54,3,2,'lazy2'],
+        [23,58,18,2,'lazy1'],[25,61,14,1,'lazy2'],
+        [27,53,2,2,'lazy2'],[35,53,2,2,'lazy2']
+      ],dy);
+    }else if(outfit==='school'){
+      // The sailor collar is visible from behind, with the ribbon at the nape.
+      blocks(ctx,[
+        [20,47,24,3,'uniform2'],[22,50,20,3,'uniform3'],
+        [25,53,14,3,'uniform2'],[27,55,10,3,'uniform0'],
+        [21,48,22,1,'uniform1'],[23,51,18,1,'uniform1'],
+        [29,54,6,5,'date1'],[30,54,4,3,'date2'],[31,55,2,4,'date1'],
+        [20,58,24,2,'uniform1']
+      ],dy);
+    }else if(outfit==='formal'){
+      // Tailored jacket seams, back collar and a short row of buttons.
+      blocks(ctx,[
+        [20,47,8,4,'formal2'],[36,47,8,4,'formal2'],
+        [22,49,6,2,'formal3'],[36,49,6,2,'formal3'],
+        [30,49,4,12,'formal1'],[31,50,2,10,'formal2'],
+        [21,53,8,2,'formal1'],[35,53,8,2,'formal1'],
+        [23,58,18,2,'formal2'],[26,61,12,1,'formal3'],
+        [32,53,1,1,'makeupGold'],[32,56,1,1,'makeupGold'],[32,59,1,1,'makeupGold']
+      ],dy);
+    }else if(outfit==='swimsuit'){
+      // Sporty crossed straps and a clean horizontal back band.
+      blocks(ctx,[
+        [21,47,5,5,'swim2'],[38,47,5,5,'swim2'],
+        [24,49,4,3,'swim3'],[36,49,4,3,'swim3'],
+        [25,50,4,2,'swim2'],[35,50,4,2,'swim2'],
+        [28,51,8,2,'swim0'],[22,54,20,2,'swim2'],
+        [24,57,16,2,'swim0'],[29,60,6,1,'swim3']
+      ],dy);
+    }else if(outfit==='date'){
+      // A ribbon bow and a fine centre seam on the rose dress.
+      blocks(ctx,[
+        [21,47,8,3,'date2'],[35,47,8,3,'date2'],
+        [28,49,8,3,'date3'],[24,50,7,4,'date2'],[33,50,7,4,'date2'],
+        [30,51,4,3,'date1'],[31,52,2,2,'date3'],
+        [31,55,2,6,'date2'],[23,58,18,2,'date0'],
+        [26,61,12,1,'date3']
+      ],dy);
+    }
   }
 
   function drawWalkLegsVertical(ctx,step,dy,direction){
@@ -372,7 +430,7 @@
 
     // Hair behind the body, feet first, then the outfit so sleeves and shoes
     // can be drawn on top. This avoids the old "floating hand under the shirt" look.
-    if(!rear)drawBackHair(ctx,frame.hair||'long',dy);
+    drawBackHair(ctx,frame.hair||'long',dy);
     if(frame.sitting)drawPerchLegs(ctx,step,dy);
     else if(walking&&side)drawWalkLegs(ctx,step,dy);
     else if(walking)drawWalkLegsVertical(ctx,step,dy,direction);
