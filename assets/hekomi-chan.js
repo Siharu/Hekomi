@@ -1,6 +1,77 @@
-/* Hekomi-chan — high-resolution 2D anime canvas with a shared head-and-hair rig. */
+/* Hekomi-chan — handcrafted pixel companion.
+   64×80 logical canvas. All drawing is aligned to an integer pixel grid. */
 (() => {
   'use strict';
+  const W=64,H=80;
+  const P={
+    ink:'#171522',hair0:'#211b30',hair1:'#30253f',hair2:'#49365d',hair3:'#654b7d',hair4:'#8b6a9e',
+    skin0:'#ce8e88',skin1:'#e9b3a4',skin2:'#f7cbbb',skin3:'#ffe0cf',blush:'#e99b9e',
+    eye0:'#2a2039',eye1:'#5a3c7c',eye2:'#9871cc',eye3:'#c8a8f0',white:'#fff0e8',
+    shirt0:'#40364f',shirt1:'#65577f',shirt2:'#8875a9',shirt3:'#ad9acb',
+    mint0:'#4d9f91',mint1:'#8be1cf',pant0:'#1d2232',pant1:'#2c3145',pant2:'#41465c',
+    shoe0:'#171925',shoe1:'#77718d',accent:'#c5b5ff',
+    uniform0:'#26344e',uniform1:'#455b78',uniform2:'#edf0ec',uniform3:'#c7d8da',
+    formal0:'#35283f',formal1:'#624b68',formal2:'#b39bbf',formal3:'#f3e8ef',
+    lazy0:'#31564f',lazy1:'#4d7b70',lazy2:'#9acbbb',lazy3:'#deebe1',
+    swim0:'#246b78',swim1:'#4da9a8',swim2:'#b5e7df',swim3:'#f1c3c6',
+    date0:'#713d5b',date1:'#b65f82',date2:'#efa5bb',date3:'#ffe1e9',
+    makeupShadow:'#a87592',makeupRose:'#d28ba1',makeupCoral:'#e8a08e',
+    makeupLip:'#bd647e',makeupGold:'#f0d39a'
+  };
+  const BACK_HAIR=[
+    [15,7,34,7,'ink'],[12,11,40,12,'ink'],[10,20,44,22,'ink'],
+    [10,37,9,17,'ink'],[11,50,9,11,'ink'],[15,57,7,8,'ink'],
+    [43,38,10,18,'ink'],[45,51,8,12,'ink'],[43,60,8,6,'ink'],[17,61,7,5,'ink'],[40,64,8,4,'ink'],
+    [15,10,34,7,'hair0'],[13,15,38,12,'hair0'],[12,27,7,26,'hair0'],
+    [13,49,7,11,'hair0'],[17,57,5,7,'hair0'],[46,27,6,27,'hair0'],
+    [46,50,6,12,'hair0'],[43,58,7,7,'hair0'],[20,61,5,4,'hair0'],
+    [17,14,4,16,'hair1'],[13,29,4,17,'hair1'],[15,47,4,12,'hair1'],
+    [45,29,4,17,'hair1'],[47,45,3,12,'hair1'],[43,58,4,6,'hair1'],
+    [20,9,8,3,'hair2'],[30,8,8,3,'hair2'],[39,11,7,3,'hair2'],
+    [14,22,3,7,'hair2'],[47,23,3,8,'hair2'],[17,17,3,8,'hair3'],
+    [19,12,7,2,'hair3'],[33,10,6,2,'hair3'],[42,15,4,3,'hair3'],
+    [14,42,2,6,'hair3'],[48,40,2,7,'hair3'],[17,54,2,5,'hair2'],[46,54,2,5,'hair2']
+  ];
+  const LEGS=[
+    [20,61,25,15,'ink'],[21,62,10,14,'pant0'],[34,62,10,14,'pant0'],
+    [23,63,7,10,'pant1'],[35,63,7,10,'pant1'],[30,64,4,12,'ink'],
+    [21,70,8,3,'pant2'],[36,69,7,3,'pant2'],[22,74,10,3,'shoe0'],
+    [34,74,11,3,'shoe0'],[19,76,13,3,'ink'],[33,76,13,3,'ink'],
+    [21,74,9,2,'shoe1'],[35,74,8,2,'shoe1'],[24,67,2,5,'pant2'],[39,65,2,5,'pant2'],
+    [28,63,2,3,'pant1'],[33,63,2,3,'pant1']
+  ];
+  const TORSO=[
+    [27,39,10,9,'skin0'],[28,39,8,6,'skin2'],[29,42,6,4,'skin1'],
+    [17,46,30,19,'ink'],[15,48,34,15,'ink'],[17,47,30,17,'shirt0'],
+    [15,49,6,10,'shirt0'],[43,49,6,10,'shirt0'],[18,48,28,13,'shirt1'],
+    [17,53,30,9,'shirt1'],[20,48,24,3,'shirt2'],[17,50,4,7,'shirt2'],
+    [41,50,4,7,'shirt2'],[22,52,3,7,'shirt2'],[38,52,3,7,'shirt2'],
+    [21,58,23,3,'shirt0'],[19,62,26,3,'ink'],[25,47,4,3,'shirt3'],
+    [35,47,4,3,'shirt3'],[29,48,6,3,'mint0'],[30,49,4,2,'mint1'],
+    [34,53,2,2,'accent'],[36,55,2,2,'accent'],[34,57,2,2,'accent'],
+    [31,55,2,2,'accent'],[32,53,2,2,'accent'],[19,59,5,2,'shirt2'],[39,59,4,2,'shirt2']
+  ];
+  const FACE=[
+    [17,17,31,26,'ink'],[19,18,27,25,'skin1'],[22,17,21,27,'skin2'],
+    [19,21,3,17,'skin0'],[43,21,3,17,'skin0'],[21,19,22,3,'skin3'],
+    [24,22,16,2,'skin3'],[22,39,21,3,'skin1'],[25,42,14,2,'skin0'],
+    [16,27,4,6,'skin0'],[45,27,4,6,'skin0'],[18,29,2,3,'skin2'],
+    [45,29,2,3,'skin2'],[21,36,3,2,'blush'],[41,36,3,2,'blush']
+  ];
+  const FRINGE=[
+    [13,9,37,9,'ink'],[11,13,41,8,'ink'],[13,20,36,7,'ink'],
+    [15,12,34,6,'hair0'],[13,17,38,6,'hair0'],[15,22,34,4,'hair0'],
+    [17,9,9,5,'hair1'],[28,8,9,4,'hair1'],[39,10,8,4,'hair1'],
+    [13,15,5,9,'hair1'],[46,15,5,10,'hair1'],[19,16,6,7,'hair2'],
+    [30,13,6,7,'hair2'],[40,15,6,6,'hair2'],[17,21,5,8,'hair0'],
+    [23,19,5,8,'hair1'],[29,18,6,8,'hair0'],[36,19,5,7,'hair1'],
+    [42,21,5,7,'hair0'],[15,28,4,16,'hair0'],[13,37,4,15,'hair1'],
+    [16,47,4,8,'hair0'],[44,28,4,16,'hair0'],[47,36,4,16,'hair1'],
+    [44,47,4,10,'hair0'],[18,13,5,2,'hair3'],[32,11,5,2,'hair3'],
+    [43,13,4,2,'hair3'],[15,24,2,5,'hair3'],[47,25,2,5,'hair3'],
+    [18,34,2,7,'hair2'],[45,35,2,8,'hair2']
+  ];
+
   const WARDROBE_PRESETS=Object.freeze({
     school:{name:'School dress',detail:'Sailor collar · side ponytail',hair:'school-ponytail',makeup:'fresh',emoji:'🎒',line:'Uniform on! I even remembered my ribbon today.'},
     formal:{name:'Formal dress',detail:'Tailored jacket · neat updo',hair:'formal-bun',makeup:'elegant',emoji:'✦',line:'A little polished, a little elegant. How do I look?'},
@@ -8,394 +79,375 @@
     swimsuit:{name:'Swimsuit dress',detail:'Sporty one-piece · twin buns',hair:'twin-buns',makeup:'sun-kissed',emoji:'🌊',line:'Beach day! I packed sunscreen. You did too, right?'},
     date:{name:'Going on a date',detail:'Rose dress · half-up waves',hair:'date-half-up',makeup:'rosy',emoji:'♡',line:'Wait, is this outfit too much? No? Okay… let’s go.'}
   });
-  const CANVAS_W=256,CANVAS_H=320;
-  const ANIME_LOOKS={
-    school:{top:'#344c70',topLight:'#6f8eae',bottom:'#263956',accent:'#c66f91',trim:'#f5f0eb',shoe:'#263047'},
-    formal:{top:'#41344f',topLight:'#786181',bottom:'#44344e',accent:'#d6b8dc',trim:'#f3e8ef',shoe:'#332c42'},
-    lazy:{top:'#37685f',topLight:'#79aa9a',bottom:'#30394a',accent:'#a9e5d6',trim:'#dcefe8',shoe:'#292d3e'},
-    swimsuit:{top:'#287987',topLight:'#72c2ba',bottom:'#246476',accent:'#f2b7c4',trim:'#e3f7ed',shoe:'#e9e4ef'},
-    date:{top:'#8b4f6d',topLight:'#d78ca5',bottom:'#9f5577',accent:'#f5c1d1',trim:'#fff0f0',shoe:'#713e5c'}
-  };
-  function animeLinear(ctx,x1,y1,x2,y2,stops){
-    const g=ctx.createLinearGradient(x1,y1,x2,y2);
-    for(const [at,color] of stops)g.addColorStop(at,color);
-    return g;
-  }
-  function animeShape(ctx,draw,fill,stroke,lineWidth=2){
-    ctx.beginPath();draw();
-    if(fill){ctx.fillStyle=fill;ctx.fill();}
-    if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=lineWidth;ctx.lineJoin='round';ctx.lineCap='round';ctx.stroke();}
-  }
-  function animeStroke(ctx,draw,color,width=1.5){
-    ctx.beginPath();draw();ctx.strokeStyle=color;ctx.lineWidth=width;ctx.lineCap='round';ctx.lineJoin='round';ctx.stroke();
-  }
-  function withAnimeHead(ctx,angle,draw){
-    ctx.save();ctx.translate(128,106);ctx.rotate(angle);ctx.translate(-128,-106);draw();ctx.restore();
-  }
-  function animeHairPaint(ctx){
-    return animeLinear(ctx,60,30,194,222,[[0,'#171323'],[.26,'#30233f'],[.55,'#49345e'],[.78,'#2c213d'],[1,'#171323']]);
-  }
-  function drawAnimeBackHair(ctx,style,swing,direction){
-    const hair=animeHairPaint(ctx);
-    animeShape(ctx,()=>{
-      if(direction==='north'){
-        ctx.moveTo(76,101);ctx.bezierCurveTo(62,53,88,25,128,25);
-        ctx.bezierCurveTo(170,24,195,57,181,108);
-        ctx.bezierCurveTo(198,144,198,192,178,222);
-        ctx.bezierCurveTo(164,244,151,220,151,196);
-        ctx.bezierCurveTo(139,222,119,232,111,206);
-        ctx.bezierCurveTo(97,230,82,222,77,198);
-        ctx.bezierCurveTo(61,165,60,132,76,101);
-      }else{
-        ctx.moveTo(75,100);ctx.bezierCurveTo(61,53,87,24,128,24);
-        ctx.bezierCurveTo(171,24,195,57,181,107);
-        ctx.bezierCurveTo(198,141,196,189,178,221);
-        ctx.bezierCurveTo(165,241,153,218,151,193);
-        ctx.bezierCurveTo(141,217,120,230,111,205);
-        ctx.bezierCurveTo(99,229,82,220,77,196);
-        ctx.bezierCurveTo(60,164,59,132,75,100);
-      }
-    },hair,'#171323',3);
-    animeShape(ctx,()=>{
-      ctx.moveTo(78,91);ctx.bezierCurveTo(75,55,96,34,128,32);
-      ctx.bezierCurveTo(160,33,181,57,177,94);
-      ctx.bezierCurveTo(163,117,94,118,78,91);
-    },animeLinear(ctx,88,38,162,113,[[0,'#58436c'],[.45,'#30243f'],[1,'#241b34']]));
-    const locks=[
-      [84,83,70,127,86,187,77,205],
-      [97,76,88,130,103,183,98,211],
-      [117,83,106,130,127,177,119,213],
-      [140,78,151,126,135,176,149,212],
-      [159,81,178,126,156,178,171,207],
-      [176,93,193,130,181,173,181,194]
-    ];
-    for(let i=0;i<locks.length;i++){
-      const a=locks[i],tip=swing*(i%2?1:-1);
-      animeStroke(ctx,()=>{
-        ctx.moveTo(a[0],a[1]);ctx.bezierCurveTo(a[2],a[3],a[4]+tip,a[5],a[6]+tip*.7,a[7]);
-      },i%2?'#765a91':'#5c456f',i===2||i===3?2.2:1.55);
+  function drawBackHair(ctx,style,dy){
+    if(style==='formal-bun'||style==='twin-buns'){
+      blocks(ctx,BACK_HAIR.filter(([,y,,h])=>y<48||(y<56&&h<=5)),dy);
+      if(style==='formal-bun')blocks(ctx,[[18,3,28,10,'ink'],[20,1,24,10,'hair0'],[23,2,18,7,'hair1'],[17,8,30,7,'hair0'],[21,5,5,2,'hair3'],[36,4,5,2,'hair3'],[13,46,5,10,'hair0'],[45,46,5,10,'hair0']],dy);
+      else blocks(ctx,[[8,5,13,11,'ink'],[10,3,10,10,'hair0'],[12,4,7,6,'hair1'],[43,5,13,11,'ink'],[45,3,10,10,'hair0'],[47,4,7,6,'hair1'],[13,16,5,29,'hair0'],[46,16,5,29,'hair0'],[15,42,4,11,'hair1'],[44,42,4,11,'hair1']],dy);
+      return;
     }
-    animeStroke(ctx,()=>{ctx.moveTo(89,61);ctx.bezierCurveTo(104,38,136,34,157,52);},'#9076a7',2.2);
-    animeStroke(ctx,()=>{ctx.moveTo(101,71);ctx.bezierCurveTo(116,54,139,52,153,63);},'#6b527f',1.4);
+    blocks(ctx,BACK_HAIR,dy);
+    if(style==='school-ponytail')blocks(ctx,[[42,10,11,9,'ink'],[47,16,10,9,'ink'],[51,23,8,16,'ink'],[53,37,7,12,'ink'],[51,47,7,9,'hair0'],[48,53,6,8,'hair1'],[44,13,7,5,'hair1'],[50,21,5,5,'hair2']],dy);
+    else if(style==='messy-bun')blocks(ctx,[[19,3,25,9,'ink'],[21,1,21,9,'hair0'],[23,3,15,5,'hair1'],[14,7,8,7,'hair0'],[43,5,7,7,'hair0'],[18,10,5,4,'hair3'],[47,8,5,4,'hair3']],dy);
+    else if(style==='date-half-up')blocks(ctx,[[20,5,24,8,'ink'],[22,3,20,8,'hair0'],[25,4,13,4,'hair1'],[16,11,7,5,'hair0'],[41,11,7,5,'hair0']],dy);
+  }
+  function drawHairAccessories(ctx,style,dy){
+    if(style==='school-ponytail')blocks(ctx,[[47,19,5,4,'date1'],[49,16,3,5,'date2'],[45,20,4,3,'uniform2'],[52,20,4,2,'date2']],dy);
+    else if(style==='formal-bun')blocks(ctx,[[39,7,6,2,'makeupGold'],[41,5,2,6,'makeupGold'],[36,9,3,2,'makeupGold']],dy);
+    else if(style==='messy-bun')blocks(ctx,[[17,15,5,2,'lazy2'],[18,13,2,5,'lazy3'],[13,17,3,2,'lazy1']],dy);
+    else if(style==='twin-buns')blocks(ctx,[[9,13,5,3,'swim2'],[10,11,3,6,'swim3'],[7,15,4,2,'swim1'],[49,13,5,3,'swim2'],[50,11,3,6,'swim3'],[52,15,4,2,'swim1']],dy);
+    else if(style==='date-half-up')blocks(ctx,[[40,12,6,3,'date2'],[42,10,3,7,'date1'],[38,13,4,2,'date3'],[45,13,3,2,'date3']],dy);
+  }
+  function drawWardrobeOutfit(ctx,outfit,dy){
+    if(outfit==='school')blocks(ctx,[[17,47,30,15,'ink'],[19,48,26,12,'uniform2'],[15,48,8,10,'ink'],[41,48,8,10,'ink'],[16,49,6,7,'uniform0'],[42,49,6,7,'uniform0'],[23,47,18,6,'uniform2'],[25,48,5,5,'uniform3'],[34,48,5,5,'uniform3'],[29,50,6,8,'uniform0'],[30,52,4,4,'date1'],[27,59,10,3,'uniform1'],[18,61,28,12,'ink'],[19,62,26,10,'uniform0'],[20,64,24,2,'uniform1'],[24,63,2,7,'uniform1'],[31,63,2,8,'uniform1'],[38,63,2,7,'uniform1'],[20,70,8,4,'uniform2'],[36,70,8,4,'uniform2'],[22,71,4,2,'uniform3'],[38,71,4,2,'uniform3']],dy);
+    else if(outfit==='formal')blocks(ctx,[[17,47,30,15,'ink'],[19,48,26,12,'formal3'],[15,48,8,10,'ink'],[41,48,8,10,'ink'],[16,49,6,8,'formal0'],[42,49,6,8,'formal0'],[20,48,8,11,'formal1'],[36,48,8,11,'formal1'],[25,48,14,9,'formal3'],[27,49,10,7,'formal2'],[29,49,6,8,'formal0'],[30,51,4,5,'makeupGold'],[27,59,10,3,'formal1'],[19,61,26,13,'ink'],[21,62,22,10,'formal0'],[22,64,20,2,'formal1'],[27,63,2,8,'formal1'],[35,63,2,8,'formal1'],[22,71,7,3,'formal3'],[37,71,7,3,'formal3']],dy);
+    else if(outfit==='lazy')blocks(ctx,[[17,47,30,16,'ink'],[19,48,26,13,'lazy0'],[14,48,9,11,'ink'],[41,48,9,11,'ink'],[16,49,6,9,'lazy1'],[42,49,6,9,'lazy1'],[20,49,24,7,'lazy1'],[19,55,26,7,'lazy0'],[24,56,16,5,'lazy1'],[26,57,12,4,'lazy0'],[27,54,2,7,'lazy3'],[35,54,2,7,'lazy3'],[24,60,16,3,'lazy0'],[25,61,14,2,'lazy1'],[27,62,2,2,'lazy2'],[36,62,2,2,'lazy2']],dy);
+    else if(outfit==='swimsuit')blocks(ctx,[[16,48,7,9,'skin0'],[42,48,7,9,'skin0'],[17,48,5,7,'skin1'],[43,48,5,7,'skin1'],[21,47,22,15,'ink'],[23,48,18,12,'swim0'],[24,48,4,4,'swim2'],[36,48,4,4,'swim2'],[27,49,10,8,'swim1'],[29,50,6,7,'swim0'],[30,52,4,4,'swim3'],[22,57,20,5,'swim1'],[27,60,10,3,'swim2'],[19,62,26,9,'ink'],[21,63,22,7,'swim0'],[22,64,20,2,'swim1'],[24,63,2,6,'swim2'],[38,63,2,6,'swim2'],[22,70,7,3,'swim2'],[36,70,7,3,'swim2']],dy);
+    else if(outfit==='date')blocks(ctx,[[17,47,30,15,'ink'],[19,48,26,12,'date2'],[14,48,9,10,'ink'],[41,48,9,10,'ink'],[16,49,6,8,'date1'],[42,49,6,8,'date1'],[20,48,8,8,'date2'],[36,48,8,8,'date2'],[25,48,14,10,'date3'],[27,51,10,7,'date2'],[29,49,6,10,'date1'],[30,52,4,4,'makeupGold'],[27,59,10,3,'date1'],[18,61,28,14,'ink'],[20,62,24,11,'date1'],[21,63,22,3,'date2'],[23,66,18,2,'date2'],[26,69,12,2,'date2'],[29,60,6,4,'date3'],[30,61,4,2,'date1']],dy);
+  }
+  function drawEyeMakeup(ctx,style){
+    if(style==='soft')return;
+    const shadow=style==='sun-kissed'?'makeupCoral':style==='fresh'?'makeupRose':'makeupShadow';
+    blocks(ctx,[[21,27,10,2,shadow],[35,27,10,2,shadow],[22,29,8,1,'eye0'],[36,29,8,1,'eye0']]);
+  }
+  function drawMakeupDetails(ctx,style){
+    if(style==='soft')return;
+    if(style==='fresh')blocks(ctx,[[21,28,2,1,'eye0'],[43,28,2,1,'eye0'],[29,41,6,1,'makeupCoral']]);
+    else if(style==='elegant')blocks(ctx,[[20,29,3,1,'eye0'],[43,29,3,1,'eye0'],[20,37,6,2,'makeupRose'],[38,37,6,2,'makeupRose'],[29,41,6,2,'makeupLip']]);
+    else if(style==='sun-kissed')blocks(ctx,[[19,37,7,3,'makeupCoral'],[38,37,7,3,'makeupCoral'],[22,40,1,1,'makeupGold'],[26,41,1,1,'makeupGold'],[38,41,1,1,'makeupGold'],[42,40,1,1,'makeupGold'],[29,41,6,2,'makeupCoral']]);
+    else if(style==='rosy')blocks(ctx,[[20,29,3,1,'eye0'],[43,29,3,1,'eye0'],[19,37,7,3,'makeupRose'],[38,37,7,3,'makeupRose'],[29,41,6,2,'makeupLip']]);
+  }
 
-    if(style==='formal-bun'||style==='messy-bun'||style==='date-half-up'){
-      const bunX=style==='date-half-up'?140:128,bunY=style==='messy-bun'?18:24;
-      animeShape(ctx,()=>{ctx.ellipse(bunX,bunY,style==='messy-bun'?25:22,style==='messy-bun'?17:16,-.2,0,Math.PI*2);},animeLinear(ctx,bunX-15,bunY-16,bunX+15,bunY+15,[[0,'#725985'],[.5,'#30223f'],[1,'#171323']]),'#171323',2.4);
-      animeStroke(ctx,()=>{ctx.moveTo(bunX-12,bunY-3);ctx.quadraticCurveTo(bunX,bunY-15,bunX+12,bunY-7);},'#9a7cab',2);
-    }else if(style==='twin-buns'){
-      for(const x of [84,172]){
-        animeShape(ctx,()=>{ctx.ellipse(x,36,18,15,.1,0,Math.PI*2);},animeLinear(ctx,x-12,22,x+12,50,[[0,'#745a8c'],[.5,'#30233f'],[1,'#171323']]),'#171323',2.3);
-        animeStroke(ctx,()=>{ctx.moveTo(x-9,34);ctx.quadraticCurveTo(x,23,x+9,31);},'#967ca8',1.8);
-      }
-    }
-    if(style==='school-ponytail'){
-      animeShape(ctx,()=>{
-        ctx.moveTo(166,55);ctx.bezierCurveTo(199,58,214,89,205,126);
-        ctx.bezierCurveTo(219,157,206,190,185,201);
-        ctx.bezierCurveTo(193,161,176,131,181,105);
-        ctx.bezierCurveTo(177,84,163,76,166,55);
-      },animeLinear(ctx,174,58,203,197,[[0,'#59426e'],[.48,'#2e213e'],[1,'#171323']]),'#171323',2);
-      animeStroke(ctx,()=>{ctx.moveTo(185,81);ctx.bezierCurveTo(203,116,197,154,189,181);},'#816692',2);
-    }
+  function blocks(ctx,list,dy=0){
+    for(const [x,y,w,h,color] of list){ctx.fillStyle=P[color];ctx.fillRect(x,y+dy,w,h);}
   }
-  function drawAnimeLeg(ctx,side,phase,look,walking,sitting){
-    ctx.save();ctx.translate(side<0?105:151,228);
-    const swing=walking?Math.sin(phase*Math.PI*2+(side<0?0:Math.PI))*.22:0;
-    ctx.rotate(sitting?(side<0?-.46:.5):swing);
-    const skin=look==='swimsuit'||look==='date'||look==='school';
-    const legFill=skin
-      ?animeLinear(ctx,-10,0,12,73,[[0,'#f4c6b8'],[.55,'#e7a99f'],[1,'#bf7e80']])
-      :animeLinear(ctx,-10,0,12,73,[[0,'#3e4055'],[.55,'#25293b'],[1,'#171b2b']]);
-    animeShape(ctx,()=>{
-      ctx.moveTo(-11,0);ctx.bezierCurveTo(-17,18,-12,37,-9,55);
-      ctx.lineTo(-7,69);ctx.quadraticCurveTo(0,74,9,69);
-      ctx.lineTo(12,54);ctx.bezierCurveTo(12,35,17,16,10,0);ctx.closePath();
-    },legFill,'#272135',2);
-    if(look==='school'||look==='formal'){
-      animeShape(ctx,()=>{
-        ctx.moveTo(-10,17);ctx.bezierCurveTo(-8,28,-7,43,-5,58);
-        ctx.lineTo(7,58);ctx.bezierCurveTo(8,41,11,26,10,17);
-      },animeLinear(ctx,-7,20,8,60,[[0,'#f5e9ed'],[1,'#c8c0d2']]));
-      animeShape(ctx,()=>{ctx.rect(-8,57,17,11);},animeLinear(ctx,-8,58,8,70,[[0,'#e9dfe9'],[1,'#a69eb9']]));
-    }else if(look==='date'){
-      animeStroke(ctx,()=>{ctx.moveTo(-6,25);ctx.bezierCurveTo(-2,36,3,45,6,57);},'#f6d6df',1.3);
-    }
-    animeShape(ctx,()=>{
-      ctx.moveTo(-8,63);ctx.quadraticCurveTo(-12,70,-12,76);
-      ctx.quadraticCurveTo(-4,82,13,77);ctx.quadraticCurveTo(15,70,8,64);
-      ctx.lineTo(4,62);ctx.closePath();
-    },animeLinear(ctx,-8,64,12,80,[[0,'#f7d2c4'],[.45,'#f0b6ac'],[1,'#d18f91']]),'#211b2d',1.7);
-    animeShape(ctx,()=>{
-      ctx.moveTo(-13,75);ctx.quadraticCurveTo(-6,69,5,73);
-      ctx.quadraticCurveTo(15,75,17,82);
-      ctx.quadraticCurveTo(4,88,-15,83);ctx.closePath();
-    },animeLinear(ctx,-10,73,12,86,[[0,look==='swimsuit'?'#f9f4f1':'#665b78'],[.55,look==='swimsuit'?'#c9d8df':'#373348'],[1,'#1c1a2a']]),'#171323',2);
-    animeShape(ctx,()=>{ctx.moveTo(-8,76);ctx.quadraticCurveTo(0,73,9,77);},null,'#d5c7dc',1.3);
-    ctx.restore();
+  function drawLeftArm(ctx,dy){
+    blocks(ctx,[
+      [14,48,7,11,'ink'],[15,49,5,8,'shirt0'],[16,50,4,5,'shirt2'],
+      [14,57,5,8,'skin0'],[13,60,6,5,'skin1'],[14,64,5,2,'skin2'],[16,62,3,2,'skin2'],[14,58,2,3,'skin1']
+    ],dy);
   }
-  function drawAnimeLegs(ctx,frame,look){
-    const sitting=!!frame.sitting,walking=!!frame.walking,phase=frame.phase||0;
-    drawAnimeLeg(ctx,-1,phase,look,walking,sitting);
-    drawAnimeLeg(ctx,1,phase,look,walking,sitting);
+  // The waving hand is drawn as a connected shoulder → elbow → wrist → palm,
+  // with separate fingers. Small pose changes keep the pixel silhouette readable.
+  function drawWaveArm(ctx,frame,dy){
+    const lift=[0,-1,-2,-1,0,1][frame%6];
+    const tilt=[0,0,1,1,0,-1][frame%6];
+    blocks(ctx,[
+      [41,47,9,12,'ink'],[43,48,6,9,'shirt0'],[43,49,5,6,'shirt2'],
+      [47,47,5,8,'skin0'],[48,46,4,8,'skin1'],
+      [49+tilt,39+lift,4,10,'skin0'],[50+tilt,38+lift,3,9,'skin2'],
+      [49+tilt,31+lift,8,9,'skin0'],[50+tilt,30+lift,6,8,'skin2'],
+      [49+tilt,23+lift,2,9,'skin1'],[52+tilt,20+lift,2,12,'skin3'],
+      [55+tilt,22+lift,2,10,'skin2'],[58+tilt,26+lift,2,7,'skin1'],
+      [47+tilt,32+lift,3,5,'skin0'],[48+tilt,34+lift,3,3,'skin2'],
+      [50+tilt,32+lift,1,2,'skin3'],[53+tilt,30+lift,1,2,'skin3'],
+      [56+tilt,31+lift,1,2,'skin3'],[50+tilt,39+lift,2,2,'skin3']
+    ],dy);
   }
-  function drawAnimeTorso(ctx,look,direction){
-    const p=ANIME_LOOKS[look]||ANIME_LOOKS.lazy;
-    const rear=direction==='north';
-    const top=animeLinear(ctx,78,151,178,245,[[0,p.topLight],[.35,p.top],[1,p.top]]);
-    animeShape(ctx,()=>{
-      ctx.moveTo(105,143);ctx.lineTo(151,143);ctx.lineTo(157,169);
-      ctx.lineTo(177,181);ctx.lineTo(185,239);ctx.quadraticCurveTo(128,255,71,239);
-      ctx.lineTo(79,181);ctx.lineTo(99,169);ctx.closePath();
-    },rear?animeLinear(ctx,72,151,183,246,[[0,p.top],[1,p.bottom]]):top,'#282035',3);
-    animeShape(ctx,()=>{
-      ctx.moveTo(105,145);ctx.quadraticCurveTo(128,158,151,145);
-      ctx.lineTo(151,166);ctx.quadraticCurveTo(128,184,105,166);ctx.closePath();
-    },animeLinear(ctx,104,145,151,176,[[0,'#f9d4c7'],[1,'#d89691']]));
-    if(look==='lazy'){
-      animeShape(ctx,()=>{
-        ctx.moveTo(96,163);ctx.quadraticCurveTo(128,188,160,163);
-        ctx.lineTo(176,237);ctx.quadraticCurveTo(128,249,80,237);ctx.closePath();
-      },animeLinear(ctx,86,163,171,243,[[0,'#80b5a3'],[.4,'#477e72'],[1,'#2e5c56']]),'#294942',2);
-      animeShape(ctx,()=>{
-        ctx.moveTo(112,172);ctx.quadraticCurveTo(128,188,144,172);
-        ctx.quadraticCurveTo(137,202,128,203);ctx.quadraticCurveTo(119,200,112,172);
-      },'#315f58','#a0cbbb',1.5);
-      animeStroke(ctx,()=>{ctx.moveTo(119,193);ctx.lineTo(118,207);ctx.moveTo(137,193);ctx.lineTo(138,207);},'#d0e9df',2);
-      animeShape(ctx,()=>{ctx.roundRect(101,209,54,22,8);},'#386c63','#80aa9d',1.7);
-      animeShape(ctx,()=>{ctx.moveTo(125,213);ctx.lineTo(128,213);ctx.lineTo(129,220);ctx.lineTo(125,220);ctx.closePath();},p.accent);
-    }else if(look==='school'){
-      animeShape(ctx,()=>{ctx.moveTo(98,163);ctx.lineTo(128,184);ctx.lineTo(158,163);ctx.lineTo(151,177);ctx.lineTo(128,197);ctx.lineTo(105,177);ctx.closePath();},'#f2f2ed','#c7d2d8',1.8);
-      animeShape(ctx,()=>{ctx.moveTo(119,181);ctx.quadraticCurveTo(128,187,137,181);ctx.lineTo(132,211);ctx.lineTo(124,211);ctx.closePath();},'#c66e90','#8d4967',1.4);
-      animeShape(ctx,()=>{ctx.moveTo(93,169);ctx.lineTo(111,181);ctx.lineTo(128,197);ctx.lineTo(117,208);ctx.lineTo(89,181);ctx.closePath();},'#f4f3ee','#bacbd5',1.5);
-      animeShape(ctx,()=>{ctx.moveTo(163,169);ctx.lineTo(145,181);ctx.lineTo(128,197);ctx.lineTo(139,208);ctx.lineTo(167,181);ctx.closePath();},'#f4f3ee','#bacbd5',1.5);
-      animeStroke(ctx,()=>{ctx.moveTo(91,184);ctx.lineTo(112,204);ctx.moveTo(165,184);ctx.lineTo(144,204);},'#b7c9d7',1.6);
-    }else if(look==='formal'){
-      animeShape(ctx,()=>{ctx.moveTo(100,163);ctx.lineTo(128,184);ctx.lineTo(118,230);ctx.lineTo(92,211);ctx.closePath();},'#f0e5ed','#b7a5bd',1.5);
-      animeShape(ctx,()=>{ctx.moveTo(156,163);ctx.lineTo(128,184);ctx.lineTo(139,230);ctx.lineTo(165,211);ctx.closePath();},'#f0e5ed','#b7a5bd',1.5);
-      animeShape(ctx,()=>{ctx.moveTo(128,184);ctx.lineTo(116,196);ctx.lineTo(128,211);ctx.lineTo(140,196);ctx.closePath();},'#624a68','#a68cae',1.5);
-      animeShape(ctx,()=>{ctx.roundRect(94,224,68,7,3);},'#d4b7cc');
-      animeShape(ctx,()=>{ctx.roundRect(120,222,16,12,4);},'#e7d7e4','#a98eae',1.4);
-      animeShape(ctx,()=>{ctx.arc(128,228,2,0,Math.PI*2);},'#f3d6a2');
-    }else if(look==='swimsuit'){
-      animeShape(ctx,()=>{ctx.moveTo(103,159);ctx.quadraticCurveTo(128,174,153,159);ctx.lineTo(164,235);ctx.quadraticCurveTo(128,244,92,235);ctx.closePath();},animeLinear(ctx,95,160,164,236,[[0,'#70c3bd'],[.5,'#277d89'],[1,'#185767']]),'#183f57',2);
-      animeShape(ctx,()=>{ctx.moveTo(108,159);ctx.lineTo(118,177);ctx.lineTo(128,185);ctx.lineTo(138,177);ctx.lineTo(148,159);},null,'#d9f0e9',3);
-      animeShape(ctx,()=>{ctx.moveTo(118,200);ctx.quadraticCurveTo(128,207,138,200);ctx.lineTo(135,236);ctx.lineTo(121,236);ctx.closePath();},'#4e9da4');
-      animeStroke(ctx,()=>{ctx.moveTo(106,213);ctx.quadraticCurveTo(128,221,150,213);},'#91d9cf',2);
-    }else if(look==='date'){
-      animeShape(ctx,()=>{ctx.moveTo(100,162);ctx.quadraticCurveTo(128,181,156,162);ctx.lineTo(168,236);ctx.quadraticCurveTo(128,249,88,236);ctx.closePath();},animeLinear(ctx,88,164,168,242,[[0,'#e69ab5'],[.48,'#ac5e83'],[1,'#7a405f']]),'#71384f',2);
-      animeShape(ctx,()=>{ctx.moveTo(111,164);ctx.lineTo(128,177);ctx.lineTo(145,164);ctx.quadraticCurveTo(138,197,128,199);ctx.quadraticCurveTo(118,197,111,164);},'#ffe6e9','#d990ac',1.6);
-      animeShape(ctx,()=>{ctx.moveTo(128,184);ctx.bezierCurveTo(118,177,111,190,128,201);ctx.bezierCurveTo(145,190,138,177,128,184);},'#f4bfd0','#a95879',1.5);
-      animeShape(ctx,()=>{ctx.ellipse(128,220,5,3,0,0,Math.PI*2);},'#f8d4df');
-    }
-    if(rear){
-      animeStroke(ctx,()=>{ctx.moveTo(92,184);ctx.quadraticCurveTo(128,203,164,184);},p.topLight,1.5);
-    }
+  function drawMakingBedArm(ctx,frame,dy){
+    const reach=frame%4<2?0:2;
+    blocks(ctx,[
+      [41,47,9,12,'ink'],[43,48,6,9,'shirt0'],[43,49,5,6,'shirt2'],
+      [46,53,5,7,'skin0'],[44,57,5,6,'skin1'],
+      [40-reach,60,7,4,'skin0'],[36-reach,61,7,3,'skin2'],
+      [34-reach,60,3,2,'skin3'],[39-reach,58,2,2,'skin3']
+    ],dy);
   }
-  function drawAnimeArm(ctx,side,angle,look,action,frame){
-    const p=ANIME_LOOKS[look]||ANIME_LOOKS.lazy;
-    ctx.save();ctx.translate(side<0?84:172,174);ctx.scale(side,1);ctx.rotate(angle);
-    const sleeve=animeLinear(ctx,0,0,34,33,[[0,p.topLight],[.45,p.top],[1,p.bottom]]);
-    animeShape(ctx,()=>{
-      ctx.moveTo(-5,-7);ctx.quadraticCurveTo(12,-15,22,1);
-      ctx.lineTo(35,26);ctx.quadraticCurveTo(27,38,18,34);
-      ctx.lineTo(6,19);ctx.quadraticCurveTo(-8,8,-5,-7);ctx.closePath();
-    },sleeve,'#2a2037',2.4);
-    animeStroke(ctx,()=>{ctx.moveTo(21,27);ctx.quadraticCurveTo(28,31,34,26);},p.accent,1.5);
-    animeShape(ctx,()=>{
-      ctx.moveTo(27,28);ctx.quadraticCurveTo(39,37,38,54);
-      ctx.quadraticCurveTo(36,61,29,59);ctx.quadraticCurveTo(25,49,25,39);ctx.closePath();
-    },animeLinear(ctx,26,28,39,60,[[0,'#f9d7c8'],[.5,'#e9ad9f'],[1,'#ce8989']]),'#a96870',1.5);
-    const handY=action==='greeting'?-2:action==='eating'?51:action==='sleeping'?51:56;
-    animeShape(ctx,()=>{
-      ctx.moveTo(27,handY);ctx.quadraticCurveTo(22,handY+3,24,handY+11);
-      ctx.quadraticCurveTo(28,handY+17,37,handY+13);
-      ctx.quadraticCurveTo(44,handY+9,39,handY+2);
-      ctx.quadraticCurveTo(34,handY-3,27,handY);ctx.closePath();
-    },animeLinear(ctx,25,handY,42,handY+15,[[0,'#ffe0d1'],[1,'#d8918f']]),'#a96870',1.3);
-    if(action==='greeting'){
-      for(let i=0;i<4;i++)animeStroke(ctx,()=>{ctx.moveTo(26+i*3,handY+2);ctx.quadraticCurveTo(21+i*3,handY-10,24+i*3,handY-17);},'#e9b1a7',2);
-    }
-    if(action==='eating'){
-      animeShape(ctx,()=>{ctx.ellipse(34,handY+5,4,5,0,0,Math.PI*2);},'#fff0dc','#d8c2b6',1);
-    }
-    ctx.restore();
+  function drawEatingArm(ctx,frame,dy){
+    const chew=frame%4<2?0:1;
+    blocks(ctx,[
+      [41,47,9,12,'ink'],[43,48,6,9,'shirt0'],[43,49,5,6,'shirt2'],
+      [46,45,5,7,'skin0'],[47,41,5,7,'skin1'],
+      [45,37-chew,5,7,'skin0'],[44,35-chew,5,6,'skin2'],
+      [43,34-chew,4,5,'skin1'],[42,35-chew,3,3,'skin3'],
+      [47,37-chew,2,3,'skin3'],[45,41,2,2,'skin3']
+    ],dy);
   }
-  function drawAnimeEyes(ctx,frame,sideView){
-    const expression=frame.expression||'normal',blink=!!frame.blink||expression==='sleepy';
-    const gazeX=frame.gazeX||0,gazeY=frame.gazeY||0;
-    function eye(x,y,scale){
-      ctx.save();ctx.translate(x,y);ctx.scale(scale,1);
-      if(blink){
-        animeStroke(ctx,()=>{ctx.moveTo(-15,2);ctx.quadraticCurveTo(0,8,15,1);},'#38263e',3.7);
-        animeStroke(ctx,()=>{ctx.moveTo(-10,5);ctx.quadraticCurveTo(0,9,10,4);},'#b56f80',1.5);
-      }else if(expression==='happy'){
-        animeStroke(ctx,()=>{ctx.moveTo(-15,4);ctx.quadraticCurveTo(-2,-8,14,3);},'#33223b',4);
-        animeStroke(ctx,()=>{ctx.moveTo(-10,5);ctx.quadraticCurveTo(0,-2,9,4);},'#a56c9e',1.6);
-      }else{
-        const h=expression==='surprised'?27:expression==='sleepy'?13:22;
-        animeShape(ctx,()=>{ctx.moveTo(-16,0);ctx.quadraticCurveTo(-13,-h,0,-h*.83);ctx.quadraticCurveTo(14,-h,16,0);ctx.quadraticCurveTo(0,9,-16,0);},'#fff8f4','#33243e',2.5);
-        const iris=animeLinear(ctx,-8,-h*.5,9,8,[[0,'#c3a4eb'],[.4,'#7856ac'],[1,'#38264f']]);
-        animeShape(ctx,()=>{ctx.ellipse(gazeX*2,-h*.12+gazeY*2,9,Math.max(8,h*.55),0,0,Math.PI*2);},iris,'#352442',1.2);
-        animeShape(ctx,()=>{ctx.ellipse(gazeX*2+1,-h*.08+gazeY*2,4,Math.max(6,h*.43),0,0,Math.PI*2);},'#251a36');
-        animeShape(ctx,()=>{ctx.ellipse(-3,-h*.42,3.8,4.5,0,0,Math.PI*2);},'#fff9f0');
-        animeShape(ctx,()=>{ctx.ellipse(5,1,1.8,2,0,0,Math.PI*2);},'#e4d5f8');
-        animeStroke(ctx,()=>{ctx.moveTo(-16,0);ctx.quadraticCurveTo(-7,-h-5,3,-h+1);ctx.quadraticCurveTo(12,-h-2,16,0);},'#21182d',3.2);
-        animeStroke(ctx,()=>{ctx.moveTo(-13,-h+1);ctx.lineTo(-17,-h+6);ctx.moveTo(12,-h+1);ctx.lineTo(17,-h+6);},'#21182d',1.8);
-      }
-      ctx.restore();
-    }
-    if(sideView){
-      eye(151,108,.72);
-      animeStroke(ctx,()=>{ctx.moveTo(126,84);ctx.quadraticCurveTo(145,73,163,83);},'#5b3c54',2.3);
-    }else{
-      eye(101,108,1);eye(155,108,1);
-      animeStroke(ctx,()=>{ctx.moveTo(83,88);ctx.quadraticCurveTo(100,80,116,88);},'#5a3e55',2.8);
-      animeStroke(ctx,()=>{ctx.moveTo(140,88);ctx.quadraticCurveTo(157,80,174,88);},'#5a3e55',2.8);
-    }
+  function drawPerchArms(ctx,frame,dy){
+    const press=frame%4<2?0:1;
+    blocks(ctx,[
+      [14,48,7,11,'ink'],[15,49,5,8,'shirt0'],[16,50,4,5,'shirt2'],
+      [13,58,5,6,'skin0'],[12,62+press,5,4,'skin1'],[12,64+press,4,2,'skin2'],
+      [41,47,9,11,'ink'],[43,48,6,8,'shirt0'],[44,49,4,6,'shirt2'],
+      [47,57,5,6,'skin0'],[48,62+press,5,4,'skin1'],[49,65+press,4,2,'skin2']
+    ],dy);
   }
-  function drawAnimeFace(ctx,frame,direction){
-    const side=direction==='east'||direction==='west';
-    if(direction==='north'){
-      animeShape(ctx,()=>{
-        ctx.moveTo(79,95);ctx.quadraticCurveTo(75,42,128,37);
-        ctx.quadraticCurveTo(183,42,177,96);ctx.quadraticCurveTo(165,139,128,158);
-        ctx.quadraticCurveTo(90,139,79,95);
-      },animeHairPaint(ctx),'#171323',2);
-      animeStroke(ctx,()=>{ctx.moveTo(94,72);ctx.quadraticCurveTo(128,54,162,72);},'#806494',2);
+  function drawPerchLegs(ctx,frame,dy){
+    const swing=frame%6<3?0:1;
+    blocks(ctx,[
+      [20,61,25,7,'ink'],[21,62,10,7,'pant0'],[34,62,10,7,'pant0'],
+      [20,67,8,6,'pant1'],[35,67,8,6,'pant1'],
+      [17,72+swing,10,4,'pant0'],[37,71-swing,9,5,'pant0'],
+      [15,76+swing,13,3,'ink'],[36,75-swing,13,3,'ink'],
+      [17,75+swing,9,2,'shoe1'],[38,74-swing,9,2,'shoe1'],
+      [24,66,2,3,'pant2'],[37,66,2,3,'pant2']
+    ],dy);
+  }
+  function drawEyes(ctx,expression,blink,gazeX=0,gazeY=0){
+    if(blink){
+      blocks(ctx,[[22,31,8,2,'eye0'],[23,32,6,1,'eye2'],[36,31,8,2,'eye0'],[37,32,6,1,'eye2']]);
       return;
     }
-    if(side){
-      animeShape(ctx,()=>{
-        ctx.moveTo(102,62);ctx.quadraticCurveTo(149,44,170,83);
-        ctx.quadraticCurveTo(184,105,176,124);
-        ctx.lineTo(190,132);ctx.quadraticCurveTo(180,139,169,139);
-        ctx.quadraticCurveTo(161,162,137,164);
-        ctx.quadraticCurveTo(108,157,101,128);ctx.closePath();
-      },animeLinear(ctx,111,52,176,162,[[0,'#ffe1d1'],[.45,'#f2c0b2'],[1,'#d99391']]),'#35243a',2.6);
-      animeShape(ctx,()=>{ctx.ellipse(169,108,8,13,.12,0,Math.PI*2);},'#efb6aa','#ca8886',1.2);
-      drawAnimeEyes(ctx,frame,true);
-      animeStroke(ctx,()=>{ctx.moveTo(181,129);ctx.quadraticCurveTo(186,127,190,130);},'#ad6e76',1.4);
-      animeStroke(ctx,()=>{ctx.moveTo(169,143);ctx.quadraticCurveTo(176,147,182,142);},'#a35d71',1.7);
-      animeShape(ctx,()=>{ctx.ellipse(153,138,9,4,.1,0,Math.PI*2);},'rgba(221,119,139,.27)');
-    }else{
-      animeShape(ctx,()=>{
-        ctx.moveTo(78,92);ctx.bezierCurveTo(74,65,94,48,128,47);
-        ctx.bezierCurveTo(162,47,182,66,178,101);
-        ctx.lineTo(173,127);ctx.quadraticCurveTo(160,157,128,165);
-        ctx.quadraticCurveTo(95,157,82,127);ctx.closePath();
-      },animeLinear(ctx,82,54,172,165,[[0,'#ffe8d9'],[.42,'#f5cabc'],[.78,'#edb3a9'],[1,'#d88e90']]),'#35233a',2.5);
-      animeShape(ctx,()=>{ctx.ellipse(76,112,8,13,-.1,0,Math.PI*2);},'#efb5a9','#c98785',1.4);
-      animeShape(ctx,()=>{ctx.ellipse(180,112,8,13,.1,0,Math.PI*2);},'#efb5a9','#c98785',1.4);
-      animeShape(ctx,()=>{ctx.ellipse(90,134,13,6,0,0,Math.PI*2);},'rgba(221,119,139,.28)');
-      animeShape(ctx,()=>{ctx.ellipse(166,134,13,6,0,0,Math.PI*2);},'rgba(221,119,139,.28)');
-      animeStroke(ctx,()=>{ctx.moveTo(128,114);ctx.quadraticCurveTo(124,126,129,128);},'#ce8b88',1.5);
-      drawAnimeEyes(ctx,frame,false);
-      if(frame.expression==='surprised'){
-        animeShape(ctx,()=>{ctx.ellipse(128,145,7,9,0,0,Math.PI*2);},'#8e465f');
-      }else if(frame.expression==='happy'){
-        animeStroke(ctx,()=>{ctx.moveTo(116,143);ctx.quadraticCurveTo(128,155,140,143);},'#9d526d',2.8);
-      }else if(frame.expression==='sleepy'){
-        animeStroke(ctx,()=>{ctx.moveTo(119,145);ctx.quadraticCurveTo(128,148,137,145);},'#9d5868',2);
-      }else{
-        animeStroke(ctx,()=>{ctx.moveTo(119,144);ctx.quadraticCurveTo(128,148,137,144);},'#a65d70',2);
-        animeShape(ctx,()=>{ctx.ellipse(128,144,3,1.8,0,0,Math.PI*2);},'#fff1ec');
-      }
-    }
-    if(frame.makeup!=='soft'){
-      animeStroke(ctx,()=>{ctx.moveTo(88,137);ctx.quadraticCurveTo(97,143,106,139);ctx.moveTo(150,139);ctx.quadraticCurveTo(160,143,169,137);},frame.makeup==='sun-kissed'?'#e6a17f':'#d18b9e',1.3);
-    }
-  }
-  function drawAnimeFrontHair(ctx,style,swing,direction){
-    const g=animeHairPaint(ctx);
-    if(direction==='north'){
-      animeShape(ctx,()=>{ctx.moveTo(76,98);ctx.bezierCurveTo(68,58,88,27,128,25);ctx.bezierCurveTo(170,24,190,60,180,98);ctx.bezierCurveTo(152,82,105,82,76,98);},g,'#171323',2.8);
+    if(expression==='happy'){
+      blocks(ctx,[[22,31,2,2,'eye0'],[24,33,5,2,'eye0'],[29,31,2,2,'eye0'],
+        [36,31,2,2,'eye0'],[38,33,5,2,'eye0'],[43,31,2,2,'eye0'],[25,34,3,1,'eye2'],[39,34,3,1,'eye2']]);
       return;
     }
-    if(direction==='east'||direction==='west'){
-      animeShape(ctx,()=>{
-        ctx.moveTo(77,97);ctx.bezierCurveTo(72,47,103,26,143,31);
-        ctx.bezierCurveTo(179,38,190,68,178,105);
-        ctx.bezierCurveTo(160,86,145,76,129,79);
-        ctx.bezierCurveTo(116,82,107,105,91,119);
-        ctx.bezierCurveTo(91,102,84,96,77,97);ctx.closePath();
-      },g,'#171323',2.8);
-      animeShape(ctx,()=>{ctx.moveTo(94,53);ctx.bezierCurveTo(125,23,170,42,176,78);ctx.bezierCurveTo(145,59,126,66,108,82);ctx.closePath();},'#3d2b50');
-      animeStroke(ctx,()=>{ctx.moveTo(104,55);ctx.quadraticCurveTo(143,35,165,63);},'#8e73a3',2);
-      animeStroke(ctx,()=>{ctx.moveTo(92,92);ctx.quadraticCurveTo(109,113,97,147);},'#6e537f',2.2);
-    }else{
-      animeShape(ctx,()=>{
-        ctx.moveTo(76,101);ctx.bezierCurveTo(68,51,89,24,128,23);
-        ctx.bezierCurveTo(169,23,190,53,181,101);
-        ctx.bezierCurveTo(169,88,161,85,153,94);
-        ctx.bezierCurveTo(145,109,141,117,136,120);
-        ctx.bezierCurveTo(135,103,132,91,128,90);
-        ctx.bezierCurveTo(119,110,109,121,103,123);
-        ctx.bezierCurveTo(105,105,101,96,95,95);
-        ctx.bezierCurveTo(88,99,83,108,78,118);ctx.closePath();
-      },g,'#171323',2.8);
-      animeShape(ctx,()=>{ctx.moveTo(84,72);ctx.bezierCurveTo(105,31,153,31,174,69);ctx.bezierCurveTo(149,57,117,56,84,86);ctx.closePath();},'#3b2a4f');
-      animeStroke(ctx,()=>{ctx.moveTo(88,66);ctx.bezierCurveTo(113,37,146,39,164,56);},'#8b719f',2.5);
-      animeStroke(ctx,()=>{ctx.moveTo(108,83);ctx.quadraticCurveTo(125,66,133,91);ctx.quadraticCurveTo(134,106,126+swing*.2,119);},'#6c527e',2);
-      animeStroke(ctx,()=>{ctx.moveTo(151,78);ctx.quadraticCurveTo(165,91,151,120);},'#7b628e',2);
+    if(expression==='sleepy'){
+      blocks(ctx,[[22,31,8,2,'eye0'],[23,32,6,2,'eye1'],[36,31,8,2,'eye0'],[37,32,6,2,'eye1']]);
+      return;
     }
-    if(style==='school-ponytail'){
-      animeShape(ctx,()=>{ctx.ellipse(164,41,16,11,.35,0,Math.PI*2);},'#382847','#171323',2);
-      animeShape(ctx,()=>{ctx.moveTo(154,43);ctx.quadraticCurveTo(167,35,177,44);ctx.lineTo(174,58);ctx.quadraticCurveTo(162,54,154,43);},'#c66f91');
-    }else if(style==='formal-bun'){
-      animeShape(ctx,()=>{ctx.arc(140,29,8,0,Math.PI*2);},'#d4b5d6','#9d83a7',1.4);
+    const surprised=expression==='surprised';
+    blocks(ctx,[
+      [21,28,10,2,'eye0'],[35,28,10,2,'eye0'],
+      [22,30,8,surprised?7:5,'white'],[36,30,8,surprised?7:5,'white'],
+      [24,30,5,surprised?7:5,'eye1'],[38,30,5,surprised?7:5,'eye1'],
+      [25,31,4,surprised?6:4,'eye2'],[39,31,4,surprised?6:4,'eye2'],
+      [26+gazeX,31+gazeY,2,3,'eye3'],[40+gazeX,31+gazeY,2,3,'eye3'],[25+gazeX,31+gazeY,1,1,'white'],[39+gazeX,31+gazeY,1,1,'white'],
+      [22,29,3,1,'hair0'],[42,29,3,1,'hair0']
+    ]);
+  }
+  function drawFaceDetails(ctx,expression,chewFrame=0){
+    blocks(ctx,[[18,30,2,4,'skin1'],[45,30,2,4,'skin1'],[21,37,4,2,'blush'],[41,37,4,2,'blush'],[31,36,2,3,'skin0'],[32,37,2,2,'skin2']]);
+    if(expression==='surprised')blocks(ctx,[[31,40,4,4,'skin0'],[32,40,2,2,'ink']]);
+    else if(expression==='annoyed')blocks(ctx,[[29,39,6,2,'eye0'],[30,41,4,1,'eye0']]);
+    else if(expression==='sleepy')blocks(ctx,[[30,40,5,1,'eye0'],[34,41,2,1,'skin0']]);
+    else if(expression==='happy')blocks(ctx,[[29,39,2,2,'eye0'],[31,41,4,2,'eye0'],[35,39,2,2,'eye0']]);
+    else if(expression==='eating'){
+      if(chewFrame%2===0)blocks(ctx,[[30,40,5,3,'eye0'],[31,41,3,1,'skin1']]);
+      else blocks(ctx,[[30,40,5,1,'eye0'],[34,41,2,1,'eye0']]);
+    }else blocks(ctx,[[30,40,5,1,'eye0'],[34,41,2,1,'eye0']]);
+  }
+  function drawRearHead(ctx,style,dy){
+    const longHair=[
+      [16,10,32,9,'ink'],[13,16,38,16,'ink'],[11,27,8,24,'ink'],[45,27,8,24,'ink'],
+      [15,16,34,14,'hair0'],[14,29,8,20,'hair0'],[42,29,8,20,'hair0'],
+      [18,21,28,18,'hair1'],[20,35,6,15,'hair0'],[38,35,6,15,'hair0'],
+      [21,45,6,11,'hair1'],[37,45,6,11,'hair1'],[25,50,14,5,'hair0'],
+      [18,22,3,13,'hair2'],[43,25,3,12,'hair2'],[20,39,2,10,'hair2'],[42,40,2,10,'hair2'],
+      [25,22,4,2,'hair3'],[34,25,5,2,'hair3'],[17,34,2,5,'hair3'],[45,36,2,5,'hair3']
+    ];
+    if(style==='formal-bun'){
+      blocks(ctx,[
+        [20,2,25,12,'ink'],[22,1,21,10,'hair0'],[25,3,15,6,'hair1'],
+        [16,10,32,10,'ink'],[16,16,32,17,'hair0'],[18,21,28,17,'hair1'],
+        [15,29,7,18,'hair0'],[42,29,7,18,'hair0'],[19,38,5,9,'hair2'],[40,38,5,9,'hair2'],
+        [27,12,10,2,'formal2']
+      ],dy);
     }else if(style==='twin-buns'){
-      animeShape(ctx,()=>{ctx.arc(84,36,8,0,Math.PI*2);ctx.arc(172,36,8,0,Math.PI*2);},'#74bfb5');
-    }else if(style==='date-half-up'){
-      animeShape(ctx,()=>{ctx.ellipse(146,44,9,5,-.35,0,Math.PI*2);},'#d98da8','#fff0f2',1.2);
-      animeShape(ctx,()=>{ctx.arc(151,43,2,0,Math.PI*2);},'#f7d5df');
+      blocks(ctx,[
+        [7,4,14,12,'ink'],[9,3,11,10,'hair0'],[12,5,6,5,'hair1'],
+        [43,4,14,12,'ink'],[45,3,11,10,'hair0'],[48,5,6,5,'hair1'],
+        [13,15,38,12,'ink'],[14,20,8,28,'hair0'],[42,20,8,28,'hair0'],
+        [18,22,28,19,'hair1'],[17,38,6,13,'hair0'],[41,38,6,13,'hair0'],
+        [20,47,5,7,'hair1'],[39,47,5,7,'hair1'],[21,24,3,8,'hair2'],[40,28,3,8,'hair2']
+      ],dy);
     }else if(style==='messy-bun'){
-      animeStroke(ctx,()=>{ctx.moveTo(102,30);ctx.quadraticCurveTo(90,19,103,11);ctx.moveTo(151,30);ctx.quadraticCurveTo(164,18,153,10);},'#564066',3);
+      blocks(ctx,[
+        [18,3,29,11,'ink'],[21,1,23,10,'hair0'],[24,3,15,6,'hair1'],
+        [15,12,34,14,'ink'],[16,18,9,29,'hair0'],[40,18,9,29,'hair0'],
+        [20,20,24,18,'hair1'],[18,36,7,12,'hair0'],[39,36,7,12,'hair0'],
+        [22,44,6,8,'hair1'],[37,44,6,8,'hair1'],[14,13,5,4,'hair2'],[45,13,5,4,'hair2']
+      ],dy);
+    }else{
+      blocks(ctx,longHair,dy);
+      if(style==='school-ponytail')blocks(ctx,[
+        [47,13,9,9,'ink'],[51,20,9,10,'ink'],[54,29,7,15,'ink'],
+        [52,42,7,10,'hair0'],[49,49,6,9,'hair1'],[50,22,4,4,'hair2'],[55,35,3,5,'hair2']
+      ],dy);
+      if(style==='date-half-up')blocks(ctx,[
+        [21,7,23,8,'ink'],[23,5,19,7,'hair0'],[26,7,13,4,'hair1'],
+        [18,13,7,6,'hair0'],[41,13,7,6,'hair0'],[22,15,3,3,'hair3']
+      ],dy);
     }
-    animeStroke(ctx,()=>{ctx.moveTo(78,108);ctx.bezierCurveTo(71,137,76+swing*.25,165,84+swing*.35,179);},'#725a87',2.1);
-    animeStroke(ctx,()=>{ctx.moveTo(179,103);ctx.bezierCurveTo(188,135,180-swing*.3,165,173-swing*.4,180);},'#6c527e',2.1);
+    if(style==='formal-bun')blocks(ctx,[[39,4,6,2,'makeupGold'],[40,3,2,5,'makeupGold']],dy);
+    if(style==='twin-buns')blocks(ctx,[[10,11,4,2,'swim2'],[49,11,4,2,'swim2']],dy);
+    if(style==='messy-bun')blocks(ctx,[[18,10,5,2,'lazy2'],[43,8,4,2,'lazy3']],dy);
   }
-  function drawAnimeSprite(ctx,frame){
-    ctx.clearRect(0,0,CANVAS_W,CANVAS_H);
+
+  function drawSideFace(ctx,frame,dy){
+    blocks(ctx,[
+      [22,18,25,27,'ink'],[25,19,20,24,'skin0'],[28,20,16,22,'skin1'],
+      [31,21,12,19,'skin2'],[42,28,4,7,'skin0'],[44,34,3,3,'skin0'],
+      [45,35,3,2,'skin2'],[27,24,3,13,'skin0']
+    ],dy);
+    // One visible eye and a small nose bridge give her a real profile silhouette.
+    if(frame.blink||frame.expression==='sleepy'){
+      blocks(ctx,[[36,31,7,2,'eye0'],[37,32,5,1,'eye2']],dy);
+    }else if(frame.expression==='happy'){
+      blocks(ctx,[[36,31,2,2,'eye0'],[38,33,4,2,'eye0'],[39,34,2,1,'eye2']],dy);
+    }else{
+      const shadow=frame.makeup==='sun-kissed'?'makeupCoral':frame.makeup==='fresh'?'makeupRose':'makeupShadow';
+      blocks(ctx,[[35,28,8,2,shadow],[36,30,7,2,'eye0'],[37,32,5,4,'white'],[39,32,3,4,'eye2'],[40,32,1,2,'eye3']],dy);
+    }
+    blocks(ctx,[
+      [42,35,3,1,'skin0'],[44,36,2,1,'skin2'],
+      [37,38,6,2,frame.makeup==='soft'?'blush':'makeupRose'],
+      [40,41,5,1,'eye0'],[42,42,3,1,'skin0']
+    ],dy);
+    // A loose front lock hides the far eye instead of showing two eyes on a side view.
+    blocks(ctx,[
+      [17,20,13,25,'hair0'],[19,27,9,16,'hair1'],[20,37,6,9,'hair0'],
+      [21,20,3,8,'hair2'],[22,32,2,7,'hair2']
+    ],dy);
+    blocks(ctx,FRINGE,dy);
+    blocks(ctx,[
+      [13,43,5,12,'hair0'],[14,52,4,8,'hair1'],[45,45,5,12,'hair0'],
+      [46,53,4,7,'hair1'],[17,57,3,5,'hair0'],[44,59,3,5,'hair1']
+    ],dy);
+    drawHairAccessories(ctx,frame.hair||'long',dy);
+  }
+
+  function drawRearOutfit(ctx,outfit,dy){
+    const back={
+      school:'uniform0',formal:'formal0',lazy:'lazy0',swimsuit:'swim0',date:'date1'
+    }[outfit]||'shirt0';
+    blocks(ctx,[
+      [24,48,16,9,'ink'],[25,49,14,7,back],
+      [31,50,2,7,outfit==='formal'?'formal2':outfit==='date'?'date2':'shirt2'],
+      [28,54,8,1,outfit==='formal'?'makeupGold':'shirt3']
+    ],dy);
+  }
+
+  function drawWalkLegsVertical(ctx,step,dy,direction){
+    const lead=[0,1,3,1][step%4],trail=[3,1,0,1][step%4];
+    blocks(ctx,[
+      [20,61,25,6,'ink'],
+      [21,65-lead,9,10+lead,'pant0'],
+      [35,65-trail,9,10+trail,'pant0'],
+      [22,69-lead,7,3,'pant1'],[36,69-trail,7,3,'pant1'],
+      [24,66-lead,2,4,'pant2'],[37,66-trail,2,4,'pant2']
+    ],dy);
+  }
+  function drawWalkArmsVertical(ctx,step,dy){
+    const swing=[-2,0,2,0][step%4];
+    blocks(ctx,[
+      [13,47,9,12,'ink'],[15,48,6,9,'shirt0'],[16,49,4,6,'shirt2'],
+      [14,55+swing,5,8,'skin0'],[13,60+swing,6,4,'skin1'],
+      [41,47,10,12,'ink'],[43,48,6,9,'shirt0'],[43,49,5,6,'shirt2'],
+      [46,55-swing,5,8,'skin0'],[46,60-swing,6,4,'skin1'],
+      [15,62+swing,3,2,'skin2'],[48,62-swing,3,2,'skin2']
+    ],dy);
+  }
+
+  function drawIdleArms(ctx,frame,dy){
+    const sway=[0,-1,0,1][frame%4];
+    blocks(ctx,[
+      [14,48,7,10,'ink'],[15,49,5,8,'shirt0'],[16,50,4,5,'shirt2'],
+      [14,57+sway,5,7,'skin0'],[15,59+sway,5,4,'skin1'],[16,62+sway,3,2,'skin2'],
+      [41,48,9,10,'ink'],[43,49,6,8,'shirt0'],[43,50,5,5,'shirt2'],
+      [46,57-sway,5,7,'skin0'],[46,59-sway,5,4,'skin1'],[47,62-sway,3,2,'skin2']
+    ],dy);
+  }
+
+  function drawShoes(ctx,step,walking,direction,dy){
+    let feet;
+    if(walking&&(direction==='east'||direction==='west')){
+      const side=[
+        [[17,74,14,4],[36,74,13,4]],
+        [[14,74,14,4],[38,72,12,4]],
+        [[23,73,12,4],[33,74,14,4]],
+        [[12,72,14,4],[37,74,13,4]]
+      ];
+      feet=side[step%4];
+    }else if(walking){
+      const lead=[0,1,3,1][step%4],trail=[3,1,0,1][step%4];
+      feet=[[19,75-lead,13,4],[34,75-trail,13,4]];
+    }else{
+      feet=[[19,74,13,4],[33,74,13,4]];
+    }
+    const back=direction==='north';
+    for(const [x,y,w,h] of feet){
+      blocks(ctx,[[x,y,w,h,'ink'],[x+2,y,w-4,1,back?'pant2':'shoe1']],dy);
+    }
+  }
+  function drawSprite(ctx,frame){
+    ctx.clearRect(0,0,W,H);
+    const dy=Math.round(frame.bob||0);
     const direction=frame.direction||'south';
-    const look=frame.outfit||'lazy';
-    const style=frame.hair||'long';
-    const time=(frame.time||0)/1000;
-    const phase=frame.phase||0;
+    const side=direction==='east'||direction==='west';
+    const rear=direction==='north';
     const walking=!!frame.walking;
-    const swing=walking?Math.sin(phase*Math.PI*2):Math.sin(time*1.45)*.16;
-    const hairSwing=walking?Math.sin(phase*Math.PI*2-.75)*10:Math.sin(time*1.3)*3.6;
-    const headAngle=(walking?Math.sin(phase*Math.PI*2)*.045:Math.sin(time*1.2)*.018)+(frame.greeting?.035:0);
-    const bodyBob=(frame.bob||0)*2.3;
-    const action=frame.sleeping?'sleeping':frame.greeting?'greeting':frame.action||'';
-    ctx.save();ctx.translate(0,bodyBob);
-    // Back hair belongs to the head rig, not to the stage. It follows every head turn.
-    withAnimeHead(ctx,headAngle,()=>drawAnimeBackHair(ctx,style,hairSwing,direction));
-    drawAnimeLegs(ctx,frame,look);
-    drawAnimeTorso(ctx,look,direction);
-    const idleArm=Math.sin(time*1.7)*.045;
-    let leftAngle=-.10+swing*.32+idleArm;
-    let rightAngle=.10-swing*.32-idleArm;
-    if(action==='greeting')rightAngle=-1.05+Math.sin(time*8)*.08;
-    if(action==='making-bed')rightAngle=.9+Math.sin(time*5)*.08;
-    if(action==='eating')rightAngle=-.62+Math.sin(time*8)*.025;
-    if(action==='sleeping'){leftAngle=.65;rightAngle=-.62;}
-    if(frame.sitting){leftAngle=.38;rightAngle=-.38;}
-    drawAnimeArm(ctx,-1,leftAngle,look,action,frame);
-    drawAnimeArm(ctx,1,rightAngle,look,action,frame);
-    // Face, scalp, fringe and loose locks share one transform so the hair cannot lag behind her head.
-    withAnimeHead(ctx,headAngle,()=>{
-      drawAnimeFace(ctx,frame,direction);
-      drawAnimeFrontHair(ctx,style,hairSwing,direction);
-      if(direction!=='north'){
-        animeStroke(ctx,()=>{ctx.moveTo(94,58);ctx.quadraticCurveTo(128,36,161,57);},'#a38ab2',1.35);
-      }
-    });
-    if(action==='eating'&&direction!=='north'){
-      animeShape(ctx,()=>{ctx.ellipse(170,148+bodyBob,6,8,-.25,0,Math.PI*2);},'#fff0db','#c7acaa',1.1);
-      animeStroke(ctx,()=>{ctx.moveTo(166,144);ctx.lineTo(172,151);},'#d6c1b6',1);
+    const step=frame.step||0;
+
+    // Hair behind the body, feet first, then the outfit so sleeves and shoes
+    // can be drawn on top. This avoids the old "floating hand under the shirt" look.
+    if(!rear)drawBackHair(ctx,frame.hair||'long',dy);
+    if(frame.sitting)drawPerchLegs(ctx,step,dy);
+    else if(walking&&side)drawWalkLegs(ctx,step,dy);
+    else if(walking)drawWalkLegsVertical(ctx,step,dy,direction);
+    else blocks(ctx,LEGS,dy);
+
+    blocks(ctx,TORSO,dy);
+    drawWardrobeOutfit(ctx,frame.outfit||'lazy',dy);
+    if(rear)drawRearOutfit(ctx,frame.outfit||'lazy',dy);
+
+    if(frame.sleeping)drawSleepArms(ctx,dy);
+    else if(walking&&side)drawWalkArms(ctx,step,dy);
+    else if(walking)drawWalkArmsVertical(ctx,step,dy);
+    else if(frame.action==='making-bed')drawMakingBedArm(ctx,frame.wave,dy);
+    else if(frame.action==='eating')drawLeftArm(ctx,dy);
+    else if(frame.sitting)drawPerchArms(ctx,step,dy);
+    else if(frame.greeting) {drawLeftArm(ctx,dy);drawWaveArm(ctx,frame.wave,dy);}
+    else drawIdleArms(ctx,frame.idleFrame||0,dy);
+
+    if(rear){
+      drawRearHead(ctx,frame.hair||'long',dy);
+    }else if(side){
+      drawSideFace(ctx,frame,dy);
+    }else{
+      blocks(ctx,FACE,dy);
+      blocks(ctx,FRINGE,dy);
+      drawHairAccessories(ctx,frame.hair||'long',dy);
+      blocks(ctx,[
+        [13,45,5,12,'hair0'],[14,54,4,7,'hair1'],[45,46,5,12,'hair0'],
+        [46,54,4,8,'hair1'],[17,58,3,5,'hair0'],[44,60,3,5,'hair1']
+      ],dy);
+      drawEyeMakeup(ctx,frame.makeup||'soft');
+      drawEyes(ctx,frame.expression,frame.blink,frame.gazeX||0,frame.gazeY||0);
+      drawFaceDetails(ctx,frame.expression,frame.chewFrame||0);
+      drawMakeupDetails(ctx,frame.makeup||'soft');
     }
-    ctx.restore();
+
+    if(frame.action==='eating'&&!rear){
+      drawEatingArm(ctx,frame.chewFrame||0,dy);
+      blocks(ctx,[[42,34,5,4,'white'],[41,35,2,3,'skin1'],[43,37,4,1,'mint0'],[44,34,1,1,'skin3']],dy);
+    }
+    if(!frame.sleeping)drawShoes(ctx,step,walking,direction,dy);
+    if(!rear){
+      blocks(ctx,[
+        [43,22,3,1,'mint1'],[44,21,1,3,'mint1'],[46,22,2,1,'accent'],
+        [17,18,2,1,'hair4'],[48,35,1,3,'hair3'],[13,44,1,4,'hair3']
+      ],dy);
+    }
   }
+  function drawWalkLegs(ctx,step,dy){
+    const poses=[
+      [[20,61,25,5,'ink'],[21,65,9,7,'pant0'],[35,65,9,7,'pant0'],[21,70,9,3,'pant1'],[36,70,8,3,'pant1'],[17,74,14,4,'shoe0'],[36,74,13,4,'shoe0'],[20,74,9,2,'shoe1'],[38,74,8,2,'shoe1'],[30,65,4,10,'ink']],
+      [[21,61,24,5,'ink'],[21,65,9,8,'pant0'],[34,65,9,6,'pant0'],[18,71,10,3,'pant1'],[38,69,8,3,'pant1'],[14,74,14,4,'shoe0'],[38,72,12,4,'shoe0'],[17,74,9,2,'shoe1'],[40,72,8,2,'shoe1'],[30,65,4,10,'ink']],
+      [[20,61,25,5,'ink'],[22,65,8,7,'pant0'],[34,65,9,8,'pant0'],[24,70,8,3,'pant1'],[33,72,9,3,'pant1'],[23,73,12,4,'shoe0'],[33,74,14,4,'shoe0'],[25,73,8,2,'shoe1'],[36,74,9,2,'shoe1'],[30,65,4,10,'ink']],
+      [[20,61,25,5,'ink'],[20,65,9,6,'pant0'],[35,65,9,8,'pant0'],[16,69,10,3,'pant1'],[38,72,8,3,'pant1'],[12,72,14,4,'shoe0'],[37,74,13,4,'shoe0'],[15,72,9,2,'shoe1'],[39,74,8,2,'shoe1'],[30,65,4,10,'ink']]
+    ];
+    blocks(ctx,poses[step%4],dy);
+  }
+  function drawWalkArms(ctx,step,dy){
+    const poses=[
+      [[14,48,7,11,'ink'],[15,49,5,8,'shirt0'],[16,50,4,5,'shirt2'],[14,57,5,7,'skin0'],[15,59,5,5,'skin1'],[41,47,9,11,'ink'],[43,48,6,8,'shirt0'],[44,49,4,6,'shirt2'],[46,56,5,7,'skin0'],[46,58,5,5,'skin1']],
+      [[13,48,7,12,'ink'],[14,49,5,8,'shirt0'],[15,50,4,5,'shirt2'],[13,59,5,7,'skin0'],[12,62,5,4,'skin1'],[42,47,8,10,'ink'],[44,48,5,7,'shirt0'],[45,49,4,5,'shirt2'],[47,55,5,7,'skin0'],[48,58,5,4,'skin1']],
+      [[14,48,7,11,'ink'],[15,49,5,8,'shirt0'],[16,50,4,5,'shirt2'],[14,57,5,7,'skin0'],[13,60,6,5,'skin1'],[41,47,9,11,'ink'],[43,48,6,8,'shirt0'],[44,49,4,6,'shirt2'],[46,56,5,7,'skin0'],[46,59,5,4,'skin1']],
+      [[15,48,7,10,'ink'],[16,49,5,7,'shirt0'],[17,50,4,5,'shirt2'],[15,56,5,7,'skin0'],[15,59,5,5,'skin1'],[40,47,9,12,'ink'],[42,48,6,9,'shirt0'],[43,49,4,6,'shirt2'],[45,57,5,7,'skin0'],[45,60,5,4,'skin1']]
+    ];
+    blocks(ctx,poses[step%4],dy);
+  }
+  function drawSleepArms(ctx,dy){
+    blocks(ctx,[
+      [14,48,7,11,'ink'],[15,49,5,8,'shirt0'],[16,50,4,5,'shirt2'],
+      [17,54,5,8,'skin0'],[19,56,5,5,'skin1'],[40,48,8,10,'ink'],
+      [42,49,5,7,'shirt0'],[43,50,4,5,'shirt2'],[38,55,5,7,'skin0'],
+      [36,57,5,5,'skin1'],[25,49,4,2,'skin2'],[35,49,4,2,'skin2']
+    ],dy);
+  }
+
   class HekomiWanderer{
     constructor(canvas,message,root,bubble){
       this.canvas=canvas;this.ctx=canvas.getContext('2d',{alpha:true});this.message=message;
@@ -409,10 +461,10 @@
       this.bed=root.querySelector('.hekomi-bed');this.snack=root.querySelector('.hekomi-snack');
       this.recommendLink=bubble&&bubble.querySelector('.hekomi-recommend-link');
       this.reduced=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      this.canvas.width=CANVAS_W;this.canvas.height=CANVAS_H;this.ctx.imageSmoothingEnabled=true;
+      this.canvas.width=W;this.canvas.height=H;this.ctx.imageSmoothingEnabled=false;
       this.mountWardrobe();
       this.setDirection('south');
-      this.canvas.style.imageRendering='auto';this.canvas.setAttribute('role','button');
+      this.canvas.style.imageRendering='pixelated';this.canvas.setAttribute('role','button');
       this.canvas.setAttribute('tabindex','0');this.canvas.setAttribute('aria-label','Hekomi-chan, wandering around Hekomi. Activate to say hello.');
       this.canvas.title='Say hi to Hekomi-chan';
       this.lines=this.dialogueForPage();
@@ -805,13 +857,13 @@
       const blink=sleeping||time<this.blinkUntil;
       const expression=sleeping?'sleepy':eating?'eating':this.state==='greet'?'happy':this.state==='wake'?'surprised':this.activity==='curious'?'surprised':this.activity==='annoyed'?'annoyed':'normal';
       const bob=sleeping?Math.round(Math.sin(time/1150)*.6):walking?Math.round(Math.sin(this.walkPhase*Math.PI*2)*.8):Math.round(Math.sin(time/900)*.45);
-      drawAnimeSprite(this.ctx,{
+      drawSprite(this.ctx,{
         expression,blink,walking,sleeping,sitting,greeting:this.state==='greet',
         action:makingBed?'making-bed':eating?'eating':'',
-        step:gaitStep,phase:this.walkPhase,time,chewFrame:Math.floor(time/480)%2,
-        bob,gazeX:this.gazeX,gazeY:this.gazeY,direction:this.direction,
+        step:gaitStep,wave:Math.floor(time/300)%6,chewFrame:Math.floor(time/480)%2,
+        idleFrame:Math.floor(time/420)%4,bob,gazeX:this.gazeX,gazeY:this.gazeY,direction:this.direction,
         outfit:this.outfit,hair:WARDROBE_PRESETS[this.outfit].hair,makeup:WARDROBE_PRESETS[this.outfit].makeup
-      });;
+      });
     }
   }
 
