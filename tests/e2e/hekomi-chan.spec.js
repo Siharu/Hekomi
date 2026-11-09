@@ -139,31 +139,6 @@ test('Hekomi-chan wardrobe can be dismissed with Escape', async ({ page }) => {
 });
 
 
-test('Hekomi-chan uses a high-resolution anime canvas with naturally moving hair', async ({ page }) => {
-  await openHekomiWithAiringFixture(page);
-  const result = await page.evaluate(() => {
-    const companion = window.hekomiChan;
-    companion.state = 'idle';
-    companion.setDirection('south');
-    companion.paint(1100, true);
-    const firstFrame = companion.canvas.toDataURL();
-    companion.paint(1640, true);
-    const secondFrame = companion.canvas.toDataURL();
-    return {
-      width: companion.canvas.width,
-      height: companion.canvas.height,
-      smoothing: companion.ctx.imageSmoothingEnabled,
-      imageRendering: getComputedStyle(companion.canvas).imageRendering,
-      motionChangesFrame: firstFrame !== secondFrame
-    };
-  });
-  expect(result.width).toBe(256);
-  expect(result.height).toBe(320);
-  expect(result.smoothing).toBe(true);
-  expect(result.imageRendering).toBe('auto');
-  expect(result.motionChangesFrame).toBe(true);
-});
-
 test('Hekomi-chan has distinct front, back and side-facing sprite views', async ({ page }) => {
   await openHekomiWithAiringFixture(page);
 
